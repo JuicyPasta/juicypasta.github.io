@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Shortlinks</title>
+<!--
+  Web view for the Shortlinks Chrome extension (Chrome Web Store ID dmeofffiffhpjfkegiafpkiaomegkpcb, v1.1.0+).
+  A plain web page, so people, browser automation and AI browser agents can list, add, edit, delete, export
+  and import links. The extension's manifest lets only https://juicypasta.github.io/shortlinks/* message it
+  (externally_connectable). This file is static: links come from the extension in this browser and are never
+  sent anywhere. Source of the extension: github.com/JuicyPasta/golinks (private).
+  Testing an unpacked copy: add ?ext=<its extension id>.
+-->
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #fff; --fg: #202124; --muted: #5f6368; --line: #e8eaed; --accent: #1a73e8; --accent-fg: #fff;
+    --danger: #c5221f; --field: #fff; --field-line: #c4c7c5; --note: #fef7e0; --note-line: #f9e1a1; --ok: #188038;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #202124; --fg: #e8eaed; --muted: #9aa0a6; --line: #3c4043; --accent: #8ab4f8; --accent-fg: #202124;
+      --danger: #f28b82; --field: #303134; --field-line: #5f6368; --note: #3a3220; --note-line: #5c4b1e; --ok: #81c995;
+    }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 32px 16px 48px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 32px 0 8px; }
+  a { color: var(--accent); }
+  .muted, footer { color: var(--muted); }
+  footer { margin-top: 40px; font-size: 13px; }
+  .note { background: var(--note); border: 1px solid var(--note-line); border-radius: 8px; padding: 12px 14px; margin: 16px 0; }
+  form.row, .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label { font-size: 13px; color: var(--muted); }
+  .name-wrap { display: flex; align-items: center; gap: 2px; }
+  input, textarea { font: inherit; color: var(--fg); background: var(--field); border: 1px solid var(--field-line); border-radius: 6px; padding: 8px; }
+  textarea { width: 100%; font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; }
+  #name { width: 150px; }
+  .grow { flex: 1 1 260px; }
+  .grow input { width: 100%; }
+  #filter { width: 100%; margin-bottom: 8px; }
+  button { font: inherit; border: 0; border-radius: 6px; padding: 8px 14px; background: var(--accent); color: var(--accent-fg); cursor: pointer; }
+  button.plain { background: none; color: var(--accent); padding: 4px 6px; }
+  button.danger { background: none; color: var(--danger); padding: 4px 6px; }
+  button.secondary { background: none; color: var(--accent); border: 1px solid var(--field-line); }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 13px; font-weight: 600; color: var(--muted); padding: 6px 4px; }
+  td { padding: 7px 4px; border-top: 1px solid var(--line); vertical-align: top; }
+  td.link a { white-space: nowrap; text-decoration: none; font-weight: 500; }
+  td.url { word-break: break-all; color: var(--muted); }
+  td.actions { white-space: nowrap; text-align: right; }
+  #formMsg.ok, #importMsg.ok { color: var(--ok); }
+  #formMsg.err, #importMsg.err { color: var(--danger); }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  code { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; }
+  details { margin-top: 24px; }
+  @media (max-width: 560px) {
+    td.url { display: none; }
+    #name { width: 120px; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>Shortlinks</h1>
+  <p id="status" class="muted" role="status">Connecting to the Shortlinks extension…</p>
+
+  <div id="missing" class="note" hidden>
+    <p style="margin-top:0"><b>The Shortlinks extension isn't connected in this browser.</b></p>
+    <p>This page needs <a id="storeLink" href="https://chromewebstore.google.com/detail/dmeofffiffhpjfkegiafpkiaomegkpcb">Shortlinks</a> version 1.1.0 or newer, installed in this Chrome profile.
+      If it's installed but older, Chrome updates it on its own within a few hours.</p>
+    <p style="margin-bottom:0"><button type="button" id="retry" class="secondary">Try again</button></p>
+  </div>
+
+  <section id="app" hidden>
+    <h2 id="formTitle">Add a link</h2>
+    <form id="form" class="row" autocomplete="off">
+      <div class="field">
+        <label for="name">Name</label>
+        <span class="name-wrap"><span class="pfx">go</span>/<input id="name" name="name" required spellcheck="false" placeholder="name"></span>
+      </div>
+      <div class="field grow">
+        <label for="url">URL</label>
+        <input id="url" name="url" type="url" required spellcheck="false" placeholder="https://…">
+      </div>
+      <button type="submit" id="save">Save</button>
+      <button type="button" id="cancel" class="secondary" hidden>Cancel</button>
+    </form>
+    <p id="formMsg" role="alert"></p>
+
+    <h2>Links (<span id="count">0</span>)</h2>
+    <input id="filter" type="search" placeholder="Filter by name or URL" aria-label="Filter links">
+    <table>
+      <thead><tr><th>Shortlink</th><th>URL</th><th><span class="sr">Actions</span></th></tr></thead>
+      <tbody id="list"></tbody>
+    </table>
+    <p id="empty" class="muted" hidden>No links yet. Add one above, then type <code><span class="pfx">go</span>/name</code> in the address bar.</p>
+    <div id="undo" class="note row" hidden><span id="undoText"></span><button type="button" id="undoBtn" class="secondary">Undo</button></div>
+
+    <h2>Copy links between Chrome profiles</h2>
+    <p class="muted">Links are saved in Chrome sync for the Google account a Chrome profile is signed in to, so each account has its own set.
+      To copy them, export here and import in the other profile (open this page there too).</p>
+    <div class="field">
+      <label for="exportBox">Export: every link as JSON</label>
+      <textarea id="exportBox" rows="6" readonly></textarea>
+    </div>
+    <p class="row"><button type="button" id="copy" class="secondary">Copy</button><button type="button" id="download" class="secondary">Download .json</button></p>
+    <div class="field">
+      <label for="importBox">Import: paste an export, or <code>{"name": "https://…"}</code></label>
+      <textarea id="importBox" rows="6" spellcheck="false"></textarea>
+    </div>
+    <p class="row">
+      <button type="button" id="importMerge">Import, keep existing links</button>
+      <button type="button" id="importOverwrite" class="secondary">Import, replace links with the same name</button>
+    </p>
+    <p id="importMsg" role="status"></p>
+
+    <details>
+      <summary>For scripts and browser agents</summary>
+      <p>From this page's console: <code>await shortlinks.list()</code> returns <code>{prefix, version, links}</code>;
+        <code>shortlinks.save(name, url)</code>, <code>shortlinks.rename(oldName, name, url)</code>, <code>shortlinks.remove(name)</code>,
+        <code>shortlinks.importLinks({name: url}, overwrite)</code>. To open a link, go to <code>http://<span class="pfx">go</span>/name</code>.</p>
+    </details>
+  </section>
+
+  <footer>
+    This page is a static file. It reads your links from the Shortlinks extension inside this browser and never sends them anywhere.
+    To change the prefix, type <code><span class="pfx">go</span>/</code> in the address bar to open the extension's own page.
+  </footer>
+</main>
+<script>
+(() => {
+  "use strict";
+  const STORE_ID = "dmeofffiffhpjfkegiafpkiaomegkpcb";
+  const asked = new URLSearchParams(location.search).get("ext") || "";
+  const EXT_ID = /^[a-p]{32}$/.test(asked) ? asked : STORE_ID;
+  const $ = (id) => document.getElementById(id);
+  const MISSING = "missing";
+
+  let state = { prefix: "go", version: "", links: {} };
+  let editing = null; // name being edited, or null when adding
+  let lastDeleted = null;
+
+  function call(msg) {
+    return new Promise((resolve, reject) => {
+      const rt = window.chrome && window.chrome.runtime;
+      if (!rt || typeof rt.sendMessage !== "function") return reject(new Error(MISSING));
+      try {
+        rt.sendMessage(EXT_ID, msg, (res) => {
+          if (window.chrome.runtime.lastError || !res) return reject(new Error(MISSING));
+          if (!res.ok) return reject(new Error(res.error || "Something went wrong."));
+          resolve(res);
+        });
+      } catch {
+        reject(new Error(MISSING));
+      }
+    });
+  }
+
+  function showMissing() {
+    $("app").hidden = true;
+    $("missing").hidden = false;
+    $("status").textContent = "Not connected.";
+  }
+
+  async function load() {
+    try {
+      const res = await call({ op: "list" });
+      state = { prefix: res.prefix, version: res.version, links: res.links || {} };
+    } catch (e) {
+      if (e.message === MISSING) return showMissing();
+      $("status").textContent = e.message;
+      return;
+    }
+    $("missing").hidden = true;
+    $("app").hidden = false;
+    render();
+  }
+
+  const label = (name) => `${state.prefix}/${name}`;
+  const sortedNames = () => Object.keys(state.links).sort();
+
+  function render() {
+    const names = sortedNames();
+    document.querySelectorAll(".pfx").forEach((el) => (el.textContent = state.prefix));
+    document.title = `${state.prefix}/ · Shortlinks`;
+    $("status").textContent = `${names.length} link${names.length === 1 ? "" : "s"} · prefix ${state.prefix}/ · extension ${state.version}`;
+    $("count").textContent = names.length;
+    $("empty").hidden = names.length > 0;
+
+    const q = $("filter").value.trim().toLowerCase();
+    const rows = names
+      .filter((n) => !q || n.includes(q) || state.links[n].toLowerCase().includes(q))
+      .map((n) => {
+        const url = state.links[n];
+        const tr = document.createElement("tr");
+        tr.dataset.name = n;
+
+        const linkTd = document.createElement("td");
+        linkTd.className = "link";
+        const a = document.createElement("a");
+        a.href = url;
+        a.textContent = label(n);
+        linkTd.append(a);
+
+        const urlTd = document.createElement("td");
+        urlTd.className = "url";
+        urlTd.textContent = url;
+
+        const actTd = document.createElement("td");
+        actTd.className = "actions";
+        const edit = document.createElement("button");
+        edit.type = "button";
+        edit.className = "plain";
+        edit.textContent = "Edit";
+        edit.setAttribute("aria-label", `Edit ${label(n)}`);
+        edit.onclick = () => startEdit(n);
+        const del = document.createElement("button");
+        del.type = "button";
+        del.className = "danger";
+        del.textContent = "Delete";
+        del.setAttribute("aria-label", `Delete ${label(n)}`);
+        del.onclick = () => remove(n);
+        actTd.append(edit, del);
+
+        tr.append(linkTd, urlTd, actTd);
+        return tr;
+      });
+    $("list").replaceChildren(...rows);
+
+    const sorted = {};
+    for (const n of names) sorted[n] = state.links[n];
+    $("exportBox").value = JSON.stringify({ shortlinks: 1, prefix: state.prefix, links: sorted }, null, 2);
+  }
+
+  function setMsg(id, text, kind) {
+    const el = $(id);
+    el.textContent = text;
+    el.className = kind || "";
+  }
+
+  function startEdit(name) {
+    editing = name;
+    $("formTitle").textContent = `Edit ${label(name)}`;
+    $("name").value = name;
+    $("url").value = state.links[name];
+    $("save").textContent = "Save changes";
+    $("cancel").hidden = false;
+    setMsg("formMsg", "");
+    $("url").focus();
+  }
+
+  function stopEdit() {
+    editing = null;
+    $("form").reset();
+    $("formTitle").textContent = "Add a link";
+    $("save").textContent = "Save";
+    $("cancel").hidden = true;
+  }
+
+  async function save(name, url, oldName) {
+    const msg = { op: "save", name, url };
+    if (oldName) msg.oldName = oldName;
+    const res = await call(msg);
+    await load();
+    return res;
+  }
+
+  async function remove(name) {
+    const url = state.links[name];
+    await call({ op: "delete", name });
+    lastDeleted = { name, url };
+    $("undoText").textContent = `Deleted ${label(name)} (${url}).`;
+    $("undo").hidden = false;
+    if (editing === name) stopEdit();
+    await load();
+  }
+
+  async function importLinks(links, overwrite) {
+    const res = await call({ op: "import", links, overwrite: !!overwrite });
+    await load();
+    return res;
+  }
+
+  $("form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = $("name").value.trim().toLowerCase();
+    const url = $("url").value.trim();
+    if (!editing && name in state.links && state.links[name] !== url) {
+      setMsg("formMsg", `${label(name)} already exists. Use Edit on its row to change it.`, "err");
+      return;
+    }
+    try {
+      await save(name, url, editing);
+      setMsg("formMsg", `Saved ${label(name)} → ${url}`, "ok");
+      stopEdit();
+      $("name").focus();
+    } catch (err) {
+      setMsg("formMsg", err.message === MISSING ? "Lost the connection to the extension." : err.message, "err");
+    }
+  });
+
+  $("cancel").onclick = () => { stopEdit(); setMsg("formMsg", ""); };
+  $("filter").addEventListener("input", render);
+  $("retry").onclick = load;
+
+  $("undoBtn").onclick = async () => {
+    if (!lastDeleted) return;
+    const { name, url } = lastDeleted;
+    lastDeleted = null;
+    $("undo").hidden = true;
+    try {
+      await save(name, url);
+      setMsg("formMsg", `Restored ${label(name)}`, "ok");
+    } catch (err) {
+      setMsg("formMsg", err.message, "err");
+    }
+  };
+
+  $("copy").onclick = async () => {
+    try {
+      await navigator.clipboard.writeText($("exportBox").value);
+      setMsg("importMsg", "Copied the export to the clipboard.", "ok");
+    } catch {
+      $("exportBox").select();
+      setMsg("importMsg", "Select-all is done; press Cmd/Ctrl+C to copy.", "");
+    }
+  };
+
+  $("download").onclick = () => {
+    const blob = new Blob([$("exportBox").value + "\n"], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `shortlinks-${state.prefix}-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  };
+
+  function parseImport(text) {
+    const data = JSON.parse(text);
+    const links = data && typeof data === "object" && data.links && typeof data.links === "object" ? data.links : data;
+    if (!links || typeof links !== "object" || Array.isArray(links)) throw new Error('Expected {"name": "https://…"} or an export from this page.');
+    return links;
+  }
+
+  async function runImport(overwrite) {
+    let links;
+    try {
+      links = parseImport($("importBox").value);
+    } catch (err) {
+      return setMsg("importMsg", `Couldn't read that JSON: ${err.message}`, "err");
+    }
+    try {
+      const r = await importLinks(links, overwrite);
+      const parts = [`added ${r.added.length}`];
+      if (r.updated.length) parts.push(`replaced ${r.updated.length}`);
+      if (r.unchanged.length) parts.push(`already the same ${r.unchanged.length}`);
+      if (r.skipped.length) parts.push(`kept the existing URL for ${r.skipped.length} (${r.skipped.join(", ")})`);
+      if (r.invalid.length) parts.push(`ignored ${r.invalid.length} invalid (${r.invalid.join(", ")})`);
+      setMsg("importMsg", `Import done: ${parts.join(", ")}.`, r.invalid.length ? "err" : "ok");
+      $("importBox").value = "";
+    } catch (err) {
+      setMsg("importMsg", err.message, "err");
+    }
+  }
+  $("importMerge").onclick = () => runImport(false);
+  $("importOverwrite").onclick = () => runImport(true);
+
+  // Pick up changes made in another tab or in the extension's own page.
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });
+
+  window.shortlinks = {
+    list: async () => { const r = await call({ op: "list" }); return { prefix: r.prefix, version: r.version, links: r.links }; },
+    save: (name, url) => save(name, url),
+    rename: (oldName, name, url) => save(name, url ?? state.links[oldName], oldName),
+    remove: (name) => remove(name),
+    importLinks: (links, overwrite = false) => importLinks(links, overwrite),
+  };
+
+  load();
+})();
+</script>
+</body>
+</html>
