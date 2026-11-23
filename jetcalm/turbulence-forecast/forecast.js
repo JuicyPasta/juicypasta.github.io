@@ -536,6 +536,32 @@ export function availability(plan, manifest) {
   return 'ready';
 }
 
+// forecast.dart ForecastWindow + forecast_service.dart: what a FREE user
+// gets (the web page has no Pro). The 48-hour window is free; a flight
+// that departs later than that is the Pro early outlook in the app.
+export const OFFICIAL_WINDOW_MS = 48 * 3600e3;
+export const OUTLOOK_WINDOW_MS = 114 * 3600e3;
+
+export const opensAt = (departure, earlyOutlook) =>
+  departure - (earlyOutlook ? OUTLOOK_WINDOW_MS : OFFICIAL_WINDOW_MS);
+
+/**
+ * { kind: 'ready' | 'past' | 'needsPro' | 'opensLater', opensAt? }, in the
+ * app's order (ForecastService.forecastFor with earlyOutlook = false).
+ * A flight that departs inside the window is shown whole, even when its
+ * landing is past 48 hours (that tail may come from outlook steps).
+ */
+export function freeOutcome(plan, manifest, now) {
+  const lead = plan.departure - now;
+  const avail = availability(plan, manifest);
+  if (avail === 'past') return { kind: 'past' };
+  if (lead > OFFICIAL_WINDOW_MS) {
+    return { kind: avail === 'ready' ? 'needsPro' : 'opensLater', opensAt: opensAt(plan.departure, false) };
+  }
+  if (avail === 'tooEarly') return { kind: 'opensLater', opensAt: opensAt(plan.departure, true) };
+  return { kind: 'ready' };
+}
+
 // ---- utils/formatters.dart ----
 export function formatDuration(minutes) {
   const total = dartRound(minutes);

@@ -125,3 +125,34 @@ test('durations read like the app', () => {
   assert.equal(F.roundToFive(2), 5);
   assert.equal(F.roundToFive(237.4), 235);
 });
+
+// ForecastWindow + ForecastService for a free user (lib/forecast/forecast.dart,
+// lib/services/forecast_service.dart): values worked out from the Dart.
+test('free window: only flights departing within 48 hours', () => {
+  const H = 3600e3;
+  const now = Date.parse('2026-11-23T10:00:00Z');
+  const step = (iso, kind = 'wafs') => ({ valid: Date.parse(iso), kind, file: iso, layers: ['cruise_mid'] });
+  const manifest = {
+    steps: [step('2026-11-23T06:00:00Z'), step('2026-11-25T00:00:00Z'), step('2026-11-28T00:00:00Z', 'outlook')],
+  };
+  const jfk = airports.JFK;
+  const lhr = airports.LHR; // 430 min estimate
+  const at = (iso) => F.freeOutcome(F.FlightPlan.estimated(jfk, lhr, Date.parse(iso)), manifest, now);
+  assert.deepEqual(at('2026-11-24T18:00:00Z'), { kind: 'ready' });
+  // Exactly 48 h ahead is still inside (the Dart test is lead > 48 h).
+  assert.deepEqual(at('2026-11-25T10:00:00Z'), { kind: 'ready' });
+  // Departs inside, lands outside: the whole flight is shown, like the app.
+  assert.deepEqual(at('2026-11-25T09:00:00Z'), { kind: 'ready' });
+  // One minute past the window: Pro outlook in the app; opens 48 h before.
+  assert.deepEqual(at('2026-11-25T10:01:00Z'), { kind: 'needsPro', opensAt: Date.parse('2026-11-23T10:01:00Z') });
+  assert.deepEqual(at('2026-11-27T18:00:00Z'), { kind: 'needsPro', opensAt: Date.parse('2026-11-25T18:00:00Z') });
+  // Past the last step (+3 h): opens later, still at departure - 48 h.
+  assert.deepEqual(at('2026-11-30T23:00:00Z'), { kind: 'opensLater', opensAt: Date.parse('2026-11-28T23:00:00Z') });
+  // Landed before the first step - 3 h.
+  assert.deepEqual(at('2026-11-22T12:00:00Z'), { kind: 'past' });
+  // Inside the window but beyond the feed (a degraded feed): the app's
+  // opensAt with the early-outlook window.
+  const short = { steps: [step('2026-11-23T06:00:00Z')] };
+  const p = F.FlightPlan.estimated(jfk, lhr, now + 20 * H);
+  assert.deepEqual(F.freeOutcome(p, short, now), { kind: 'opensLater', opensAt: now + 20 * H - 114 * H });
+});

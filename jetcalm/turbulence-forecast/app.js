@@ -18,7 +18,6 @@ const CONFIDENCE = {
   good: 'Good confidence: your flight is one to two days away.',
   outlook: 'Early outlook: expect changes as your flight gets closer.',
 };
-const OUTLOOK_WINDOW_MS = 114 * 3600e3; // ForecastWindow.outlook
 const STALE_MS = 18 * 3600e3;
 
 const $ = (id) => document.getElementById(id);
@@ -165,8 +164,8 @@ async function getStep(manifest, info) {
 async function compute(origin, destination, departure) {
   let manifest = await getManifest();
   const plan = F.FlightPlan.estimated(origin, destination, departure);
-  const avail = F.availability(plan, manifest);
-  if (avail !== 'ready') return { plan, manifest, avail };
+  const outcome = F.freeOutcome(plan, manifest, Date.now());
+  if (outcome.kind !== 'ready') return { plan, manifest, outcome };
   let steps;
   try {
     steps = await Promise.all(F.stepsFor(manifest, plan.departure, plan.arrival).map((i) => getStep(manifest, i)));
@@ -178,7 +177,7 @@ async function compute(origin, destination, departure) {
   }
   const samples = F.sample(plan, steps);
   const summary = F.summarize(samples, manifest.thresholds, plan.durationMinutes);
-  return { plan, manifest, avail, samples, summary, steps };
+  return { plan, manifest, outcome, samples, summary, steps };
 }
 
 // ---------- formatting ----------
@@ -212,8 +211,9 @@ function routeHeader(plan) {
     el('p', { class: 'muted small' }, `${km(plan.distanceKm)} · ${F.formatDuration(plan.durationMinutes)} flight. The landing time is our estimate from the distance.`));
 }
 
-function renderMessage(plan, title, body) {
-  show(el('div', { class: 'card' }, routeHeader(plan), el('h2', { class: 'msg-title' }, title), el('p', {}, body)));
+function renderMessage(plan, title, body, extra = null) {
+  show(el('div', { class: 'card', id: 'message' }, routeHeader(plan), el('h2', { class: 'msg-title' }, title), el('p', {}, body),
+    extra ? el('p', { class: 'pro-note' }, extra, ' ', el('a', { href: '../' }, 'About the app')) : null));
 }
 
 function bar(segments, duration, { tall, onPick }) {
@@ -383,12 +383,15 @@ async function run(from, to, push = true) {
   btn.textContent = 'Loading the forecast…';
   try {
     const r = await compute(origin, destination, departure);
-    if (r.avail === 'past') {
-      renderMessage(r.plan, 'This flight has already flown', 'Forecasts cover flights from now to about five days ahead.');
-    } else if (r.avail === 'tooEarly') {
-      const opens = Math.max(Date.now(), departure - OUTLOOK_WINDOW_MS);
-      renderMessage(r.plan, `Your forecast opens on ${fmtDay(opens, origin.tz)}`,
-        `The forecast isn't out yet for that time. It reaches about five days ahead (the latest step is ${fmtWhen(r.manifest.steps[r.manifest.steps.length - 1].valid, origin.tz)}, ${origin.place} time). Come back then.`);
+    const kind = r.outcome.kind;
+    if (kind === 'past') {
+      renderMessage(r.plan, 'This flight has already flown', 'The free forecast covers flights from now to 48 hours ahead.');
+    } else if (kind === 'needsPro' || kind === 'opensLater') {
+      const opens = r.outcome.opensAt;
+      const when = `${fmtWhen(opens)} your time`;
+      renderMessage(r.plan, `Your forecast opens on ${fmtWhen(opens)}`,
+        `The free forecast reaches 48 hours ahead, so it opens for this flight on ${when}. Come back then.`,
+        'An early outlook for flights 2 to 5 days ahead is part of Jetcalm Pro in the app, coming soon to the App Store and Google Play.');
     } else {
       renderForecast(r);
     }

@@ -75,3 +75,5 @@ td:first-child{white-space:nowrap}
 .app-cta{border-left:4px solid var(--accent)}
 .app-cta h2{margin-top:0;font-size:19px}
 @media (max-width:420px){h1{font-size:26px}.headline h2{font-size:23px}main{padding-top:20px}}
+.pro-note{font-size:15px;border-left:4px solid var(--accent);padding-left:10px}
+#message .route{border-top:0;margin-top:0;padding-top:0}
