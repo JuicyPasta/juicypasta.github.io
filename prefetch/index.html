@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prefetch support</title>
+<meta name="description" content="Help for Prefetch, the offline reader for Hacker News: downloading stories, comments and articles before a flight, background downloads, storage, privacy.">
+<link rel="icon" href="icon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+<header>
+<img src="icon.png" alt="Prefetch app icon">
+<div><h1>Prefetch support</h1><p>Offline reader for Hacker News</p></div>
+</header>
+
+<p>Prefetch is a reader for Hacker News that works without a connection. One tap downloads the front pages, every comment, and the linked articles in a clean reader view with their images, so all of it reads on a plane or in the subway. No ads, no tracking, and no account with us.</p>
+
+<div class="card">
+<strong>Need help?</strong> Email <a href="mailto:dangochains@googlegroups.com?subject=Prefetch">dangochains@googlegroups.com</a> with "Prefetch" in the subject. That's the developer's support address for all his apps. Please include your device model, your iOS or Android version, and what you expected to happen.
+</div>
+
+<div class="card note">
+<strong>Prefetch is an independent app.</strong> It is not affiliated with or endorsed by Y Combinator or Hacker News.
+</div>
+
+<h2>Before a flight</h2>
+
+<h3>How do I get everything onto my phone?</h3>
+<ol>
+<li>On Wi-Fi, open Prefetch and tap <strong>Download now</strong> (at the top of any feed, or in Settings, Offline).</li>
+<li>Keep the app open until it says it's done. The progress line shows what it's on: stories, comments, articles, images.</li>
+<li>That's it. Turn on Airplane Mode whenever you like. The feed shows how old your copy is ("Downloaded 3 h ago").</li>
+</ol>
+
+<h3>What gets downloaded?</h3>
+<p>For each feed you chose: the list of stories as it was at that moment, every comment on each story, and the linked article turned into a reader page with its images. You choose which feeds, how many stories per feed, and whether images are included, in Settings, Offline. The first screen shows a size estimate before you start.</p>
+
+<h3>Does it download by itself in the background?</h3>
+<p>It tries, and it's honest about the limits.</p>
+<ul>
+<li><strong>iPhone and iPad:</strong> iOS decides when an app may work in the background. For an app you open most days that's usually about once a day, and not at all if Background App Refresh is off, Low Power Mode is on, or you force-quit the app. A background run refreshes the stories and comments; articles and images come with the next download you run with the app open. Prefetch shows whether Background App Refresh is on, and never promises a time.</li>
+<li><strong>Android:</strong> Prefetch asks the system to run a download about every 6, 12 or 24 hours. The system may shift it to save battery.</li>
+</ul>
+<p><strong>For a flight, don't rely on the background run: tap Download now before you leave.</strong></p>
+
+<h3>Why does an article say "not available offline"?</h3>
+<p>Some links can't be turned into a reader page: the site blocked the download or needs a login, the link is a video, a PDF, or a web app with almost no text. Prefetch shows the reason and never tries to get around a paywall or a block. When you're back online, Open in browser shows the original.</p>
+
+<h3>How fresh is what I'm reading?</h3>
+<p>Every screen that shows a downloaded copy shows its age, and the age turns amber after 24 hours. Scores and comment counts are the ones from the moment of the download.</p>
+
+<h2>Storage</h2>
+
+<h3>How much space does it use?</h3>
+<p>About 30 MB for the top 100 stories with comments, articles and images, depending on the day. Settings, Offline, shows what's used by comments, articles and images against the cap you set.</p>
+
+<h3>Will it delete things while I'm offline?</h3>
+<p>No. Old stories are only cleared after a successful new download, never while you're offline, and saved stories are never cleared. A new download adds to what's there; nothing is removed before its replacement has arrived.</p>
+
+<h3>How do I free up space?</h3>
+<p>Settings, Offline, Free up space. It removes downloaded stories that aren't saved and aren't in your newest copy of a feed, after telling you what it will remove.</p>
+
+<h3>Is the downloaded content in my iCloud or Google backup?</h3>
+<p>No, because it can be downloaded again. Your saved list, read marks and settings are small and are included in your device's own backup.</p>
+
+<h2>Reading</h2>
+
+<h3>How do I collapse a comment thread?</h3>
+<p>Tap anywhere on a comment. The collapsed row shows the author and how many replies are hidden. The floating button jumps to the next top-level comment.</p>
+
+<h3>What does "+12 new" mean on a story?</h3>
+<p>Twelve comments have arrived since you last opened that story. Inside the thread they carry a "new" mark.</p>
+
+<h3>Does it work on iPad and on tablets?</h3>
+<p>Yes. On a wide screen the story list and the open story sit side by side, in any orientation.</p>
+
+<h2>Hacker News account</h2>
+
+<h3>Do I need an account?</h3>
+<p>No. Reading, downloading and saving need no account of any kind. Prefetch itself has no accounts.</p>
+
+<h3>If I sign in to Hacker News, where do my details go?</h3>
+<p>Only to <code>news.ycombinator.com</code>, the same as signing in on the website. Your password is used once for that sign-in and not stored. The sign-in cookie stays on your device in the system's secure storage (Keychain on iOS, Keystore on Android). Signing out deletes it. See the <a href="privacy.html">privacy policy</a>.</p>
+
+<h3>How do I report a comment or hide a user?</h3>
+<p>Long-press the comment. Hiding a user hides their comments on your device. Reporting flags the comment on Hacker News if you're signed in, or opens it on the Hacker News site if you aren't. Hacker News moderates its own content; you can also write to its moderators at hn@ycombinator.com.</p>
+
+<h2>Purchases</h2>
+
+<h3>What is free?</h3>
+<p>The reader itself, with no ads: all feeds, comments, the reader view, search, saved stories and themes, plus offline downloads of the Top feed. An optional Pro upgrade widens what can be downloaded. Nothing you've already downloaded or saved is ever hidden or deleted if Pro ends.</p>
+
+<h3>How do I restore a purchase or cancel?</h3>
+<p>Restore: Settings in the app, Pro, Restore Purchases, signed in to the same Apple or Google account. Cancel a plan in your store account: on iPhone, Settings, your name, Subscriptions; on Android, Google Play, your profile, Payments and subscriptions. Refunds are handled by Apple or Google.</p>
+
+<footer>
+<p><a href="privacy.html">Privacy policy</a></p>
+<p>Prefetch is made by Jackson Darrow in New York City. Hacker News and Y Combinator are trademarks of Y Combinator Management, LLC. Prefetch is not affiliated with or endorsed by Y Combinator or Hacker News.</p>
+</footer>
+</main>
+</body>
+</html>
