@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Turbulence Forecast for Your Flight (Free) | Jetcalm</title>
+<meta name="description" content="Free turbulence forecast for your flight: pick two airports and a departure time and see where bumps are expected from takeoff to landing, in plain words. From the World Area Forecast System, up to 5 days ahead.">
+<link rel="canonical" href="https://juicypasta.github.io/jetcalm/turbulence-forecast/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Jetcalm">
+<meta property="og:title" content="Turbulence forecast for your flight (free)">
+<meta property="og:description" content="Two airports and a departure time: see where bumps are expected from takeoff to landing, in plain words.">
+<meta property="og:url" content="https://juicypasta.github.io/jetcalm/turbulence-forecast/">
+<meta property="og:image" content="https://juicypasta.github.io/jetcalm/icon.png">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#17695c">
+<link rel="icon" href="../icon.png">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="page.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"Jetcalm turbulence forecast","url":"https://juicypasta.github.io/jetcalm/turbulence-forecast/","applicationCategory":"TravelApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"description":"Free turbulence forecast for a flight between two airports, from the World Area Forecast System."}
+</script>
+<script type="module" src="app.js"></script>
+</head>
+<body>
+<main>
+<header>
+<a href="../"><img src="../icon.png" alt="Jetcalm" width="64" height="64"></a>
+<div><p class="brand"><a href="../">Jetcalm</a></p><p>Free, no ads, no sign-up</p></div>
+</header>
+
+<h1>Turbulence forecast for your flight</h1>
+<p class="lead">Pick your two airports and your departure time. You get a timeline from takeoff to landing showing where bumps are forecast, in plain words, from the same World Area Forecast System airlines plan flights with.</p>
+
+<form id="flight" class="card" autocomplete="off" novalidate>
+  <div class="field combo">
+    <label for="from">Flying from</label>
+    <input id="from" name="from" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="from-list" placeholder="City, airport or code" spellcheck="false" autocapitalize="characters" required>
+    <ul id="from-list" role="listbox" class="options" hidden></ul>
+  </div>
+  <div class="field combo">
+    <label for="to">Flying to</label>
+    <input id="to" name="to" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="to-list" placeholder="City, airport or code" spellcheck="false" autocapitalize="characters" required>
+    <ul id="to-list" role="listbox" class="options" hidden></ul>
+  </div>
+  <div class="row">
+    <div class="field">
+      <label for="date">Departure date</label>
+      <input id="date" name="date" type="date" required>
+    </div>
+    <div class="field">
+      <label for="time">Time</label>
+      <input id="time" name="time" type="time" required>
+    </div>
+  </div>
+  <p class="hint" id="time-hint">Local time at the departure airport, as on your ticket.</p>
+  <p class="error" id="form-error" role="alert" hidden></p>
+  <button type="submit" id="go">Show my forecast</button>
+</form>
+<noscript><p class="card note">The forecast is worked out in your browser and needs JavaScript.</p></noscript>
+
+<section id="result" aria-live="polite" hidden></section>
+
+<section class="app-cta card">
+<h2>Take it offline in the air: Jetcalm for iPhone and Android</h2>
+<p>The Jetcalm app keeps your forecast readable in airplane mode, saves your trip, shows the route on a map with the weather at both airports, and has a bump meter for the flight itself. Same forecast, same plain words, no account and no ads.</p>
+<p><strong>Coming soon to the App Store and Google Play.</strong> <a href="../">About the app</a></p>
+</section>
+
+<h2>What the levels mean</h2>
+<table>
+<tr><th>Level</th><th>What it feels like in the cabin</th></tr>
+<tr><td><span class="lvl l0"></span>Calm</td><td>Nothing to notice, or an occasional gentle wobble.</td></tr>
+<tr><td><span class="lvl l1"></span>Light</td><td>Small bumps, like a car on a gravel road. Drinks stay in the cup. Very common.</td></tr>
+<tr><td><span class="lvl l2"></span>Moderate</td><td>Clear bumps and some jolts. Drinks can spill and walking is awkward. The seatbelt sign is usually on.</td></tr>
+<tr><td><span class="lvl l3"></span>Strong</td><td>Firm jolts that press you against the belt. Loose items move. Service stops. Uncommon.</td></tr>
+<tr><td><span class="lvl l4"></span>Severe</td><td>Abrupt, large movements. Rare, and pilots plan routes to stay away from areas where it is forecast.</td></tr>
+<tr><td><span class="lvl gap"></span>No data</td><td>The forecast does not cover this stretch. A gap means no data, not calm.</td></tr>
+</table>
+<p>The levels come from EDR (eddy dissipation rate), the standard measure of rough air that aviation forecasts use, sorted into bands for a medium-sized airliner: light from an EDR of 0.15, moderate from 0.22, strong from 0.34 and severe from 0.45.</p>
+
+<h2>How this turbulence forecast works</h2>
+<p>Four times a day, the world's aviation forecast centres publish the World Area Forecast System (WAFS): a global forecast of turbulence and thunderstorm cloud at the heights airliners fly, in three-hour steps. This page draws the shortest path (the great circle) between your two airports, works out where the aircraft should be at each minute from your departure time, and reads the forecast at that place, time and height.</p>
+<ul>
+<li><strong>Climb and descent</strong> (the first 20 and last 25 minutes, or 15% of a short flight each) use the lower flight levels, FL140 to FL270.</li>
+<li><strong>Cruise</strong> uses a typical cruising height, FL340. "Could reach" is the strongest value nearby and at the other cruise heights (FL300 to FL390), because real flights don't follow the line exactly.</li>
+<li><strong>Thunderstorms:</strong> when large storm clouds are forecast near your path at cruise, the forecast says so. Pilots route around them, which can add a few minutes.</li>
+<li><strong>Flight time</strong> is estimated from the distance (about 830 km/h plus 30 minutes for taxi, climb and approach).</li>
+</ul>
+
+<h2>How far ahead can I check?</h2>
+<p>The official forecast reaches 48 hours ahead. From 2 to about 5 days ahead this page shows an <strong>early outlook</strong>, estimated from the US Global Forecast System (GFS) weather model; it is marked as less exact, because it changes more. A new run arrives about every six hours, so a forecast for tomorrow is firmer than one for next week. Further out than that, the forecast isn't out yet: check back closer to your flight.</p>
+<p>The forecast maps stop at 75° north and south, so the far-northern stretch of a polar route (New York to Hong Kong, for example) shows as a gap: no data, not calm.</p>
+
+<div class="card note">
+<p><strong>A forecast, not a promise.</strong> Turbulence is uncomfortable, but it is not dangerous to the aircraft: airliners are built for far more than they meet in flight. Forecasts can be wrong and pilots change course and altitude on the day, using reports from the aircraft ahead. Keep your seatbelt fastened whenever you are seated and always follow the crew's instructions. This page is for passengers; it is not a flight-planning tool, and Jetcalm is not affiliated with any airline.</p>
+</div>
+
+<footer>
+<p>Forecast data: NOAA/NWS (WAFS), NCEP GFS. World Area Forecast System products from the NOAA/NWS Aviation Weather Center and the Global Forecast System from NOAA/NCEP, works of the US government in the public domain. Jetcalm is not affiliated with or endorsed by NOAA or the National Weather Service. Airports: <a href="https://ourairports.com/">OurAirports</a> (public domain).</p>
+<p>No ads, no cookies, no tracking: the forecast is worked out in your browser from public files, and nothing you type is sent anywhere. <a href="../">Jetcalm</a> · <a href="../privacy.html">Privacy</a></p>
+<p>Jetcalm is made by Jackson Darrow in New York City.</p>
+</footer>
+</main>
+</body>
+</html>
