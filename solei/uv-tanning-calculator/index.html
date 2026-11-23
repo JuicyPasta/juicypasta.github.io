@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UV Tanning Calculator: How Long in the Sun at Each UV Index (Free) | Solei</title>
+<meta name="description" content="Free UV tanning calculator: enter the UV index, your skin type and your sunscreen to estimate the minutes until your safe sun limit, when to reapply, and burn times at UV 1 to 11. Tan without burning. Estimates only, not medical advice.">
+<link rel="canonical" href="https://juicypasta.github.io/solei/uv-tanning-calculator/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Solei">
+<meta property="og:title" content="UV tanning calculator: how long in the sun at each UV index (free)">
+<meta property="og:description" content="UV index, skin type and sunscreen in; minutes until your safe sun limit and when to reapply out. Tan without burning.">
+<meta property="og:url" content="https://juicypasta.github.io/solei/uv-tanning-calculator/">
+<meta property="og:image" content="https://juicypasta.github.io/solei/icon.png">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#0b5d6e">
+<link rel="icon" href="../icon.png">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="page.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"Solei UV tanning calculator","url":"https://juicypasta.github.io/solei/uv-tanning-calculator/","applicationCategory":"HealthApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"description":"Free calculator: estimated minutes in the sun before your safe limit, from the UV index, your skin type and your sunscreen."}
+</script>
+<script type="module" src="app.js"></script>
+</head>
+<body>
+<main>
+<header>
+<a href="../"><img src="../icon.png" alt="Solei" width="64" height="64"></a>
+<div><p class="brand"><a href="../">Solei</a></p><p>Free, no ads, no sign-up</p></div>
+</header>
+
+<h1>UV tanning calculator: how long in the sun at your UV index</h1>
+<p class="lead">Enter the UV index, your skin type and your sunscreen. You get an estimate of how long your skin can stay in the sun before it reaches its safe limit, when to reapply, and the time at every UV level. For a tan without burning, with the same maths as the Solei app.</p>
+
+<form id="calc" class="card" autocomplete="off" novalidate>
+  <fieldset class="field">
+    <legend><label for="uv">UV index</label> <span id="uv-cat" class="cat-chip" hidden></span></legend>
+    <div class="uv-row">
+      <input id="uv" name="uv" type="number" inputmode="decimal" min="0" max="15" step="0.1" value="7">
+      <input id="uv-range" type="range" min="0" max="15" step="1" value="7" aria-label="UV index slider">
+    </div>
+    <p class="hint">Today's UV index is in your phone's weather app (use the highest value for the hours you'll be outside; it peaks around midday) or in Solei.</p>
+  </fieldset>
+
+  <fieldset class="field">
+    <legend>Skin type</legend>
+    <div class="skins" id="skins">
+      <label class="skin"><input type="radio" name="skin" value="1"><span><b>Type I</b> Very fair. Always burns, never tans.</span></label>
+      <label class="skin"><input type="radio" name="skin" value="2"><span><b>Type II</b> Fair. Burns easily, tans a little.</span></label>
+      <label class="skin"><input type="radio" name="skin" value="3" checked><span><b>Type III</b> Medium. Sometimes burns, tans gradually.</span></label>
+      <label class="skin"><input type="radio" name="skin" value="4"><span><b>Type IV</b> Olive. Rarely burns, tans easily.</span></label>
+      <label class="skin"><input type="radio" name="skin" value="5"><span><b>Type V</b> Brown. Very rarely burns, tans very easily.</span></label>
+      <label class="skin"><input type="radio" name="skin" value="6"><span><b>Type VI</b> Dark brown or black. Almost never burns.</span></label>
+    </div>
+    <details class="quiz" id="quiz">
+      <summary>Not sure? Three quick questions</summary>
+      <p class="hint">Three quick questions to estimate how your skin reacts to the sun.</p>
+      <label for="q1">What is your natural skin colour?</label>
+      <select id="q1"><option value="">Choose…</option><option value="0">Very fair, often with freckles</option><option value="1">Fair</option><option value="2">Light to medium</option><option value="3">Olive or light brown</option><option value="4">Brown</option><option value="5">Dark brown or black</option></select>
+      <label for="q2">What happens after an hour of strong sun without protection?</label>
+      <select id="q2"><option value="">Choose…</option><option value="0">I always burn, and it hurts</option><option value="1">I burn easily</option><option value="2">I sometimes burn</option><option value="3">I rarely burn</option><option value="4">I almost never burn</option><option value="5">I never burn</option></select>
+      <label for="q3">How does your skin tan?</label>
+      <select id="q3"><option value="">Choose…</option><option value="0">It never tans</option><option value="1">It barely tans</option><option value="2">It tans gradually</option><option value="3">It tans easily</option><option value="4">It tans very easily</option><option value="5">It is naturally dark</option></select>
+      <p id="quiz-result" class="quiz-result" role="status" hidden></p>
+    </details>
+  </fieldset>
+
+  <fieldset class="field">
+    <legend>Sunscreen</legend>
+    <div class="segs" id="spfs">
+      <label><input type="radio" name="spf" value="0" checked><span>None</span></label>
+      <label><input type="radio" name="spf" value="15"><span>SPF 15</span></label>
+      <label><input type="radio" name="spf" value="30"><span>SPF 30</span></label>
+      <label><input type="radio" name="spf" value="50"><span>SPF 50</span></label>
+      <label><input type="radio" name="spf" value="60"><span>SPF 50+</span></label>
+    </div>
+  </fieldset>
+
+  <label class="check"><input type="checkbox" id="swim" name="swim"><span><b>Swimming or sweating</b><br><span class="muted small">Reapply every 80 minutes instead of every 2 hours</span></span></label>
+</form>
+<noscript><p class="card note">The calculator works in your browser and needs JavaScript. The burn-time table below works without it.</p></noscript>
+
+<section id="result" aria-live="polite" hidden></section>
+
+<section class="app-cta card">
+<h2>Solei follows the whole day's UV for you</h2>
+<p>This page holds the UV index steady. The Solei app gets the UV forecast where you are, adds up your dose minute by minute along the day's curve (so a session before noon accounts for the sun getting stronger), counts earlier time in the sun the same day, and reminds you when to reapply and, in tan mode, when to turn over. The core app is free, with no ads, no account and no tracking.</p>
+<p><strong>Coming soon to the App Store and Google Play.</strong> <a href="../">About the app</a></p>
+</section>
+
+<h2>What UV index is best for tanning?</h2>
+<p>None is free of risk: a tan is your skin reacting to UV, and no tan is risk-free. What the UV index does tell you is how fast you reach your limit. A higher UV index doesn't give you a better tan, it gives you fewer minutes before you burn. At UV 3 (moderate), unprotected type II skin reaches its safe limit in about 37 minutes; at UV 8 (very high), in about 13.</p>
+<p>If you want a tan without burning, lower UV gives you more time: the morning and late afternoon instead of the midday peak. A gradual tan over several days is gentler on skin than one long session. Wear sunscreen, and stop at your limit.</p>
+
+<h2>How long can I tan at UV 3, 5, 8 or 10?</h2>
+<p>It depends on your skin type and on sunscreen. Without sunscreen, at a steady UV index, the estimated time to the safe limit is: at UV 3, about 29 minutes for type I and 44 for type III; at UV 5, 17 and 26; at UV 8, 11 and 16; at UV 10, 8 and 13. Darker skin has more time: type V at UV 8 has about 33 minutes. The table below has every combination, and the calculator above adds sunscreen.</p>
+
+<h2>Burn time by UV index and skin type</h2>
+<div class="table-wrap">
+<table class="burn">
+<caption>Minutes to the safe limit with no sunscreen, at a steady UV index</caption>
+<thead><tr><th scope="col">UV index</th><th scope="col">I</th><th scope="col">II</th><th scope="col">III</th><th scope="col">IV</th><th scope="col">V</th><th scope="col">VI</th></tr></thead>
+<tbody id="burn-body">
+<tr><th scope="row">1 <small>Low</small></th><td>88</td><td>111</td><td>133</td><td>200</td><td>266</td><td>444</td></tr>
+<tr><th scope="row">2 <small>Low</small></th><td>44</td><td>55</td><td>66</td><td>100</td><td>133</td><td>222</td></tr>
+<tr><th scope="row">3 <small>Moderate</small></th><td>29</td><td>37</td><td>44</td><td>66</td><td>88</td><td>148</td></tr>
+<tr><th scope="row">4 <small>Moderate</small></th><td>22</td><td>27</td><td>33</td><td>50</td><td>66</td><td>111</td></tr>
+<tr><th scope="row">5 <small>Moderate</small></th><td>17</td><td>22</td><td>26</td><td>40</td><td>53</td><td>88</td></tr>
+<tr><th scope="row">6 <small>High</small></th><td>14</td><td>18</td><td>22</td><td>33</td><td>44</td><td>74</td></tr>
+<tr><th scope="row">7 <small>High</small></th><td>12</td><td>15</td><td>19</td><td>28</td><td>38</td><td>63</td></tr>
+<tr><th scope="row">8 <small>Very high</small></th><td>11</td><td>13</td><td>16</td><td>25</td><td>33</td><td>55</td></tr>
+<tr><th scope="row">9 <small>Very high</small></th><td>9</td><td>12</td><td>14</td><td>22</td><td>29</td><td>49</td></tr>
+<tr><th scope="row">10 <small>Very high</small></th><td>8</td><td>11</td><td>13</td><td>20</td><td>26</td><td>44</td></tr>
+<tr><th scope="row">11 <small>Extreme</small></th><td>8</td><td>10</td><td>12</td><td>18</td><td>24</td><td>40</td></tr>
+</tbody>
+</table>
+</div>
+<p class="small muted">Skin types I to VI are the Fitzpatrick types in the calculator above. The safe limit is set at two thirds of the dose that typically causes the first redness, as a margin. Estimates only, not medical advice.</p>
+
+<h2>How sunscreen changes the time</h2>
+<p>Sunscreen counts as the square root of its SPF (SPF 30 counts as about 5.5×), because most people apply far less than the amount used in lab tests. It only counts until it's time to reapply: every 2 hours, or every 80 minutes when you swim or sweat, and right after a swim. SPF 50+ counts as SPF 60.</p>
+<p>So the calculator never shows more than one reapply interval with sunscreen: if your limit lies further out, it says "2 h, then reapply" and how long the limit would take if you reapply on time. Reapplying keeps the protection going; it doesn't reset the limit, which counts for the whole day.</p>
+
+<h2>About the estimates</h2>
+<p>Safe sun time is how long it takes to reach two thirds of the dose that typically causes the first redness for your skin type. Each step of the UV index adds 1.5 J/m² of sunburn-weighted UV per minute, and the doses used for skin types I to VI are 200, 250, 300, 450, 600 and 1,000 J/m², the cautious low ends of the published ranges. This page assumes the UV index stays the same for the whole time; real UV rises toward midday and falls after it, which the Solei app follows along the forecast.</p>
+<p>These are estimates for healthy skin. Altitude, snow, water and sand add extra UV. Some medicines and skin conditions make skin far more sensitive. Keep babies out of direct sun.</p>
+<p>Solei is not medical advice. If you're unsure, ask a doctor or pharmacist.</p>
+
+<footer>
+<p>No ads, no cookies, no tracking: everything is worked out in your browser, and nothing you enter is sent anywhere. <a href="../">Solei</a> · <a href="../privacy.html">Privacy</a></p>
+<p>Solei is made by Jackson Darrow in New York City.</p>
+</footer>
+</main>
+</body>
+</html>
