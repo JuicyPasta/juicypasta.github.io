@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Turbulence Map: Today's Forecast (Free) | Jetcalm</title>
+<meta name="description" content="Free turbulence map for today: the official aviation turbulence forecast (WAFS) at cruise altitude, FL300 to FL390, for the world, the USA and the North Atlantic, with what each level feels like in the cabin.">
+<link rel="canonical" href="https://juicypasta.github.io/jetcalm/turbulence-map/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Jetcalm">
+<meta property="og:title" content="Turbulence map: today's forecast (free)">
+<meta property="og:description" content="Where bumps are forecast at cruise altitude right now: world, USA and North Atlantic views, from the official World Area Forecast System.">
+<meta property="og:url" content="https://juicypasta.github.io/jetcalm/turbulence-map/">
+<meta property="og:image" content="https://juicypasta.github.io/jetcalm/icon.png">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#17695c">
+<link rel="icon" href="../icon.png">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../turbulence-forecast/page.css">
+<link rel="stylesheet" href="map.css">
+<script type="module" src="map.js"></script>
+</head>
+<body>
+<main>
+<header>
+<a href="../"><img src="../icon.png" alt="Jetcalm" width="64" height="64"></a>
+<div><p class="brand"><a href="../">Jetcalm</a></p><p>Free, no ads, no sign-up</p></div>
+</header>
+
+<h1>Turbulence map: today's forecast at cruise altitude</h1>
+<p class="lead">Where bumps are forecast at the heights airliners cruise, for <span id="valid">the forecast time nearest to now</span>. Pick a view, or <a href="../turbulence-forecast/">check the forecast for your own flight</a>, minute by minute.</p>
+
+<div class="views" role="group" aria-label="Map view">
+<button type="button" data-view="world" aria-pressed="true">World</button>
+<button type="button" data-view="usa" aria-pressed="false">USA</button>
+<button type="button" data-view="atlantic" aria-pressed="false">North Atlantic</button>
+</div>
+<figure class="map-wrap">
+<canvas id="map" role="img" aria-label="Map of forecast turbulence at cruise altitude, highest of FL300 to FL390"></canvas>
+<figcaption>
+<ul class="legend">
+<li><span class="lvl l1"></span>Light</li>
+<li><span class="lvl l2"></span>Moderate</li>
+<li><span class="lvl l3"></span>Strong</li>
+<li><span class="lvl l4"></span>Severe</li>
+<li><span class="lvl clear"></span>Calm (map shows through)</li>
+</ul>
+<p class="layer">Highest of FL300–FL390 (about 30,000 to 39,000 ft). No forecast beyond 75° N and S.</p>
+<p id="map-status" class="muted small" aria-live="polite">Loading the latest forecast…</p>
+</figcaption>
+</figure>
+
+<div class="card note">
+<p><strong>Not radar, not live reports.</strong> Looking for a turbulence radar or tracker? Clear-air turbulence, the kind at cruise height, doesn't show on weather radar. This map is the official aviation forecast grid, the World Area Forecast System (WAFS), for the time shown: the same forecast airlines plan flights with. It is not a radar picture and not live pilot reports.</p>
+</div>
+
+<p class="cta-line"><a href="../turbulence-forecast/">Turbulence forecast for your flight</a>: two airports and a departure time give a timeline from takeoff to landing, in plain words.</p>
+
+<h2>What the colours mean</h2>
+<table>
+<tr><th>Level</th><th>What it feels like in the cabin</th></tr>
+<tr><td><span class="lvl l0"></span>Calm</td><td>Nothing to notice, or an occasional gentle wobble.</td></tr>
+<tr><td><span class="lvl l1"></span>Light</td><td>Small bumps, like a car on a gravel road. Drinks stay in the cup. Very common.</td></tr>
+<tr><td><span class="lvl l2"></span>Moderate</td><td>Clear bumps and some jolts. Drinks can spill and walking is awkward. The seatbelt sign is usually on.</td></tr>
+<tr><td><span class="lvl l3"></span>Strong</td><td>Firm jolts that press you against the belt. Loose items move. Service stops. Uncommon.</td></tr>
+<tr><td><span class="lvl l4"></span>Severe</td><td>Abrupt, large movements. Rare, and pilots plan routes to stay away from areas where it is forecast.</td></tr>
+</table>
+<p>The levels come from EDR (eddy dissipation rate), the standard measure of rough air in aviation forecasts, sorted into bands for a medium-sized airliner: light from an EDR of 0.15, moderate from 0.22, strong from 0.34 and severe from 0.45.</p>
+
+<h2>About this turbulence map</h2>
+<p>Four times a day, the world's aviation forecast centres publish the World Area Forecast System: a global forecast of turbulence at the heights airliners fly, in three-hour steps. This map shows the step nearest to now, at each place taking the strongest of the three cruise levels FL300, FL340 and FL390, on a half-degree grid (about 55 km). Because it shows the bumpiest of three heights, it looks rougher than any single flight will be: pilots pick the smoother height and route around the worst areas.</p>
+<p>Turbulence is uncomfortable, but it is not dangerous to the aircraft: airliners are built for far more than they meet in flight. Keep your seatbelt fastened whenever you are seated. This map is for passengers; it is not a flight-planning tool, and Jetcalm is not affiliated with any airline.</p>
+
+<section class="app-cta card">
+<h2>Take it offline in the air: Jetcalm for iPhone and Android</h2>
+<p>The Jetcalm app keeps your flight's forecast readable in airplane mode, saves your trip, shows the route on a map with the weather at both airports, and has a bump meter for the flight itself. Jetcalm Pro adds this world map with a time slider and the 2 to 5 day early outlook.</p>
+<p><strong>Coming soon to the App Store and Google Play.</strong> <a href="../">About the app</a></p>
+</section>
+
+<footer>
+<p>Forecast data: NOAA/NWS (WAFS). World Area Forecast System products from the NOAA/NWS Aviation Weather Center, works of the US government in the public domain. Jetcalm is not affiliated with or endorsed by NOAA or the National Weather Service. Map outlines: <a href="https://www.naturalearthdata.com/">Natural Earth</a> (public domain).</p>
+<p>No ads, no cookies, no tracking. <a href="../">Jetcalm</a> · <a href="../turbulence-forecast/">Flight forecast</a> · <a href="../privacy.html">Privacy</a></p>
+<p>Jetcalm is made by Jackson Darrow in New York City.</p>
+</footer>
+</main>
+</body>
+</html>
