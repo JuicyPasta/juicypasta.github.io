@@ -12,6 +12,8 @@ const PAGES = {
   'pt-BR': 'pt/onde-aplicar-mounjaro/index.html',
   es: 'es/donde-aplicar-mounjaro/index.html',
 };
+// English pages per medicine: same planner, strings in their own block.
+const DRUG_PAGES = ['zepbound', 'mounjaro', 'wegovy', 'ozempic'].map((d) => `${d}-injection-sites/index.html`);
 
 function pageStrings(rel) {
   const html = readFileSync(rotinia + rel, 'utf8');
@@ -63,5 +65,37 @@ for (const [lang, rel] of Object.entries(PAGES)) {
     }
     // Loads the one shared planner, not a copy.
     assert.match(html, /<script type="module" src="\.\.\/\.\.\/glp-1-injection-sites\/app\.js"><\/script>/);
+  });
+}
+
+for (const rel of DRUG_PAGES) {
+  test(`${rel}: every planner string, shared planner, canonical`, () => {
+    const { html, strings } = pageStrings(rel);
+    assert.match(html, /<html lang="en">/);
+    assert.deepEqual(missingKeys(strings), []);
+    for (const key of requiredKeys()) {
+      const en = key.startsWith('sites.') ? EN.sites[key.slice(6)] : EN[key];
+      const got = key.startsWith('sites.') ? strings.sites[key.slice(6)] : strings[key];
+      assert.equal(got, en, `${rel} ${key}`);
+    }
+    for (const id of SITE_IDS) {
+      assert.ok(html.includes(`data-site="${id}">${strings.sites[id]}<small>`), `${rel} button ${id}`);
+      assert.ok(html.includes(`value="${id}"> ${strings.sites[id]}</label>`), `${rel} checkbox ${id}`);
+    }
+    assert.match(html, /<script type="module" src="\.\.\/glp-1-injection-sites\/app\.js"><\/script>/);
+    assert.equal((html.match(/<script type="module"/g) || []).length, 1);
+    const dir = rel.replace('index.html', '');
+    assert.ok(html.includes(`<link rel="canonical" href="https://juicypasta.github.io/rotinia/${dir}">`), `${rel} canonical`);
+    assert.doesNotMatch(html, /hreflang="[^"]*" href=/, `${rel}: not a translation, no alternates`);
+    assert.doesNotMatch(html, /\b\d+(\.\d+)?\s?mg\b/i, `${rel}: no doses`);
+    assert.match(html, /not affiliated with or endorsed by Eli Lilly or Novo Nordisk/);
+    assert.match(html, /talk to your doctor or pharmacist/i);
+    assert.match(html, /Coming soon to the App Store for iPhone\./);
+    assert.doesNotMatch(html, /googletagmanager|google-analytics|gtag\(/);
+    const sitemap = readFileSync(rotinia + '../sitemap.xml', 'utf8');
+    assert.ok(sitemap.includes(`<loc>https://juicypasta.github.io/rotinia/${dir}</loc>`), `${rel} in sitemap`);
+    for (const other of DRUG_PAGES) {
+      if (other !== rel) assert.ok(html.includes(`href="../${other.replace('index.html', '')}"`), `${rel} links ${other}`);
+    }
   });
 }
