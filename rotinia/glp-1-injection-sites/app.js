@@ -1,13 +1,23 @@
 // The planner page: taps, the suggestion, the printable log. The rule itself
-// is in rotation.js (a port of the app's Dart code).
+// is in rotation.js (a port of the app's Dart code); the UI text is in
+// i18n.js, and a translated page overrides it with a JSON block
+// (<script type="application/json" id="planner-strings">).
 import { SITES, DEFAULTS, fromId, suggestAfter, plan, shotsAgo, cleanHistory, cleanEnabled } from './rotation.js';
+import { mergeStrings, fill } from './i18n.js';
 
 const KEY = 'rotinia-sites-v1';
 const OFF_KEY = 'rotinia-sites-remember-off';
 const MAX = 40;
 
 const $ = (id) => document.getElementById(id);
-const nameOf = (id) => fromId(id)?.name ?? '';
+
+function readStrings() {
+  const el = document.getElementById('planner-strings');
+  if (!el) return mergeStrings(null);
+  try { return mergeStrings(JSON.parse(el.textContent)); } catch { return mergeStrings(null); }
+}
+const T = readStrings();
+const nameOf = (id) => (fromId(id) ? T.sites[id] : '');
 const lower = (s) => s.charAt(0).toLowerCase() + s.slice(1);
 
 const store = {
@@ -40,7 +50,21 @@ function save() {
 }
 
 function agoText(n) {
-  return n === 1 ? 'Last time' : `${n} shots ago`;
+  return n === 1 ? T.agoLast : fill(T.agoN, { n });
+}
+
+// Squeezes a body-map label that is wider than its zone (a long translated
+// badge) so it stays inside the box; short labels are left alone.
+function fitLabel(text, rect) {
+  text.removeAttribute('textLength');
+  text.removeAttribute('lengthAdjust');
+  const room = Number(rect.getAttribute('width')) - 4;
+  let width = 0;
+  try { width = text.getComputedTextLength(); } catch { return; }
+  if (width > room) {
+    text.setAttribute('textLength', String(room));
+    text.setAttribute('lengthAdjust', 'spacingAndGlyphs');
+  }
 }
 
 function render() {
@@ -56,40 +80,42 @@ function render() {
     g.classList.toggle('last', id === last && id !== next);
     g.classList.toggle('next', id === next);
     g.classList.toggle('off', !enabled.has(id));
-    g.querySelector('text').textContent = id === next ? 'NEXT' : (n !== undefined ? String(n) : '');
+    const label = g.querySelector('text');
+    label.textContent = id === next ? T.badge : (n !== undefined ? String(n) : '');
+    fitLabel(label, g.querySelector('rect'));
   }
 
   for (const b of document.querySelectorAll('.site-btn')) {
     const id = b.dataset.site;
     const n = ago.get(id);
     const parts = [];
-    if (id === next) parts.push('Next');
+    if (id === next) parts.push(T.next);
     if (n !== undefined) parts.push(id === next ? lower(agoText(n)) : agoText(n));
-    else if (id !== next) parts.push('Not used yet');
-    if (!enabled.has(id)) parts.push('not ticked');
+    else if (id !== next) parts.push(T.notUsed);
+    if (!enabled.has(id)) parts.push(T.notTicked);
     b.querySelector('small').textContent = parts.join(' · ');
     b.classList.toggle('last', id === last && id !== next);
     b.classList.toggle('next', id === next);
     b.classList.toggle('off', !enabled.has(id));
-    b.setAttribute('aria-label', `${nameOf(id)}: ${parts.join(', ')}. Tap to add it as your latest site.`);
+    b.setAttribute('aria-label', fill(T.aria, { site: nameOf(id), parts: parts.join(', ') }));
   }
 
   const nextEl = $('next-site');
   const why = $('next-why');
   if (!next) {
-    nextEl.textContent = 'No site ticked';
-    why.textContent = 'Tick at least one site under "Sites you use".';
+    nextEl.textContent = T.noneTicked;
+    why.textContent = T.noneTickedWhy;
   } else {
     nextEl.textContent = nameOf(next);
     const n = ago.get(next);
     if (!history.length) {
-      why.textContent = 'No sites tapped yet, so it starts with the first site in the list. Tap the site you used last time.';
+      why.textContent = T.whyStart;
     } else if (n === undefined) {
-      why.textContent = `Last time: ${lower(nameOf(last))}. Sites you haven't used yet come first, in list order.`;
+      why.textContent = fill(T.whyUnused, { last: lower(nameOf(last)) });
     } else if (enabled.size === 1) {
-      why.textContent = 'It is the only site ticked. Tick more sites to rotate.';
+      why.textContent = T.whyOnly;
     } else {
-      why.textContent = `Last time: ${lower(nameOf(last))}. This is the site you used least recently (${n} shots ago).`;
+      why.textContent = fill(T.whyLeast, { last: lower(nameOf(last)), n });
     }
   }
 
@@ -99,15 +125,15 @@ function render() {
 
   const recent = $('recent');
   if (!history.length) {
-    recent.textContent = 'Your sites, newest first: none yet.';
+    recent.textContent = T.recentNone;
   } else {
     const shown = history.slice(-8).reverse().map((id, i) => `${i + 1}. ${nameOf(id)}`);
-    const more = history.length > 8 ? ` (+${history.length - 8} older)` : '';
-    recent.textContent = `Your sites, newest first: ${shown.join(', ')}${more}.`;
+    const more = history.length > 8 ? fill(T.recentMore, { n: history.length - 8 }) : '';
+    recent.textContent = fill(T.recent, { list: shown.join(', '), more });
   }
 
   for (const box of document.querySelectorAll('#checks input')) box.checked = enabled.has(box.value);
-  $('use-count').textContent = `${enabled.size} of ${SITES.length}`;
+  $('use-count').textContent = fill(T.useCount, { n: enabled.size, total: SITES.length });
   $('remember').checked = state.remember;
 
   renderLog(next);

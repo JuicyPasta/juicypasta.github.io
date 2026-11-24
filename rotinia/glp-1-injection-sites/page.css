@@ -92,3 +92,8 @@ select{font:inherit;font-size:15px;padding:6px 8px;border:1px solid var(--line);
   .log-table thead{display:table-header-group}
   .print-foot{display:block;font-size:9pt;color:#333;margin-top:6px}
 }
+
+/* Language links and the short answer on the translated pages. */
+.langs{font-size:15px;color:var(--muted);margin:-12px 0 12px}
+.answer{border-left:4px solid var(--next)}
+.answer p:last-child{margin-bottom:0}

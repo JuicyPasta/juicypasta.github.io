@@ -8,6 +8,7 @@ Apps and free tools by Jackson Darrow.
 - [Turbulence map](https://juicypasta.github.io/jetcalm/turbulence-map/): today's forecast at cruise altitude, for the world, the USA and the North Atlantic.
 - [UV tanning calculator](https://juicypasta.github.io/solei/uv-tanning-calculator/): enter the UV index, your skin type and your sunscreen to estimate how long you can stay in the sun before your safe limit, and when to reapply.
 - [GLP-1 injection sites and rotation planner](https://juicypasta.github.io/rotinia/glp-1-injection-sites/): where the labels say to inject Ozempic, Wegovy, Mounjaro and Zepbound, how to rotate, and a printable rotation log.
+- [Onde aplicar Mounjaro (português)](https://juicypasta.github.io/rotinia/pt/onde-aplicar-mounjaro/) and [Dónde aplicar Mounjaro (español)](https://juicypasta.github.io/rotinia/es/donde-aplicar-mounjaro/): the same guide and planner, from the Brazilian (Anvisa) and EU labels.
 - [DangoChains daily Japanese word puzzle](https://dangochains.com/play/): 16 Japanese words, 4 hidden groups, free in the browser.
 
 ## Apps (support and privacy)
