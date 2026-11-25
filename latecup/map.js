@@ -380,6 +380,13 @@
     });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && S.selected) closePlace(); });
     window.addEventListener('hashchange', function () { if (S.ready) applyHash(); });
+    var showid = $('showid'), forgetid = $('forgetid'); // "Delete your data": the visitor can see or remove what this browser keeps
+    if (showid) showid.addEventListener('click', function () { $('myid').textContent = mine().iid || 'No ID yet: this browser has not sent a confirmation or rating.'; });
+    if (forgetid) forgetid.addEventListener('click', function () {
+      try { if (store) store.removeItem(V.KEY); } catch (e) { /* nothing kept */ }
+      S.mine = null; S.thanks = {}; $('myid').textContent = 'Removed from this browser.';
+      if (S.selected) renderPlace(S.byId[S.selected], true);
+    });
     var city = $('cityform');
     if (city) city.addEventListener('submit', function (e) {
       e.preventDefault();

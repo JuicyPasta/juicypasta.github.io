@@ -44,3 +44,4 @@ footer.page{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);co
 form.ask{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
 form.ask input[type=text]{flex:1 1 200px;min-width:0;font:inherit;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
 .sent{color:var(--accent);font-weight:600}
+.linkbtn{font:inherit;color:var(--accent);background:none;border:0;padding:0;text-decoration:underline;cursor:pointer}
