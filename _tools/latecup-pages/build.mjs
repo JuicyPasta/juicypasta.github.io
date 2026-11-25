@@ -36,7 +36,7 @@ const manifest = await get('manifest.json');
 const city = manifest.cities[0];
 const feed = await get(city.places);
 const places = feed.places;
-const updated = city.updated.slice(0, 10);
+const updated = new Intl.DateTimeFormat('en-CA', { timeZone: city.tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(city.updated)); // the city's date, YYYY-MM-DD
 
 // group by neighbourhood; a name that shows up in two boroughs is a data error: skip it and say so
 const groups = new Map();
@@ -187,7 +187,7 @@ ${foot('../')}`;
 
 // ---------- sitemap: replace only the Latecup lines ----------
 {
-  const file = join(ROOT, 'sitemap.xml'), today = new Date().toISOString().slice(0, 10);
+  const file = join(ROOT, 'sitemap.xml'), today = new Intl.DateTimeFormat('en-CA', { timeZone: city.tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
   const kept = readFileSync(file, 'utf8').split('\n').filter((l) => !l.includes(`<loc>${SITE}`));
   const end = kept.findIndex((l) => l.includes('</urlset>'));
   const urls = ['', 'privacy.html', 'nyc/', ...hoods.map((h) => `nyc/${h.slug}/`)].map((u) => `  <url><loc>${SITE}${u}</loc><lastmod>${u.startsWith('nyc/') ? updated : today}</lastmod></url>`);
