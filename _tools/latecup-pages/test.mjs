@@ -93,4 +93,77 @@ t('week closings and source line', () => {
   assert.equal(H.sourceLine({ src: 'shop', checked: '2026-11-24' }).text, "Hours confirmed 2026-11-24 from the shop's website");
   assert.equal(H.sourceLine({ src: 'osm', checked: null }).text, 'Unconfirmed hours from OpenStreetMap: check before you go');
 });
+
+// ---------- visitor confirmations and ratings (latecup/votes.js) ----------
+const V = createRequire(import.meta.url)('../../latecup/votes.js');
+const fakeStorage = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), map: m }; };
+const osm = { id: 'n1', src: 'osm', hh: '9f2c41aa' }, shop = { id: 'n2', src: 'shop', checked: '2026-11-24', hh: 'aa11' };
+
+t('two kinds of confirmed: ours, or 2 or more visitors', () => {
+  assert.equal(V.summary(osm, undefined).marked, false);
+  assert.equal(V.summary(shop, undefined).marked, true); assert.equal(V.summary(shop, undefined).ours, true);
+  let s = V.summary(osm, { ok: [1, '2026-11-25', 0] });
+  assert.equal(s.marked, false); assert.equal(s.visitorLine, '1 visitor confirmed these hours · Nov 25');
+  s = V.summary(osm, { ok: [3, '2026-11-25', 2], stars: [4.3, 7] });
+  assert.equal(s.marked, true); assert.equal(s.byVisitors, true); assert.equal(s.ours, false);
+  assert.equal(s.visitorLine, '3 visitors confirmed these hours · latest Nov 25'); assert.equal(s.starsLine, '4.3 · 7 ratings');
+  assert.equal(V.summary(osm, { stars: [5, 1] }).starsLine, '5.0 · 1 rating');
+});
+t('a newer "hours wrong" report takes the mark away, an older one does not', () => {
+  let s = V.summary(osm, { ok: [3, '2026-11-25', 0], bad: [1, '2026-11-26'] });
+  assert.equal(s.flagged, true); assert.equal(s.marked, false); assert.equal(s.flaggedLine, 'Reported wrong on Nov 26: being checked');
+  s = V.summary(osm, { ok: [3, '2026-11-27', 0], bad: [1, '2026-11-26'] });
+  assert.equal(s.flagged, false); assert.equal(s.marked, true); assert.equal(s.flaggedLine, '');
+  s = V.summary(osm, { ok: [2, '2026-11-26', 0], bad: [1, '2026-11-26'] }); // the same day is not "newer"
+  assert.equal(s.flagged, false);
+  s = V.summary(shop, { bad: [2, '2026-11-26'] }); // the feed only counts reports newer than our own check
+  assert.equal(s.flagged, true); assert.equal(s.marked, false);
+});
+t('bad or missing vote data never throws and never marks', () => {
+  for (const v of [null, {}, { ok: [] }, { ok: ['x'] }, { ok: [0, '2026-11-25', 0] }, { stars: [9, 3] }, { stars: [4, 0] }, { bad: [0, ''] }]) {
+    const s = V.summary(osm, v); assert.equal(s.marked, false); assert.equal(s.visitorLine, ''); assert.equal(s.starsLine, ''); assert.equal(s.flagged, false);
+  }
+});
+t('what is sent: the note strings of the contract; onsite is always 0 on the web', () => {
+  assert.equal(V.attestNote('0a1b2c3d-0000-4000-8000-000000000001', '9f2c41aa'), 'v=1;iid=0a1b2c3d-0000-4000-8000-000000000001;hh=9f2c41aa;onsite=0');
+  assert.equal(V.rateNote('0a1b2c3d-0000-4000-8000-000000000001', 4), 'v=1;iid=0a1b2c3d-0000-4000-8000-000000000001;stars=4');
+  const sheet = /^v=1;iid=[0-9A-Fa-f-]{36};(hh=[0-9A-Za-z_-]{1,40};onsite=[01]|stars=[1-5])$/; // the published tab passes only this shape
+  const id = V.uuid();
+  assert.match(V.attestNote(id, '9f2c41aa'), sheet); assert.match(V.rateNote(id, 1), sheet);
+  assert.doesNotMatch(V.rateNote(id, 6), sheet); assert.doesNotMatch('closes at 9 now', sheet);
+});
+t('install ID: a random v4 UUID, made once and kept', () => {
+  const re = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+  assert.match(V.uuid(), re); assert.match(V.uuid({}), re); // also without crypto.randomUUID
+  assert.match(V.uuid({ getRandomValues: (a) => { for (let i = 0; i < a.length; i++) a[i] = i * 17; return a; } }), re);
+  assert.notEqual(V.uuid(), V.uuid());
+  const st = fakeStorage(), a = V.load(st), b = V.load(st);
+  assert.match(a.iid, re); assert.equal(a.iid, b.iid); assert.ok(st.map.has(V.KEY));
+});
+t('one confirmation per place per day; a changed hours table can be confirmed again', () => {
+  const st = fakeStorage(), me = V.load(st);
+  assert.equal(V.canAttest(me, osm, '2026-11-24'), true); assert.equal(V.myAttest(me, osm), null);
+  V.recordAttest(me, osm, '2026-11-24'); V.save(st, me);
+  const again = V.load(st);
+  assert.equal(V.canAttest(again, osm, '2026-11-24'), false); assert.equal(V.myAttestLine(V.myAttest(again, osm), '2026-11-24'), 'You confirmed these hours today');
+  assert.equal(V.canAttest(again, osm, '2026-11-25'), true);  assert.equal(V.myAttestLine(V.myAttest(again, osm), '2026-11-25'), 'You confirmed these hours on Nov 24');
+  const changed = { ...osm, hh: 'bbbb2222' };
+  assert.equal(V.myAttest(again, changed), null); assert.equal(V.canAttest(again, changed, '2026-11-24'), true);
+  assert.equal(V.canAttest(again, { id: 'n9', src: 'osm' }, '2026-11-24'), false); // no hash, nothing to confirm
+  assert.equal(V.canAttest(again, shop, '2026-11-24'), true);                    // another place the same day
+});
+t('rating: one per place, sending again replaces it', () => {
+  const st = fakeStorage(), me = V.load(st);
+  assert.equal(V.myStars(me, osm), 0);
+  V.recordStars(me, osm, 4); V.recordStars(me, osm, 2); V.save(st, me);
+  assert.equal(V.myStars(V.load(st), osm), 2); assert.equal(Object.keys(V.load(st).stars).length, 1);
+});
+t('storage that is missing, broken or full: the page still works for this view', () => {
+  const me = V.load(null); assert.match(me.iid, /^[0-9a-f-]{36}$/);
+  assert.equal(V.save(null, me), false);
+  const junk = fakeStorage(); junk.setItem(V.KEY, '{not json'); assert.match(V.load(junk).iid, /^[0-9a-f-]{36}$/);
+  const tampered = fakeStorage(); tampered.setItem(V.KEY, JSON.stringify({ iid: 'me@example.com', ok: 5 }));
+  const fixed = V.load(tampered); assert.match(fixed.iid, /^[0-9a-f-]{36}$/); assert.deepEqual(fixed.ok, {});
+  assert.equal(V.save({ setItem() { throw new Error('quota'); } }, me), false);
+});
 console.log(`ok: ${n} tests`);

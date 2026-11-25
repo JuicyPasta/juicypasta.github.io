@@ -50,7 +50,7 @@
 <p id="count" role="status">Loading places…</p>
 <ol id="rows"></ol>
 <button type="button" id="more" hidden>Show more</button>
-<p class="osm"><span id="data"></span><br>Places and unconfirmed hours © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>. ✓ marks hours we confirmed from the shop's own site.</p>
+<p class="osm"><span id="data"></span><br>Places and unconfirmed hours © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>. ✓ marks hours confirmed from the shop's own site, or by two or more visitors.</p>
 </div>
 <aside id="place" hidden aria-label="Place details"></aside>
 </section>
@@ -72,11 +72,13 @@
 </ul>
 
 <h3>Where the hours come from, and how sure they are</h3>
-<p>Each place says where its hours come from. There are two kinds:</p>
+<p>Each place says where its hours come from, and the two kinds of confirmation are never mixed:</p>
 <ul>
-<li><strong>Confirmed (✓).</strong> We checked the hours against the shop's own website, its ordering page or its official social account, or the chain's own store locator, and we show the date we did.</li>
+<li><strong>Confirmed by us.</strong> We checked the hours against the shop's own website, its ordering page or its official social account, or the chain's own store locator, and we show the date we did.</li>
+<li><strong>Confirmed by visitors.</strong> People who use Latecup can press <strong>Hours are right</strong> on a place. The place then says how many visitors confirmed its hours and when the latest did. A confirmation is for the hours shown that day: if the hours change, the count starts again.</li>
 <li><strong>Unconfirmed.</strong> The hours come from <a href="https://www.openstreetmap.org/">OpenStreetMap</a>, a map that volunteers keep up. They are often right and sometimes out of date. Check with the shop before a late trip.</li>
 </ul>
+<p>The ✓ in the list, and the "Confirmed hours only" box, mean confirmed by us or by two or more visitors. If someone reports the hours as wrong after the latest confirmation, the place says "Reported wrong: being checked" and loses its ✓ until we have looked.</p>
 <p>On holidays the map shows a notice: shops change their hours and we never guess holiday hours. Any shop can close early without notice. When a late trip matters, call or check the shop's own page.</p>
 
 <h2 id="help">Help</h2>
@@ -86,6 +88,10 @@
 
 <h3>A place has the wrong hours. How do I report it?</h3>
 <p>Open the place (tap its pin or its row in the list) and choose <strong>Hours wrong?</strong> Pick what is wrong, add the right hours if you know them, and send. In the app it is the same button on the place screen. A report contains only the place, your choice and what you typed. Each report is checked against the shop's own site, and the map is corrected in a daily update.</p>
+
+<h3>How do I confirm hours or rate a café?</h3>
+<p>Open the place. <strong>Hours are right</strong> confirms the hours you are looking at, once per place per day. The stars rate the café as a place to be late, from 1 to 5; tap again to change your rating. You don't need an account. Your own answers show at once on your device, and the totals that everybody sees are recounted about once an hour. Ratings are stars only: there are no written reviews.</p>
+<p>So that one person counts once, a confirmation or rating carries a random ID made by the app or by this page. It isn't linked to your name, an account or your device. The <a href="privacy.html">privacy policy</a> lists exactly what is sent.</p>
 
 <h3>A late coffee shop is missing.</h3>
 <p>A place is on the map only when we know its hours and it closes at 8 PM or later on at least one night. If a shop you know is missing, email its name and street to the address above. If you edit OpenStreetMap, adding the shop's <code>opening_hours</code> there fixes it for everybody.</p>
@@ -102,7 +108,7 @@
 </div>
 
 <h3>Does the map know where I am?</h3>
-<p>Only if you press <strong>Near me</strong>, and then your location stays in this page to sort the list by distance. It is never sent to us or anyone else. See the <a href="privacy.html">privacy policy</a>.</p>
+<p>Only if you press <strong>Near me</strong>, and then your location stays in this page to sort the list by distance. It is never sent to us or anyone else. In the app, a confirmation also says whether you were at the café, as a plain yes or no that the phone works out by itself; no location is sent. See the <a href="privacy.html">privacy policy</a>.</p>
 
 <h3>What do I need to use the app?</h3>
 <p>An iPhone or iPad with iOS 15 or later. The list, search and saved places keep working without a connection; the map background needs one.</p>
@@ -122,6 +128,7 @@
 </main>
 <script src="lib/maplibre-gl.js"></script>
 <script src="hours.js"></script>
+<script src="votes.js"></script>
 <script src="config.js"></script>
 <script src="map.js"></script>
 </body>

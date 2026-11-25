@@ -4,7 +4,7 @@
    Location is asked only on "Near me", used in the page, and never sent anywhere. */
 (function () {
   'use strict';
-  var H = window.LatecupHours;
+  var H = window.LatecupHours, V = window.LatecupVotes;
   var FEED = 'https://juicypasta.github.io/latecup-data/v1/';
   var local = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
   if (local && new URLSearchParams(location.search).get('feed')) FEED = new URLSearchParams(location.search).get('feed'); // tests only
@@ -21,11 +21,16 @@
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var S = { manifest: null, city: null, places: [], byId: {}, now: null, day: 0, chip: null, chipTouched: false, q: '', indie: false, confirmed: false,
-            user: null, shown: PAGE, selected: null, matched: [], map: null, ready: false, lastChips: '' };
+            user: null, shown: PAGE, selected: null, matched: [], map: null, ready: false, lastChips: '', votes: {}, mine: null, thanks: {} };
 
   function testNow() { // ?now=2026-11-27T02:30:00Z on localhost, for tests
     var v = local && new URLSearchParams(location.search).get('now'); return v ? new Date(v) : new Date();
   }
+  var store = null; try { store = window.localStorage; store.getItem('x'); } catch (e) { store = null; }
+  function mine() { return S.mine || (S.mine = V.load(store)); } // the visitor's own confirmations, stars and random ID
+  function sum(p) { return V.summary(p, S.votes[p.id]); }
+  /* Confirmations and ratings go only to the feed's own endpoint, and only for a place whose hours table has a hash. */
+  function voteTarget(p) { var r = S.manifest && S.manifest.report; return r && r.kind === 'google_form' && r.url && r.fields && p.hh ? r : null; }
   function dayInfo() { // the service day being looked at
     var date = H.addDays(S.now.serviceDate, S.day);
     return { date: date, dow: H.dowOf(date), isToday: S.day === 0 };
@@ -89,7 +94,7 @@
     var chip = currentChip(), di = dayInfo(), q = S.q.trim().toLowerCase(), out = [];
     S.places.forEach(function (p) {
       if (S.indie && p.chain) return;
-      if (S.confirmed && p.src === 'osm') return;
+      if (S.confirmed && !sum(p).marked) return;
       if (q && (p.name + ' ' + p.addr + ' ' + p.hood + ' ' + p.boro).toLowerCase().indexOf(q) < 0) return;
       var ev = evaluate(p, chip, di);
       if (ev) out.push({ p: p, ev: ev });
@@ -135,11 +140,12 @@
     $('count').textContent = S.q.trim() ? total + (total === 1 ? ' place ' : ' places ') + what + when + ' matching "' + S.q.trim() + '"'
       : rows.length + ' in view · ' + total + ' across the city ' + what + when + (S.user ? ' · nearest first' : ' · latest closing first');
     var html = rows.slice(0, S.shown).map(function (m) {
-      var st = statusText(m.ev, ctx.di), src = H.sourceLine(m.p);
+      var st = statusText(m.ev, ctx.di), v = sum(m.p);
       return '<li><button type="button" class="row" data-id="' + esc(m.p.id) + '"><span class="top"><span class="nm">' + esc(m.p.name) + '</span>' +
         (S.user ? '<span class="dist">' + distText(m.d) + '</span>' : '') + '</span>' +
         '<span class="hood">' + esc(m.p.hood) + ' · ' + esc(CAT[m.p.cat] || m.p.cat) + '</span>' +
-        '<span class="st ' + st.cls + '">' + (src.confirmed ? '<span class="ck" title="Hours confirmed">✓</span>' : '') + esc(st.text) + (src.confirmed ? '' : ' · unconfirmed') + '</span></button></li>';
+        '<span class="st ' + st.cls + '">' + (v.marked ? '<span class="ck" title="' + (v.ours ? 'Hours confirmed from the shop' : 'Hours confirmed by visitors') + '">✓</span>' : '') + esc(st.text) +
+        (v.marked ? '' : v.flagged ? ' · reported wrong' : ' · unconfirmed') + (v.stars ? ' · ★ ' + v.stars.mean.toFixed(1) : '') + '</span></button></li>';
     }).join('');
     $('rows').innerHTML = html || '<li class="empty">' + (total ? 'Nothing in this part of the map. Zoom out or move the map.' : 'No places match. Try an earlier time or clear the filters.') + '</li>';
     $('more').hidden = rows.length <= S.shown;
@@ -159,7 +165,8 @@
     if (!p) return;
     var di = dayInfo(), t = H.tonight(p.hours, di.dow), st = nowStatusText(p), src = H.sourceLine(p), hol = holidayFor(di.date);
     var big = !t ? 'Closed' : t.allDay ? '24 hours' : H.clock(t.close);
-    var bigsub = !t ? 'not open ' + nightName(di) : t.allDay ? 'open ' + nightName(di) : 'closes ' + nightName(di);
+    var over = t && !t.allDay && di.isToday && t.close <= S.now.rel, flagged = sum(p).flagged; // a reported-wrong place loses its mark
+    var bigsub = !t ? 'not open ' + nightName(di) : t.allDay ? 'open ' + nightName(di) : over ? 'closed for tonight at this time' : 'closes ' + nightName(di);
     var rows = H.DOW.map(function (d, i) { return '<tr' + (i === di.dow ? ' class="today"' : '') + '><td>' + d + '</td><td>' + esc(H.dayText(p.hours, i)) + '</td></tr>'; }).join('');
     var apple = /iPhone|iPad|Macintosh/.test(navigator.userAgent);
     var dir = apple ? 'https://maps.apple.com/?daddr=' + p.lat + ',' + p.lon + '&dirflg=w' : 'https://www.google.com/maps/dir/?api=1&destination=' + p.lat + ',' + p.lon;
@@ -171,19 +178,59 @@
     var tags = (p.tags || []).map(function (x) { return TAG[x]; }).filter(Boolean).join(' · ');
     var prev = quiet && document.querySelector('#place details.wrong');
     if (prev && (prev.open || prev.dataset.sent)) { // don't wipe a report being written
-      document.querySelector('#place .st').className = 'st ' + st.cls; document.querySelector('#place .st').textContent = st.text; return;
+      document.querySelector('#place .st').className = 'st ' + st.cls; document.querySelector('#place .st').textContent = st.text;
+      var vb = document.querySelector('#place .votebox'); if (vb) vb.outerHTML = voteHtml(p);
+      return;
     }
     $('place').innerHTML = '<button type="button" class="x" id="closeplace">Close</button>' +
       '<p class="meta">' + esc(p.hood) + ' · ' + esc(p.boro) + ' · ' + esc(CAT[p.cat] || p.cat) + '</p><h2>' + esc(p.name) + '</h2>' +
       '<p class="st ' + st.cls + '">' + esc(st.text) + '</p>' +
       '<p class="big">' + esc(big) + '</p><p class="bigsub">' + esc(bigsub) + '</p>' +
-      '<p class="src' + (src.confirmed ? ' ok' : '') + '">' + (src.confirmed ? '✓ ' : '') + esc(src.text) + '</p>' +
+      '<p class="src' + (src.confirmed && !flagged ? ' ok' : '') + '">' + (src.confirmed && !flagged ? '✓ ' : '') + esc(src.text) + '</p>' + voteHtml(p) +
       (hol ? '<p class="banner">' + esc(hol.name) + ': hours may differ. Check with the shop before you go.</p>' : '') +
       '<table>' + rows + '</table>' +
       '<p class="addr">' + esc(p.addr) + '</p>' + (tags ? '<p class="tags">' + esc(tags) + '</p>' : '<p class="tags"></p>') +
       '<div class="actions">' + acts + '</div>' + reportHtml(p);
     $('place').hidden = false;
     if (!quiet) { $('place').scrollTop = 0; $('closeplace').focus({ preventScroll: true }); }
+  }
+  /* The visitors' side of a place: their confirmations, an open "wrong" report, the stars, and this visitor's own answers. */
+  function voteHtml(p) {
+    var v = sum(p), t = voteTarget(p), me = mine(), today = S.now.calendarDate, a = V.myAttest(me, p), my = V.myStars(me, p), th = S.thanks[p.id] || {}, h = '<div class="votebox">';
+    if (v.flaggedLine) h += '<p class="flag">' + esc(v.flaggedLine) + '</p>';
+    if (v.visitorLine) h += '<p class="vis">' + esc(v.visitorLine) + '</p>';
+    if (a) h += '<p class="minev">' + esc(V.myAttestLine(a, today)) + (th.ok ? '. Thank you: the count updates about hourly.' : '') + '</p>';
+    if (t && V.canAttest(me, p, today)) h += '<button type="button" class="okbtn" id="attest">' + (a ? 'Hours are still right' : 'Hours are right') + '</button>';
+    if (th.okErr) h += '<p class="fine err">That didn\'t send. Check your connection and try again.</p>';
+    if (v.stars || t) {
+      h += '<div class="rate"><span class="avg">' + (v.stars ? '<b>★ ' + v.stars.mean.toFixed(1) + '</b> · ' + v.stars.n + (v.stars.n === 1 ? ' rating' : ' ratings') : 'No ratings yet') + '</span>';
+      if (t) {
+        h += '<span class="stars" role="group" aria-label="Rate this café, 1 to 5 stars">';
+        for (var i = 1; i <= 5; i++) h += '<button type="button" data-star="' + i + '" aria-label="' + i + (i === 1 ? ' star' : ' stars') + '" aria-pressed="' + (my === i) + '" class="' + (i <= my ? 'on' : '') + '">' + (i <= my ? '★' : '☆') + '</button>';
+        h += '</span>';
+      }
+      h += '</div>';
+      if (t) h += '<p class="fine' + (th.starErr ? ' err' : '') + '">' + (th.starErr ? "That didn't send. Check your connection and try again."
+        : my ? 'Your rating: ' + my + (my === 1 ? ' star' : ' stars') + (th.star ? '. Saved: the average updates about hourly.' : '. Tap a star to change it.')
+        : 'Rate it as a place to be late. Stars only.') + '</p>';
+    }
+    return h + '</div>';
+  }
+  function sendVote(p, kind, stars) {
+    var t = voteTarget(p), me = mine(), th = S.thanks[p.id] || (S.thanks[p.id] = {}); if (!t) return;
+    var note = kind === 'attest' ? V.attestNote(me.iid, p.hh) : V.rateNote(me.iid, stars), body = new URLSearchParams();
+    var f = { type: kind, place_id: p.id, place_name: p.name, note: note, app: APP };
+    Object.keys(t.fields).forEach(function (k) { body.append(t.fields[k], f[k] == null ? '' : String(f[k]).slice(0, 600)); });
+    var redraw = function () { var vb = document.querySelector('#place .votebox'); if (vb && S.selected === p.id) vb.outerHTML = voteHtml(p); };
+    // shown at once, counted later: record first, take it back only if the request never left
+    var before = JSON.stringify(me);
+    if (kind === 'attest') { V.recordAttest(me, p, S.now.calendarDate); th.ok = true; th.okErr = false; } else { V.recordStars(me, p, stars); th.star = true; th.starErr = false; }
+    V.save(store, me); redraw();
+    fetch(t.url, { method: 'POST', mode: 'no-cors', body: body }).catch(function () {
+      S.mine = JSON.parse(before); V.save(store, S.mine);
+      if (kind === 'attest') { th.ok = false; th.okErr = true; } else { th.star = false; th.starErr = true; }
+      redraw();
+    });
   }
   function reportTarget() { return (S.manifest && S.manifest.report && S.manifest.report.kind === 'google_form' && S.manifest.report) || REPORT_FALLBACK; }
   function reportHtml(p) {
@@ -322,6 +369,9 @@
     });
     $('place').addEventListener('click', function (e) {
       if (e.target.id === 'closeplace') closePlace();
+      if (e.target.id === 'attest' && S.selected) { e.target.disabled = true; sendVote(S.byId[S.selected], 'attest'); }
+      var star = e.target.closest && e.target.closest('[data-star]');
+      if (star && S.selected) sendVote(S.byId[S.selected], 'rate', +star.dataset.star);
       if (e.target.id === 'share') {
         var url = location.origin + location.pathname + '#p=' + encodeURIComponent(S.selected), b = e.target;
         (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(function () { b.textContent = 'Link copied'; }, function () { prompt('Copy this link', url); });
@@ -347,6 +397,12 @@
         function () { $('cityfine').textContent = "That didn't send. Check your connection and try again."; });
     });
   }
+  function loadVotes() { // optional file: totals of visitor confirmations and ratings, rebuilt about hourly
+    if (!S.city.votes) return;
+    fetch(FEED + S.city.votes).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+      if (d && d.votes && typeof d.votes === 'object') { S.votes = d.votes; refresh(); }
+    }).catch(function () {});
+  }
   function dayOptions() {
     var html = '';
     for (var i = 0; i < 7; i++) {
@@ -368,6 +424,7 @@
       var up = new Date(S.city.updated);
       $('data').textContent = S.places.length.toLocaleString('en-US') + ' places in the feed · updated ' + up.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: S.city.tz });
       refresh();
+      loadVotes(); setInterval(loadVotes, 30 * 60000);
       try { if (!window.maplibregl) throw new Error('no maplibre'); initMap(); }
       catch (e) { S.ready = false; S.map = null; message('The map could not be drawn in this browser. The list still works.'); }
       setInterval(function () { refresh({ keepPanel: false }); }, 30000);
