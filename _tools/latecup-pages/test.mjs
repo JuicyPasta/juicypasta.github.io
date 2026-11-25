@@ -168,4 +168,33 @@ t('storage that is missing, broken or full: the page still works for this view',
   const fixed = V.load(tampered); assert.equal(fixed.iid, null, 'anything that is not a UUID is thrown away'); assert.deepEqual(fixed.ok, {});
   assert.equal(V.save({ setItem() { throw new Error('quota'); } }, me), false);
 });
+
+// ---------- build.mjs refuses a bad feed before it writes anything (exit code 3) ----------
+import { spawnSync } from 'node:child_process';
+import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+const BUILD = join(dirname(fileURLToPath(import.meta.url)), 'build.mjs');
+const refuse = (files) => {
+  const dir = mkdtempSync(join(tmpdir(), 'latecup-feed-'));
+  for (const [name, text] of Object.entries(files)) writeFileSync(join(dir, name), text);
+  const r = spawnSync(process.execPath, [BUILD, '--feed', dir + '/'], { encoding: 'utf8' });
+  rmSync(dir, { recursive: true });
+  return r;
+};
+t('a feed that is missing, not JSON, the wrong format or nearly empty changes nothing', () => {
+  const place = { id: 'n1', name: 'A', lat: 40.7, lon: -73.9, addr: '1 A St', hood: 'East Village', boro: 'Manhattan', cat: 'coffee', chain: null, hours: [[[480, 1380]], [[480, 1380]], [[480, 1380]], [[480, 1380]], [[480, 1380]], [[480, 1380]], [[480, 1380]]], src: 'osm', checked: null };
+  const man = (extra) => JSON.stringify({ format: 1, cities: [{ id: 'nyc', tz: 'America/New_York', places: 'nyc.json', updated: '2026-11-25T01:00:00Z', ...extra }] });
+  for (const [why, files] of [
+    ['no files', {}],
+    ['an error page instead of JSON', { 'manifest.json': '<html>503</html>' }],
+    ['format 2', { 'manifest.json': JSON.stringify({ format: 2, cities: [] }) }],
+    ['three places', { 'manifest.json': man({}), 'nyc.json': JSON.stringify({ format: 1, places: [place, { ...place, id: 'n2' }, { ...place, id: 'n3' }] }) }],
+    ['a places file that does not match its hash', { 'manifest.json': man({ sha256: '0'.repeat(64) }), 'nyc.json': JSON.stringify({ format: 1, places: [place] }) }],
+  ]) {
+    const r = refuse(files);
+    assert.equal(r.status, 3, `${why}: exit ${r.status} ${r.stderr}`); assert.match(r.stderr, /FEED NOT USABLE, nothing written/);
+  }
+});
 console.log(`ok: ${n} tests`);

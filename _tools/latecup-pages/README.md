@@ -2,7 +2,9 @@
 
 Not published (the folder starts with `_`). Run from the repo root.
 
-- `node _tools/latecup-pages/build.mjs` rebuilds `latecup/nyc/` (one page per neighbourhood with 3 or more late places, plus the index) from the live feed and rewrites the Latecup lines of `sitemap.xml`. Run it whenever the feed's places change. `--feed <folder or URL>` reads another copy of the feed.
+- `node _tools/latecup-pages/build.mjs` rebuilds `latecup/nyc/` (one page per neighbourhood with 3 or more late places, plus the index) from the live feed and rewrites the Latecup lines of `sitemap.xml`. `--feed <folder or URL>` reads another copy of the feed.
+- **It runs by itself:** `.github/workflows/latecup-pages.yml`, at 10:05 and 16:05 UTC (after the feed's refreshes at 09:17 and 15:17) and on demand (`gh workflow run latecup-pages.yml`). It runs the tests, builds, and commits only if `latecup/` or `sitemap.xml` changed; Pages deploys from `main`, so the commit publishes.
+- **A bad feed changes nothing.** The build checks the feed before it deletes or writes a file (format 1, the places file matches the manifest's sha256, at least 200 places and 10 neighbourhoods, under 5% malformed places, not under half the count the current pages were built from) and otherwise exits with code 3; the workflow then ends green with a warning and no commit. `--force` skips the half-the-count check for a real shrink.
 - `node _tools/latecup-pages/test.mjs` tests `latecup/hours.js`, the "late" rules shared by the web map and these pages (service day, chains across midnight, chips, both clock changes).
 - `latecup/votes.js` holds the rules for visitor confirmations and star ratings (the two kinds of "confirmed", the reported-wrong flag, the note strings, the random install ID and the once-a-day limit); its tests are in the same `test.mjs`. The pages show visitor counts and star averages when the feed's manifest names a votes file, and say nothing when it doesn't.
 - `og.html` is the source of `latecup/og.png`: serve the repo (`python3 -m http.server`), open the file at 1200×630 in a headless browser and screenshot it.
