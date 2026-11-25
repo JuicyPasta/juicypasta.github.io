@@ -1,8 +1,8 @@
-// Builds Latecup's neighbourhood pages from the live feed:
-//   latecup/nyc/index.html                    (all neighbourhoods, by borough)
-//   latecup/nyc/<neighbourhood>/index.html    ("Coffee shops open late in the East Village")
+// Builds Latecup's neighborhood pages from the live feed:
+//   latecup/nyc/index.html                    (all neighborhoods, by borough)
+//   latecup/nyc/<neighborhood>/index.html    ("Coffee shops open late in the East Village")
 // and rewrites the Latecup lines of sitemap.xml. Only facts that don't depend on tonight:
-// usual closing time per night, where the hours come from. A neighbourhood gets a page
+// usual closing time per night, where the hours come from. A neighborhood gets a page
 // when it has 3 or more places in the feed (the feed holds only places that close at
 // 8 PM or later on at least one night).
 //
@@ -13,7 +13,7 @@
 // A bad feed can never blank the pages: the feed is fetched and checked before anything is
 // deleted or written, and when it is unreachable or fails a check the script exits with
 // code 3 having touched nothing (the workflow treats 3 as "nothing to do"). Checks: format 1,
-// the places file matches the manifest's sha256, at least 200 places and 10 neighbourhoods,
+// the places file matches the manifest's sha256, at least 200 places and 10 neighborhoods,
 // under 5% malformed places, and not under half the places the current pages were built
 // from (--force skips that last one, for a real, deliberate shrink).
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, rmSync, existsSync } from 'node:fs';
@@ -79,7 +79,7 @@ if (city.votes) { try { const v = await get(city.votes); if (v && v.votes && typ
 const sum = (p) => V.summary(p, votes[p.id]);
 const updated = new Intl.DateTimeFormat('en-CA', { timeZone: city.tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(city.updated)); // the city's date, YYYY-MM-DD
 
-// group by neighbourhood; a name that shows up in two boroughs is a data error: skip it and say so
+// group by neighborhood; a name that shows up in two boroughs is a data error: skip it and say so
 const groups = new Map();
 for (const p of places) { if (!groups.has(p.hood)) groups.set(p.hood, []); groups.get(p.hood).push(p); }
 const hoods = [];
@@ -90,8 +90,8 @@ for (const [name, ps] of groups) {
   hoods.push({ name, slug: slug(name), boro: boros[0], places: ps });
 }
 hoods.sort((a, b) => a.name.localeCompare(b.name));
-if (new Set(hoods.map((h) => h.slug)).size !== hoods.length) unusable('two neighbourhoods share a slug');
-if (hoods.length < MIN_HOODS) unusable(`only ${hoods.length} neighbourhoods with ${MIN_PLACES} or more places (need ${MIN_HOODS})`);
+if (new Set(hoods.map((h) => h.slug)).size !== hoods.length) unusable('two neighborhoods share a slug');
+if (hoods.length < MIN_HOODS) unusable(`only ${hoods.length} neighborhoods with ${MIN_PLACES} or more places (need ${MIN_HOODS})`);
 
 const facts = (ps) => {
   const late = (rel) => ps.filter((p) => { for (let d = 0; d < 7; d++) { const t = H.tonight(p.hours, d); if (t && (t.allDay || t.close > rel)) return true; } return false; }).length;
@@ -137,7 +137,7 @@ const source = (p) => {
     + (v.stars ? `<span class="tag star">★ ${v.stars.mean.toFixed(1)} · ${v.stars.n} ${v.stars.n === 1 ? 'rating' : 'ratings'}</span>` : '');
 };
 
-// ---------- one page per neighbourhood ----------
+// ---------- one page per neighborhood ----------
 const outDir = join(ROOT, 'latecup', 'nyc');
 mkdirSync(outDir, { recursive: true });
 for (const d of readdirSync(outDir, { withFileTypes: true })) { // drop pages from an earlier run
@@ -201,7 +201,7 @@ ${others.length ? `
 <ul class="hoods">
 ${others.map((o) => `<li><a href="../${o.slug}/">${esc(o.name)}</a><span class="n">${o.places.length}</span></li>`).join('\n')}
 </ul>
-<p><a href="../">All New York City neighbourhoods</a></p>` : '<p><a href="../">All New York City neighbourhoods</a></p>'}
+<p><a href="../">All New York City neighborhoods</a></p>` : '<p><a href="../">All New York City neighborhoods</a></p>'}
 ${foot('../../')}`;
   mkdirSync(join(outDir, h.slug), { recursive: true });
   writeFileSync(join(outDir, h.slug, 'index.html'), html);
@@ -210,18 +210,18 @@ ${foot('../../')}`;
 // ---------- the index ----------
 {
   const f = facts(places), moreThan = (n) => (n > 50 ? 'more than ' + Math.floor((n - 1) / 50) * 50 : String(n)), cap = (t) => t[0].toUpperCase() + t.slice(1);
-  const title = 'Coffee shops open late in New York City, by neighbourhood | Latecup';
-  const desc = `Late-night coffee shops, tea houses and dessert cafés in ${hoods.length} New York City neighbourhoods, with the usual closing time for each night and where the hours come from.`;
+  const title = 'Coffee shops open late in New York City, by neighborhood | Latecup';
+  const desc = `Late-night coffee shops, tea houses and dessert cafés in ${hoods.length} New York City neighborhoods, with the usual closing time for each night and where the hours come from.`;
   const html = `${head(title, desc, 'nyc/', [{ '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
     { '@type': 'ListItem', position: 1, name: 'Latecup', item: SITE }, { '@type': 'ListItem', position: 2, name: 'New York City', item: SITE + 'nyc/' }] }])}
 <!-- places: ${places.length} -->
 <p class="crumbs"><a href="../">Latecup</a> › New York City</p>
 <header class="page">
 <img src="../icon.png" alt="">
-<div><h1>Coffee shops open late in New York City</h1><p>By neighbourhood · list updated ${updated}</p></div>
+<div><h1>Coffee shops open late in New York City</h1><p>By neighborhood · list updated ${updated}</p></div>
 </header>
 
-<p>Latecup lists ${moreThan(f.n)} coffee shops, tea houses and dessert cafés across the five boroughs that close at 8 PM or later on at least one night. ${cap(moreThan(f.ten))} of them are open past 10 PM on some night, and ${moreThan(f.midnight)} past midnight. Pick a neighbourhood for the usual closing times, or open <a href="../">the map</a> to see what is open tonight and until when.</p>
+<p>Latecup lists ${moreThan(f.n)} coffee shops, tea houses and dessert cafés across the five boroughs that close at 8 PM or later on at least one night. ${cap(moreThan(f.ten))} of them are open past 10 PM on some night, and ${moreThan(f.midnight)} past midnight. Pick a neighborhood for the usual closing times, or open <a href="../">the map</a> to see what is open tonight and until when.</p>
 <p><a class="btn" href="../">Open the map</a></p>
 ${BOROS.map((b) => {
     const hs = hoods.filter((h) => h.boro === b);
@@ -231,7 +231,7 @@ ${BOROS.map((b) => {
 ${hs.map((h) => `<li><a href="${h.slug}/">${esc(h.name)}</a><span class="n">${h.places.length}</span></li>`).join('\n')}
 </ul>` : '';
   }).join('\n')}
-<p class="small muted">The number beside a neighbourhood is the number of places on its page: those that close at 8 PM or later on at least one night. Neighbourhoods with fewer than ${MIN_PLACES} are on the map only.${f.confirmed ? '' : ' Hours come from OpenStreetMap until we confirm them from the shop\'s own site or page or the chain\'s store locator; unconfirmed hours are labelled.'}</p>
+<p class="small muted">The number beside a neighborhood is the number of places on its page: those that close at 8 PM or later on at least one night. Neighborhoods with fewer than ${MIN_PLACES} are on the map only.${f.confirmed ? '' : ' Hours come from OpenStreetMap until we confirm them from the shop\'s own site or page or the chain\'s store locator; unconfirmed hours are labeled.'}</p>
 ${foot('../')}`;
   writeFileSync(join(outDir, 'index.html'), html);
 }
@@ -247,4 +247,4 @@ ${foot('../')}`;
   kept.splice(end, 0, ...urls);
   writeFileSync(file, kept.join('\n'));
 }
-console.log(`${hoods.length} neighbourhood pages + index from ${places.length} places (feed updated ${updated}); sitemap has ${hoods.length + 3} Latecup URLs`);
+console.log(`${hoods.length} neighborhood pages + index from ${places.length} places (feed updated ${updated}); sitemap has ${hoods.length + 3} Latecup URLs`);

@@ -1,9 +1,9 @@
-# Rebuilds Latecup's neighbourhood pages (latecup/nyc/) and the Latecup lines of sitemap.xml
+# Rebuilds Latecup's neighborhood pages (latecup/nyc/) and the Latecup lines of sitemap.xml
 # from the live feed, twice a day after the feed's own refreshes (09:17 and 15:17 UTC).
 # Pages is deployed from this branch, so the commit this makes publishes by itself.
 # A feed that is unreachable or fails the build's checks changes nothing: build.mjs exits 3
 # before it touches a file, and this job then ends green without a commit.
-name: Latecup neighbourhood pages
+name: Latecup neighborhood pages
 
 on:
   schedule:
@@ -55,7 +55,7 @@ jobs:
           places=$(grep -o '<!-- places: [0-9]* -->' latecup/nyc/index.html | grep -o '[0-9]*' || echo "?")
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -q -m "Latecup neighbourhood pages: rebuilt from the feed ($places places)"
+          git commit -q -m "Latecup neighborhood pages: rebuilt from the feed ($places places)"
           git pull -q --rebase origin "${GITHUB_REF_NAME}"
           git push -q origin "HEAD:${GITHUB_REF_NAME}"
           git show --stat --oneline HEAD | tail -3

@@ -1,4 +1,4 @@
-/* Latecup text pages (support sections, privacy, neighbourhood pages). Palette: Latecup/marketing/brand.md */
+/* Latecup text pages (support sections, privacy, neighborhood pages). Palette: Latecup/marketing/brand.md */
 :root{--bg:#FAF7F2;--card:#FFFFFF;--raised:#F1ECE3;--ink:#1B1A17;--muted:#5E584E;--faint:#6A645A;--line:#DDD6CA;--accent:#8A5300;--fill:#F5B14C;--on-fill:#1A1408;--under2:#9C4A0B;--soon:#B5321C}
 @media (prefers-color-scheme:dark){:root{--bg:#0E1116;--card:#171B22;--raised:#20252E;--ink:#F3EEE6;--muted:#B4AEA3;--faint:#8A8F99;--line:#2C323D;--accent:#F5B14C;--under2:#F0873A;--soon:#F2604A}}
 :root.night{--bg:#0E1116;--card:#171B22;--raised:#20252E;--ink:#F3EEE6;--muted:#B4AEA3;--faint:#8A8F99;--line:#2C323D;--accent:#F5B14C;--under2:#F0873A;--soon:#F2604A;color-scheme:dark}
@@ -26,7 +26,7 @@ th{color:var(--muted);font-weight:600;font-size:14px}
 .crumbs{font-size:15px;color:var(--muted);margin:0 0 14px}
 .btn{display:inline-block;background:var(--fill);color:var(--on-fill);font-weight:600;text-decoration:none;border:0;border-radius:10px;padding:10px 16px;font-size:16px;cursor:pointer;font-family:inherit}
 footer.page{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:15px}
-/* neighbourhood pages */
+/* neighborhood pages */
 .places td:first-child{min-width:44%}
 .places .name{font-weight:600}
 .places .sub{display:block;color:var(--muted);font-size:14.5px}

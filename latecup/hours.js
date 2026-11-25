@@ -1,5 +1,5 @@
 /* Latecup "late" rules (SPEC.md → What "late" means), shared by the web map and the
-   neighbourhood-page generator (_tools/latecup-pages/). No dependencies.
+   neighborhood-page generator (_tools/latecup-pages/). No dependencies.
 
    - City time: every calculation uses the city's time zone, never the visitor's clock.
    - Service day: a night belongs to the day it started on; it runs 05:00 → 05:00.

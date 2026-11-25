@@ -26,7 +26,7 @@
 <body class="app">
 <div class="bar">
 <a class="brand" href="./"><img src="icon.png" alt="" width="30" height="30">Latecup</a>
-<nav><a href="nyc/">Neighbourhoods</a><a class="opt" href="#about">About</a><a href="#help">Help</a></nav>
+<nav><a href="nyc/">Neighborhoods</a><a class="opt" href="#about">About</a><a href="#help">Help</a></nav>
 </div>
 
 <section id="app" aria-label="Map of coffee shops open late">
@@ -37,7 +37,7 @@
 <div class="chips" id="chips" role="group" aria-label="How late"></div>
 <div class="tools">
 <select id="day" aria-label="Which night"><option value="0">Tonight</option></select>
-<input id="q" type="search" placeholder="Search name or area" aria-label="Search by name, street or neighbourhood" autocomplete="off">
+<input id="q" type="search" placeholder="Search name or area" aria-label="Search by name, street or neighborhood" autocomplete="off">
 <button type="button" id="near" aria-pressed="false">Near me</button>
 </div>
 <div class="checks">
@@ -54,12 +54,12 @@
 </div>
 <aside id="place" hidden aria-label="Place details"></aside>
 </section>
-<noscript><p style="padding:16px">The map needs JavaScript. The <a href="nyc/">neighbourhood pages</a> list late coffee shops without it.</p></noscript>
+<noscript><p style="padding:16px">The map needs JavaScript. The <a href="nyc/">neighborhood pages</a> list late coffee shops without it.</p></noscript>
 
 <main class="text">
 <h2 id="about">It's 9:40 pm. Where can you still get a coffee, and until when?</h2>
-<p>Latecup is a map of coffee shops, tea houses and dessert cafés in New York City that stay open late. Other maps tell you what is open now. Latecup answers the next question: what is still open at 10, at 11, at midnight, and what time each place closes. The closing time is written on the pin, and the pin's colour shows how much time is left.</p>
-<p>It is free, with no ads and no account. It covers the five boroughs: Manhattan, Brooklyn, Queens, the Bronx and Staten Island. Browse by area on the <a href="nyc/">neighbourhood pages</a>, for example late coffee in the East Village, Koreatown or Astoria.</p>
+<p>Latecup is a map of coffee shops, tea houses and dessert cafés in New York City that stay open late. Other maps tell you what is open now. Latecup answers the next question: what is still open at 10, at 11, at midnight, and what time each place closes. The closing time is written on the pin, and the pin's color shows how much time is left.</p>
+<p>It is free, with no ads and no account. It covers the five boroughs: Manhattan, Brooklyn, Queens, the Bronx and Staten Island. Browse by area on the <a href="nyc/">neighborhood pages</a>, for example late coffee in the East Village, Koreatown or Astoria.</p>
 <p><strong>The apps for iPhone, iPad and Android are on their way.</strong> Until they are in the stores, this page is the whole product.</p>
 
 <h3>How the map decides what "late" means</h3>
@@ -68,7 +68,7 @@
 <li><strong>A night belongs to the day it started on.</strong> At 1:30 am on Saturday the map is still showing Friday night. The night rolls over at 5 am.</li>
 <li><strong>The chips.</strong> Open now shows what is open this minute. 8 PM+, 9 PM+, 10 PM+, 11 PM+, Midnight+ and All night show the places that are open at that time tonight. A shop that closes at 10 is not counted as open at 10. All night means open at 3 am. A time that has already passed drops off the row.</li>
 <li><strong>"24 hours"</strong> is only for a place that is open round the clock and stays open through the coming night. On the last night of a 24-hour run, a shop that shuts at midnight says midnight.</li>
-<li><strong>Colour.</strong> <span style="color:#F5B14C">Amber</span>: two hours or more left. <span style="color:#F0873A">Orange</span>: under two hours. <span style="color:#F2604A">Red-orange</span>: closing within the hour.</li>
+<li><strong>Color.</strong> <span style="color:#F5B14C">Amber</span>: two hours or more left. <span style="color:#F0873A">Orange</span>: under two hours. <span style="color:#F2604A">Red-orange</span>: closing within the hour.</li>
 <li><strong>Another night.</strong> Use the night picker to check any of the next seven nights.</li>
 </ul>
 
@@ -88,7 +88,7 @@
 </div>
 
 <h3>A place has the wrong hours. How do I report it?</h3>
-<p>Open the place (tap its pin or its row in the list) and choose <strong>Hours wrong?</strong> Pick what is wrong, add the right hours if you know them, and send. In the app it is the same button on the place screen. A report contains only the place, your choice and what you typed. Each report is checked against the shop's own site or page, or the chain's store locator, and the map is corrected in a daily update.</p>
+<p>Open the place (tap its pin or its row in the list) and choose <strong>Hours wrong?</strong> Pick what is wrong, add the right hours if you know them, and send. In the app it is the same button on the place screen. A report contains the place, your choice, what you typed and the app version. Each report is checked against the shop's own site or page, or the chain's store locator, and the map is corrected in a daily update.</p>
 
 <h3>How do I confirm hours or rate a café?</h3>
 <p>Open the place. <strong>Hours are right</strong> confirms the hours you are looking at, once per place per day. The stars rate the café as a place to be late, from 1 to 5; tap again to change your rating. You don't need an account. Your own answers show at once on your device, and the totals that everybody sees are recounted about once an hour. Ratings are stars only: there are no written reviews.</p>
@@ -105,7 +105,7 @@
 <div class="card note">
 <strong>Want Latecup in your city?</strong>
 <form class="ask" id="cityform"><input type="text" name="city" maxlength="80" placeholder="Your city" aria-label="Your city" required><button class="btn" type="submit">Ask for it</button></form>
-<p class="small muted" id="cityfine" style="margin:0">Sends only the city name you type.</p>
+<p class="small muted" id="cityfine" style="margin:0">Sends the city name you type and this page's version ("web 1"), nothing else.</p>
 </div>
 
 <h3>Does the map know where I am?</h3>
@@ -125,14 +125,14 @@
 
 <h2 id="credits">Data and credits</h2>
 <ul>
-<li><strong>Places and unconfirmed hours:</strong> © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>, under the <a href="https://opendatacommons.org/licenses/odbl/1-0/">Open Database License</a>. The list Latecup publishes is a derived database under the same licence: <a href="https://github.com/JuicyPasta/latecup-data">github.com/JuicyPasta/latecup-data</a>.</li>
+<li><strong>Places and unconfirmed hours:</strong> © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>, under the <a href="https://opendatacommons.org/licenses/odbl/1-0/">Open Database License</a>. The list Latecup publishes is a derived database under the same license: <a href="https://github.com/JuicyPasta/latecup-data">github.com/JuicyPasta/latecup-data</a>.</li>
 <li><strong>Confirmed hours:</strong> read from each shop's own website, ordering page or official social account, or a chain's store locator. Never from Google Maps, Yelp or other listing sites.</li>
 <li><strong>Map:</strong> <a href="https://openfreemap.org/">OpenFreeMap</a>, © <a href="https://openmaptiles.org/">OpenMapTiles</a>, data from OpenStreetMap. Drawn with <a href="https://maplibre.org/">MapLibre GL JS</a>.</li>
 </ul>
 <p class="small muted">Latecup is not affiliated with any coffee shop or chain shown on the map. Shop names belong to their owners.</p>
 
 <footer class="page">
-<p><a href="privacy.html">Privacy policy</a> · <a href="#delete-data">Delete your data</a> · <a href="nyc/">Neighbourhoods</a> · Places © OpenStreetMap contributors</p>
+<p><a href="privacy.html">Privacy policy</a> · <a href="#delete-data">Delete your data</a> · <a href="nyc/">Neighborhoods</a> · Places © OpenStreetMap contributors</p>
 <p>Latecup is made by Jackson Darrow in New York City.</p>
 </footer>
 </main>

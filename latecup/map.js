@@ -77,7 +77,7 @@
     S.places.forEach(function (p) {
       if (S.indie && p.chain) return;
       if (S.confirmed && !sum(p).marked) return;
-      if (S.hood && p.hood !== S.hood) return; // a neighbourhood page's link: exactly that neighbourhood
+      if (S.hood && p.hood !== S.hood) return; // a neighborhood page's link: exactly that neighborhood
       if (q && (p.name + ' ' + p.addr + ' ' + p.hood + ' ' + p.boro).toLowerCase().indexOf(q) < 0) return;
       var ev = evaluate(p, chip, di);
       if (ev) out.push({ p: p, ev: ev });
@@ -120,7 +120,7 @@
       : function (a, b) { return (b.ev.allDay ? 1e6 : b.ev.close) - (a.ev.allDay ? 1e6 : a.ev.close) || (a.p.chain ? 1 : 0) - (b.p.chain ? 1 : 0) || a.p.name.localeCompare(b.p.name); });
     var what = ctx.chip.id === 'now' ? 'open now' : ctx.chip.id === 'all' ? 'open all night' : 'open at ' + ctx.chip.label.replace('+', '').replace('Midnight', 'midnight');
     var when = ctx.chip.id === 'now' ? '' : ' ' + nightName(ctx.di);
-    // every number here is the length of a list: the one below, or the neighbourhood's own page
+    // every number here is the length of a list: the one below, or the neighborhood's own page
     if (S.hood) {
       var all = S.places.filter(function (p) { return p.hood === S.hood; }).length;
       $('count').innerHTML = esc(S.hood) + ': ' + total + ' of its ' + all + (all === 1 ? ' place ' : ' places ') + esc(what + when) + (S.q.trim() ? ' matching "' + esc(S.q.trim()) + '"' : '') +
@@ -227,7 +227,7 @@
       KINDS.map(function (k) { return '<option value="' + k[0] + '">' + k[1] + '</option>'; }).join('') + '</select>' +
       '<textarea name="note" maxlength="500" placeholder="Optional: the right hours, and where you saw them" aria-label="Note"></textarea>' +
       '<button type="submit" class="btn">Send</button>' +
-      '<p class="fine">Sends only this place, your choice and your note. No location, no name, no email.</p></form></details>';
+      '<p class="fine">Sends this place, your choice, your note and this page\'s version ("web 1"). No location, no name, no email.</p></form></details>';
   }
   function sendReport(fields) { // form-encoded POST; the answer is opaque (no-cors), so a network error is the only failure seen
     var r = reportTarget(), body = new URLSearchParams();

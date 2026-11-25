@@ -1,5 +1,5 @@
 /* Latecup visitor confirmations and ratings (SPEC.md → "Visitor confirmations and ratings"),
-   shared by the web map and the neighbourhood-page generator. No dependencies, no DOM.
+   shared by the web map and the neighborhood-page generator. No dependencies, no DOM.
 
    - Totals come from the feed's votes file: {"ok": [n, newest date], "bad": [n, newest date],
      "stars": [mean, n]}; any of the three may be missing, and further elements are ignored.
