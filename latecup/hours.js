@@ -138,16 +138,21 @@
     if (min < 60) return min + ' min left';
     var h = Math.floor(min / 60), m = min % 60; return h + ' h' + (m ? ' ' + m + ' min' : '') + ' left';
   }
-  /* What to print for one weekday row of the week table. A stretch that began before this
-     day and is still open after 05:00 reads "Open until T" (or "Open 24 hours"); a stretch
-     that only spills past midnight from the night before belongs to that night's row. */
+  /* What to print for one weekday row of the week table (the app's Night.display):
+     - a stretch already running at this day's midnight and still open past 05:00: alone,
+       "Open 24 hours", when it runs on through the night; otherwise "Open until T"
+       (the last day of a 24-hour run);
+     - stretches that begin later this day: "A – B", or "Open from A" when the stretch then
+       runs round the clock (the opening is not hidden behind "24 hours").
+     A tail that ends before 05:00 belongs to yesterday's row. */
   function dayText(hours, dow) {
-    var ss = stretches(hours, dow), parts = [], full = false;
-    ss.forEach(function (s) {
-      if (s[0] <= 0 && s[1] > SERVICE_START) { if (is24(s)) full = true; else parts.push('Open until ' + clock(s[1])); }
-      else if (s[0] > 0 && s[0] < DAY) { if (is24(s)) full = true; else parts.push(clock(s[0]) + ' – ' + clock(s[1])); }
-    });
-    return full ? 'Open 24 hours' : parts.length ? parts.join(', ') : 'Closed';
+    var ss = stretches(hours, dow), parts = [];
+    for (var i = 0; i < ss.length; i++) {
+      var s = ss[i];
+      if (s[0] <= 0 && s[1] > SERVICE_START) { if (is24(s)) return 'Open 24 hours'; parts.push('Open until ' + clock(s[1])); }
+      else if (s[0] > 0 && s[0] < DAY) parts.push(is24(s) ? 'Open from ' + clock(s[0]) : clock(s[0]) + ' – ' + clock(s[1]));
+    }
+    return parts.length ? parts.join(', ') : 'Closed';
   }
   /* "Mon–Thu 10 PM · Fri–Sat 1 AM · Sun closed": usual closing time per night, grouped. */
   function weekClosings(hours) {

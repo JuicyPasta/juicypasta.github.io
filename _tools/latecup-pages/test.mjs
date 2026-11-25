@@ -114,7 +114,13 @@ t('"Open 24 hours" needs 24 h or more AND to run at least to 05:00 the next morn
   assert.equal(H.tonight(D, 3).allDay, true);                                            // Thu: 24 h+ and past 5 AM Friday
   assert.equal(H.tonight(D, 4).allDay, false); assert.equal(H.tonight(D, 4).close, 1560); // Fri: ends 2 AM
   assert.equal(H.pinLabel(H.tonight(D, 4)), '2 AM'); assert.ok(H.matches(D, 4, MIDNIGHT)); assert.equal(H.matches(D, 4, ALL), null);
-  assert.equal(H.tonight(D, 5), null); assert.deepEqual([3, 4, 5].map((d) => H.dayText(D, d)), ['Open 24 hours', 'Open until 2 AM', 'Closed']);
+  assert.equal(H.tonight(D, 5), null); assert.deepEqual([3, 4, 5].map((d) => H.dayText(D, d)), ['Open from 8 AM', 'Open until 2 AM', 'Closed']);
+  // F: round the clock Monday to Thursday midnight, 6 AM – midnight Friday, then from 6 AM Saturday round the clock (a live Dunkin', n10294003833)
+  const F = [[[0, 1440]], [[0, 1440]], [[0, 1440]], [[0, 1440]], [[360, 1440]], [[360, 1440]], [[0, 1440]]];
+  assert.deepEqual([0, 1, 2, 3, 4, 5, 6].map((d) => H.dayText(F, d)),
+    ['Open 24 hours', 'Open 24 hours', 'Open 24 hours', 'Open until 12 AM', '6 AM – 12 AM', 'Open from 6 AM', 'Open 24 hours']);
+  assert.equal(H.tonight(F, 5).allDay, true); assert.equal(H.pinLabel(H.tonight(F, 5)), '24h'); // Saturday night itself is a 24-hour night
+  assert.deepEqual(H.weekClosings(F), [{ days: 'Mon–Wed', text: '24 hours' }, { days: 'Thu–Fri', text: '12 AM' }, { days: 'Sat–Sun', text: '24 hours' }]);
   // E: round the clock, the whole week: unchanged
   const E = week([[0, 1440]]);
   for (let d = 0; d < 7; d++) { assert.equal(H.tonight(E, d).allDay, true); assert.ok(H.matches(E, d, ALL)); assert.equal(H.dayText(E, d), 'Open 24 hours'); }
