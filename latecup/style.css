@@ -1,0 +1,43 @@
+/* Latecup text pages (support sections, privacy, neighbourhood pages). Palette: Latecup/marketing/brand.md */
+:root{--bg:#FAF7F2;--card:#FFFFFF;--raised:#F1ECE3;--ink:#1B1A17;--muted:#5E584E;--faint:#6A645A;--line:#DDD6CA;--accent:#8A5300;--fill:#F5B14C;--on-fill:#1A1408;--under2:#9C4A0B;--soon:#B5321C}
+@media (prefers-color-scheme:dark){:root{--bg:#0E1116;--card:#171B22;--raised:#20252E;--ink:#F3EEE6;--muted:#B4AEA3;--faint:#8A8F99;--line:#2C323D;--accent:#F5B14C;--under2:#F0873A;--soon:#F2604A}}
+:root.night{--bg:#0E1116;--card:#171B22;--raised:#20252E;--ink:#F3EEE6;--muted:#B4AEA3;--faint:#8A8F99;--line:#2C323D;--accent:#F5B14C;--under2:#F0873A;--soon:#F2604A;color-scheme:dark}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+main.text{max-width:760px;margin:0 auto;padding:32px 16px 56px}
+header.page{display:flex;align-items:center;gap:16px;margin-bottom:24px}
+header.page img{width:64px;height:64px;border-radius:14px}
+h1{font-size:28px;line-height:1.2;margin:0}
+header.page p{margin:2px 0 0;color:var(--muted)}
+h2{font-size:21px;line-height:1.3;margin:36px 0 8px}
+h3{font-size:17px;margin:20px 0 4px}
+p,ul,ol{margin:0 0 12px}
+ul,ol{padding-left:22px}
+a{color:var(--accent)}
+code{font-size:.92em;background:var(--raised);padding:1px 5px;border-radius:5px}
+table{border-collapse:collapse;width:100%;margin:8px 0 16px;font-size:16px}
+th,td{text-align:left;vertical-align:top;padding:9px 10px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-weight:600;font-size:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:16px 0}
+.note{border-left:4px solid var(--fill)}
+.muted{color:var(--muted)}
+.small{font-size:15px}
+.crumbs{font-size:15px;color:var(--muted);margin:0 0 14px}
+.btn{display:inline-block;background:var(--fill);color:var(--on-fill);font-weight:600;text-decoration:none;border:0;border-radius:10px;padding:10px 16px;font-size:16px;cursor:pointer;font-family:inherit}
+footer.page{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:15px}
+/* neighbourhood pages */
+.places td:first-child{min-width:44%}
+.places .name{font-weight:600}
+.places .sub{display:block;color:var(--muted);font-size:14.5px}
+.places .closings span{display:block;font-variant-numeric:tabular-nums;white-space:nowrap}
+.places .closings b{font-weight:600}
+.tag{display:inline-block;font-size:13px;line-height:1;padding:4px 7px;border-radius:999px;border:1px solid var(--line);color:var(--muted);margin-left:6px;vertical-align:1px;white-space:nowrap}
+.tag.ok{border-color:var(--accent);color:var(--accent)}
+.hoods{columns:2;column-gap:28px;padding:0;list-style:none}
+.hoods li{break-inside:avoid;padding:5px 0;border-bottom:1px solid var(--line)}
+.hoods .n{color:var(--muted);font-size:15px;float:right;font-variant-numeric:tabular-nums}
+@media (max-width:560px){.hoods{columns:1}table{font-size:15px}th,td{padding:8px 6px}.places th:last-child,.places td:last-child{display:none}}
+form.ask{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+form.ask input[type=text]{flex:1 1 200px;min-width:0;font:inherit;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.sent{color:var(--accent);font-weight:600}
