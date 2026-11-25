@@ -1,14 +1,15 @@
 /* Latecup visitor confirmations and ratings (SPEC.md → "Visitor confirmations and ratings"),
    shared by the web map and the neighbourhood-page generator. No dependencies, no DOM.
 
-   - Totals come from the feed's votes file: {"ok": [n, newest date, how many were on site],
-     "bad": [n, newest date], "stars": [mean, n]}; any of the three may be missing.
+   - Totals come from the feed's votes file: {"ok": [n, newest date], "bad": [n, newest date],
+     "stars": [mean, n]}; any of the three may be missing, and further elements are ignored.
    - Two kinds of "confirmed", never merged in wording: ours (src shop/brand) and visitors'.
      The mark and the "Confirmed hours only" filter accept ours, or 2 or more visitors.
    - A place with a newer "hours wrong" report than its newest visitor confirmation reads
      "Reported wrong on DATE: being checked" and loses the mark.
-   - What this page sends: type attest → note "v=1;iid=<uuid>;hh=<hash>;onsite=0" (the web
-     never knows whether you are there, so onsite is always 0); type rate → "v=1;iid=<uuid>;stars=<1-5>".
+   - What this page sends: type attest → note "v=1;iid=<uuid>;hh=<hash>"; type rate →
+     "v=1;iid=<uuid>;stars=<1-5>". Nothing about where the visitor is: there is no
+     "at the café" flag (a yes for a named café would be a location).
    - The visitor's own confirmations and stars are kept in the browser (localStorage) with a
      random install ID (made the first time the visitor confirms or rates, not before), shown at
      once, and limited to one confirmation per place per day. */
@@ -23,7 +24,7 @@
   /* Everything the UI needs to say about one place's confirmations and rating. */
   function summary(place, vote) {
     vote = vote || {};
-    var ok = num(vote.ok, 0) > 0 ? { n: Math.floor(num(vote.ok, 0)), date: String(vote.ok[1] || ''), onsite: Math.floor(num(vote.ok, 2)) } : null;
+    var ok = num(vote.ok, 0) > 0 ? { n: Math.floor(num(vote.ok, 0)), date: String(vote.ok[1] || '') } : null;
     var bad = num(vote.bad, 0) > 0 ? { n: Math.floor(num(vote.bad, 0)), date: String(vote.bad[1] || '') } : null;
     var stars = num(vote.stars, 1) > 0 && num(vote.stars, 0) >= 1 && num(vote.stars, 0) <= 5 ? { mean: Math.round(vote.stars[0] * 10) / 10, n: Math.floor(vote.stars[1]) } : null;
     var ours = place.src === 'shop' || place.src === 'brand';
@@ -38,7 +39,7 @@
       starsLine: stars ? stars.mean.toFixed(1) + ' · ' + stars.n + (stars.n === 1 ? ' rating' : ' ratings') : ''
     };
   }
-  function attestNote(iid, hh) { return 'v=1;iid=' + iid + ';hh=' + hh + ';onsite=0'; }
+  function attestNote(iid, hh) { return 'v=1;iid=' + iid + ';hh=' + hh; }
   function rateNote(iid, stars) { return 'v=1;iid=' + iid + ';stars=' + stars; }
   function uuid(c) { // RFC 4122 version 4
     c = c || (typeof crypto !== 'undefined' ? crypto : null);

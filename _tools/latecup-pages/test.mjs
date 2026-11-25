@@ -166,7 +166,8 @@ t('two kinds of confirmed: ours, or 2 or more visitors', () => {
   assert.equal(V.summary(shop, undefined).marked, true); assert.equal(V.summary(shop, undefined).ours, true);
   let s = V.summary(osm, { ok: [1, '2026-11-25', 0] });
   assert.equal(s.marked, false); assert.equal(s.visitorLine, '1 visitor confirmed these hours · Nov 25');
-  s = V.summary(osm, { ok: [3, '2026-11-25', 2], stars: [4.3, 7] });
+  s = V.summary(osm, { ok: [3, '2026-11-25', 2], stars: [4.3, 7] }); // a third element (the old on-site count) is ignored
+  assert.deepEqual(s.ok, { n: 3, date: '2026-11-25' }); assert.deepEqual(V.summary(osm, { ok: [3, '2026-11-25'] }).ok, s.ok);
   assert.equal(s.marked, true); assert.equal(s.byVisitors, true); assert.equal(s.ours, false);
   assert.equal(s.visitorLine, '3 visitors confirmed these hours · latest Nov 25'); assert.equal(s.starsLine, '4.3 · 7 ratings');
   assert.equal(V.summary(osm, { stars: [5, 1] }).starsLine, '5.0 · 1 rating');
@@ -186,10 +187,12 @@ t('bad or missing vote data never throws and never marks', () => {
     const s = V.summary(osm, v); assert.equal(s.marked, false); assert.equal(s.visitorLine, ''); assert.equal(s.starsLine, ''); assert.equal(s.flagged, false);
   }
 });
-t('what is sent: the note strings of the contract; onsite is always 0 on the web', () => {
-  assert.equal(V.attestNote('0a1b2c3d-0000-4000-8000-000000000001', '9f2c41aa'), 'v=1;iid=0a1b2c3d-0000-4000-8000-000000000001;hh=9f2c41aa;onsite=0');
+t('what is sent: the note strings of the contract, with nothing about where the visitor is', () => {
+  assert.equal(V.attestNote('0a1b2c3d-0000-4000-8000-000000000001', '9f2c41aa'), 'v=1;iid=0a1b2c3d-0000-4000-8000-000000000001;hh=9f2c41aa');
+  assert.doesNotMatch(V.attestNote(V.uuid(), '9f2c41aa') + V.rateNote(V.uuid(), 3), /onsite|lat|lon/);
   assert.equal(V.rateNote('0a1b2c3d-0000-4000-8000-000000000001', 4), 'v=1;iid=0a1b2c3d-0000-4000-8000-000000000001;stars=4');
-  const sheet = /^v=1;iid=[0-9A-Fa-f-]{36};(hh=[0-9A-Za-z_-]{1,40};onsite=[01]|stars=[1-5])$/; // the published tab passes only this shape
+  const sheet = /^v=1;iid=[0-9A-Fa-f-]{36};(hh=[0-9A-Za-z_-]{1,40}(;onsite=[01])?|stars=[1-5])$/; // the published tab passes only this shape
+  assert.match('v=1;iid=0a1b2c3d-0000-4000-8000-000000000001;hh=9f2c41aa;onsite=1', sheet, 'the earlier form with the flag is still let through');
   const id = V.uuid();
   assert.match(V.attestNote(id, '9f2c41aa'), sheet); assert.match(V.rateNote(id, 1), sheet);
   assert.doesNotMatch(V.rateNote(id, 6), sheet); assert.doesNotMatch('closes at 9 now', sheet);
