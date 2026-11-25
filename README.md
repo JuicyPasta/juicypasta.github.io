@@ -6,6 +6,7 @@ Apps and free tools by Jackson Darrow.
 
 - [Turbulence forecast for your flight](https://juicypasta.github.io/jetcalm/turbulence-forecast/): pick two airports and a departure time and see where bumps are expected, from the official World Area Forecast System.
 - [Turbulence map](https://juicypasta.github.io/jetcalm/turbulence-map/): today's forecast at cruise altitude, for the world, the USA and the North Atlantic.
+- [Turbulence tracker](https://juicypasta.github.io/jetcalm/turbulence-tracker/): the latest pilot turbulence reports from the last 3 hours on a map, smooth to severe.
 - [UV tanning calculator](https://juicypasta.github.io/solei/uv-tanning-calculator/): enter the UV index, your skin type and your sunscreen to estimate how long you can stay in the sun before your safe limit, and when to reapply.
 - [GLP-1 injection sites and rotation planner](https://juicypasta.github.io/rotinia/glp-1-injection-sites/): where the labels say to inject Ozempic, Wegovy, Mounjaro and Zepbound, how to rotate, and a printable rotation log.
 - [Onde aplicar Mounjaro (português)](https://juicypasta.github.io/rotinia/pt/onde-aplicar-mounjaro/) and [Dónde aplicar Mounjaro (español)](https://juicypasta.github.io/rotinia/es/donde-aplicar-mounjaro/): the same guide and planner, from the Brazilian (Anvisa) and EU labels.

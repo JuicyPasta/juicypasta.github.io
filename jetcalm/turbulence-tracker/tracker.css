@@ -1,0 +1,11 @@
+/* The tracker page, on top of ../style.css, ../turbulence-forecast/page.css and ../turbulence-map/map.css. */
+.controls{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
+.controls .views{margin:12px 0 10px}
+.legend .dot,.lvl.dot{border-radius:50%}
+#map-status.stale{color:#b3261e;font-weight:600}
+@media (prefers-color-scheme:dark){#map-status.stale{color:#ffb4ab}}
+.reports{list-style:none;padding:0;margin:8px 0 16px}
+.reports li{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line);line-height:1.35}
+.reports li .dot{flex:none;width:14px;height:14px;border-radius:50%;margin-top:4px;border:1px solid rgba(18,48,44,.5)}
+.reports li strong{display:block}
+.reports .meta{display:block;color:var(--muted);font-size:15px;overflow-wrap:anywhere}

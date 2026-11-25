@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Turbulence Tracker: Live Pilot Reports (Free) | Jetcalm</title>
+<meta name="description" content="Free turbulence tracker: the latest pilot turbulence reports (PIREPs) from the last 3 hours on a map of the USA and the world, smooth to severe, with altitude and aircraft type. Updated hourly from NOAA.">
+<link rel="canonical" href="https://juicypasta.github.io/jetcalm/turbulence-tracker/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Jetcalm">
+<meta property="og:title" content="Turbulence tracker: what pilots are reporting now">
+<meta property="og:description" content="The latest pilot turbulence reports on a map: where crews felt bumps, and where they reported smooth air, in the last 3 hours.">
+<meta property="og:url" content="https://juicypasta.github.io/jetcalm/turbulence-tracker/">
+<meta property="og:image" content="https://juicypasta.github.io/jetcalm/icon.png">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#17695c">
+<link rel="icon" href="../icon.png">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../turbulence-forecast/page.css">
+<link rel="stylesheet" href="../turbulence-map/map.css">
+<link rel="stylesheet" href="tracker.css">
+<script type="module" src="tracker.js"></script>
+</head>
+<body>
+<main>
+<header>
+<a href="../"><img src="../icon.png" alt="Jetcalm" width="64" height="64"></a>
+<div><p class="brand"><a href="../">Jetcalm</a></p><p>Free, no ads, no sign-up</p></div>
+</header>
+
+<h1>Turbulence tracker: what pilots are reporting now</h1>
+<p class="lead">Pilot reports of turbulence from the last 3 hours, smooth to severe: where crews felt bumps, at what height and in what aircraft. For your own flight, <a href="../turbulence-forecast/">check the forecast</a> instead.</p>
+
+<div class="controls">
+<div class="views" role="group" aria-label="Map view">
+<button type="button" data-view="usa" aria-pressed="true">USA</button>
+<button type="button" data-view="world" aria-pressed="false">World</button>
+</div>
+<div class="views" role="group" aria-label="Altitude">
+<button type="button" data-alt="all" aria-pressed="true">All altitudes</button>
+<button type="button" data-alt="cruise" aria-pressed="false">Above 20,000 ft</button>
+</div>
+</div>
+<figure class="map-wrap">
+<canvas id="map" role="img" aria-label="Map of pilot turbulence reports from the last 3 hours, coloured by intensity"></canvas>
+<figcaption>
+<ul class="legend">
+<li><span class="lvl dot" style="background:#6fbf9b"></span>Smooth</li>
+<li><span class="lvl dot" style="background:#cfe36a"></span>Light</li>
+<li><span class="lvl dot" style="background:#e2d35c"></span>Light to moderate</li>
+<li><span class="lvl dot" style="background:#f2c14e"></span>Moderate</li>
+<li><span class="lvl dot" style="background:#ee8a3c"></span>Moderate to severe</li>
+<li><span class="lvl dot" style="background:#c9503c"></span>Severe</li>
+</ul>
+<p class="layer">One dot per pilot report, at the place and time the crew gave. Times are in your time zone.</p>
+<p id="map-status" class="muted small" aria-live="polite">Loading the latest pilot reports…</p>
+</figcaption>
+</figure>
+
+<h2>Strongest reports right now</h2>
+<ol id="strongest" class="reports"><li class="muted">Loading…</li></ol>
+
+<div class="card note">
+<p><strong>What a pilot report is, and isn't.</strong> A pilot report (PIREP) is what one crew felt at one time and place, sent by radio and passed on by air traffic control. They are sparse and come mostly from North America; many flights never report, so an empty area doesn't mean smooth air. They reach this page up to an hour or so after the fact. And they depend on the aircraft: "moderate" in a small turboprop can be "light" in a big jet.</p>
+</div>
+
+<h2>Live reports and the forecast: use both</h2>
+<p>Reports tell you what has happened; the forecast tells you what is expected. Clear-air turbulence, the kind at cruise height, doesn't show on weather radar, so a cluster of moderate reports is the best live sign that a patch of air is rough. Pilots use them the same way: to pick a smoother height or route. For a flight later today or tomorrow, the forecast is the better guide:</p>
+<ul>
+<li><a href="../turbulence-forecast/">Turbulence forecast for your flight</a>: two airports and a departure time give a timeline from takeoff to landing, in plain words.</li>
+<li><a href="../turbulence-map/">Turbulence map</a>: today's official forecast at cruise altitude for the world, the USA and the North Atlantic.</li>
+</ul>
+
+<h2>What the levels mean</h2>
+<table>
+<tr><th>Report</th><th>What it feels like in the cabin</th></tr>
+<tr><td><span class="lvl dot" style="background:#6fbf9b"></span>Smooth</td><td>The crew reported no turbulence.</td></tr>
+<tr><td><span class="lvl dot" style="background:#cfe36a"></span>Light</td><td>Small bumps, like a car on a gravel road. Drinks stay in the cup. Very common.</td></tr>
+<tr><td><span class="lvl dot" style="background:#f2c14e"></span>Moderate</td><td>Clear bumps and some jolts. Drinks can spill and walking is awkward. The seatbelt sign is usually on.</td></tr>
+<tr><td><span class="lvl dot" style="background:#c9503c"></span>Severe</td><td>Abrupt, large movements; loose items fly. Rare, and controllers warn other crews so they can avoid the area.</td></tr>
+</table>
+<p>"Light to moderate" and "moderate to severe" are reports between two levels; extreme reports, very rare, are drawn as severe.</p>
+
+<h2>About this tracker</h2>
+<p>Every hour this page's feed collects the pilot reports (PIREPs, and AIREPs from airliners over the oceans) published by the NOAA/NWS Aviation Weather Center for the last 3 hours, and keeps every report that says something about turbulence, including "smooth". It shows the aircraft type when the crew gave one; it never shows call signs or tail numbers.</p>
+<p>Turbulence is uncomfortable, but it is not dangerous to the aircraft: airliners are built for far more than they meet in flight. Most injuries happen to people who aren't belted in, so keep your seatbelt fastened whenever you are seated. This tracker is for passengers; it is not a flight-planning tool, and Jetcalm is not affiliated with any airline.</p>
+
+<section class="app-cta card">
+<h2>Your flight's forecast, offline in the air: Jetcalm for iPhone and Android</h2>
+<p>The Jetcalm app keeps your flight's forecast readable in airplane mode, saves your trip, shows the route on a map with the weather at both airports, and has a bump meter for the flight itself.</p>
+<p class="store-row"><a class="store-btn" href="https://apps.apple.com/app/id6838153728?ct=web-tracker&amp;mt=8" rel="noopener">Download Jetcalm on the App Store</a> <span class="store-note">iPhone and iPad. Android is coming to Google Play.</span> <a href="../">About the app</a></p>
+</section>
+
+<footer>
+<p>Pilot reports: NOAA/NWS Aviation Weather Center (aviationweather.gov), works of the US government in the public domain. Jetcalm is not affiliated with or endorsed by NOAA or the National Weather Service. Map outlines: <a href="https://www.naturalearthdata.com/">Natural Earth</a> (public domain). Feed code: <a href="https://github.com/JuicyPasta/jetcalm-data">jetcalm-data</a>.</p>
+<p>No ads, no cookies, no tracking. <a href="../">Jetcalm</a> · <a href="../turbulence-forecast/">Flight forecast</a> · <a href="../turbulence-map/">Turbulence map</a> · <a href="../privacy.html">Privacy</a></p>
+<p>Jetcalm is made by Jackson Darrow in New York City.</p>
+</footer>
+</main>
+</body>
+</html>
