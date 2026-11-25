@@ -152,8 +152,75 @@ t('week closings and source line', () => {
   const hours = [[[480, 1320]], [[480, 1320]], [[480, 1320]], [[480, 1320]], [[480, 1500]], [[540, 1500]], []];
   assert.deepEqual(H.weekClosings(hours), [{ days: 'Mon–Thu', text: '10 PM' }, { days: 'Fri–Sat', text: '1 AM' }, { days: 'Sun', text: 'closed' }]);
   assert.equal(H.latestClose(hours), 1500);
-  assert.equal(H.sourceLine({ src: 'shop', checked: '2026-11-24' }).text, "Hours confirmed 2026-11-24 from the shop's website");
+  assert.equal(H.sourceLine({ src: 'shop', checked: '2026-11-24' }).text, "Hours confirmed 2026-11-24 from the shop's own site or page");
+  assert.equal(H.sourceLine({ src: 'brand', checked: '2026-11-24' }).text, "Hours confirmed 2026-11-24 from the chain's store locator");
   assert.equal(H.sourceLine({ src: 'osm', checked: null }).text, 'Unconfirmed hours from OpenStreetMap: check before you go');
+});
+
+// ---------- QA of tf-1: the next opening, and lines that never contradict the status ----------
+t('the next opening is a stretch that begins that day, never the tail of the night before (QA m10)', () => {
+  // Friday 8 AM – 1 AM, Saturday 8 AM – midnight: Saturday's table starts with the tail [0, 60] (Sunrise Sunset, n4046748105)
+  const S = [[[480, 1320]], [[480, 1320]], [[480, 1320]], [[480, 1320]], [[480, 1440]], [[0, 60], [480, 1440]], [[480, 1320]]];
+  const now = at('2026-11-28T09:40:00Z'); // Saturday 4:40 AM, still Friday night
+  assert.equal(now.dow, 4); assert.equal(now.rel, 1720);
+  const st = H.status(S, now);
+  assert.equal(st.kind, 'closed'); assert.equal(st.nextDow, 5); assert.equal(st.nextOpen, 480); assert.equal(st.daysAhead, 1);
+  const v = H.tonightView(S, now, null);
+  assert.equal(v.line, 'Closed · opens Saturday at 8 AM'); assert.equal(v.big, 'Closed at 1 AM');
+  // a week with one opening: found six days ahead
+  const once = [[], [], [[600, 900]], [], [], [], []];
+  const far = H.status(once, at('2026-11-26T20:00:00Z')); // Thursday 3 PM
+  assert.equal(far.kind, 'closed'); assert.equal(far.nextDow, 2); assert.equal(far.nextOpen, 600); assert.equal(far.daysAhead, 6);
+  assert.equal(H.status(week([]), at('2026-11-26T20:00:00Z')).nextDow, undefined); // never open
+});
+t('the large tonight line follows the status (QA M1, m1)', () => {
+  // M1: 6:30 AM – 9:30 PM Mon–Thu; Friday opens 6:30 AM and runs round the clock to Sunday midnight (n6925129153)
+  const L = [[[390, 1290]], [[390, 1290]], [[390, 1290]], [[390, 1290]], [[390, 1440]], [[0, 1440]], [[0, 1440]]];
+  let now = at('2026-11-27T10:10:00Z'); // Friday 5:10 AM: the new service day, closed until 6:30
+  assert.equal(now.dow, 4); assert.equal(now.rel, 310);
+  let v = H.tonightView(L, now, null);
+  assert.equal(v.big, 'Opens at 6:30 AM'); assert.equal(v.line, 'Opens 6:30 AM · then open 24 hours');
+  v = H.tonightView(L, now, H.matches(L, 4, H.THRESHOLDS[0])); // the same under 8 PM+, whose pin reads 24h
+  assert.equal(v.big, 'Opens at 6:30 AM'); assert.equal(v.line, 'Opens 6:30 AM · then open 24 hours'); assert.equal(v.left, undefined);
+  assert.equal(H.dayText(L, 4), 'Open from 6:30 AM'); assert.equal(H.dayText(L, 5), 'Open 24 hours'); assert.equal(H.dayText(L, 6), 'Open until 12 AM');
+  v = H.tonightView(L, at('2026-11-27T17:00:00Z'), null); // Friday noon: open, in a 24-hour run
+  assert.equal(v.big, '24 hours'); assert.equal(v.line, 'Open 24 hours'); assert.equal(v.caption, 'open tonight');
+  // m1: closes at 9 PM, looked at 9:52 PM on a Tuesday
+  const N = week([[480, 1260]]);
+  v = H.tonightView(N, at('2026-11-25T02:52:00Z'), null);
+  assert.equal(v.big, 'Closed at 9 PM'); assert.equal(v.line, 'Closed · opens Wednesday at 8 AM'); assert.equal(v.cls, 'off');
+  v = H.tonightView(N, at('2026-11-25T00:52:00Z'), null); // 7:52 PM: open, 68 minutes left
+  assert.equal(v.big, '9 PM'); assert.equal(v.caption, 'closes tonight'); assert.equal(v.line, 'Open until 9 PM · 1 h 8 min left'); assert.equal(v.cls, 'under2');
+  v = H.tonightView(N, at('2026-11-25T01:30:00Z'), null); // 8:30 PM
+  assert.equal(v.cls, 'soon'); assert.equal(v.left, 30);
+  v = H.tonightView(N, at('2026-11-24T11:00:00Z'), null); // 6 AM: not open yet
+  assert.equal(v.big, 'Opens at 8 AM'); assert.equal(v.line, 'Opens 8 AM · open until 9 PM');
+  // closed all day
+  const C = [[], [[480, 1260]], [], [], [], [], []];
+  v = H.tonightView(C, at('2026-11-23T20:00:00Z'), null); // Monday 3 PM
+  assert.equal(v.big, 'Closed'); assert.equal(v.caption, 'not open tonight'); assert.equal(v.line, 'Closed · opens Tuesday at 8 AM');
+});
+t('pin, row and place describe the same stretch (QA m4: a split-shift day)', () => {
+  // Wednesday 7 AM – 5 PM, then 6 PM – 11 PM (Bad Therapy)
+  const B = [[[420, 1380]], [[420, 1380]], [[420, 1020], [1080, 1380]], [[420, 1380]], [[420, 1380]], [[420, 1380]], [[420, 1380]]];
+  const P8 = H.THRESHOLDS[0], shown = H.matches(B, 2, P8);
+  assert.equal(shown.open, 1080); assert.equal(shown.close, 1380); assert.equal(H.pinLabel(shown), '11');
+  let now = at('2026-11-25T20:00:00Z'); // Wednesday 3 PM: open for the day shift, the pin shows the evening
+  let v = H.tonightView(B, now, shown);
+  assert.equal(v.line, 'Open until 5 PM · reopens 6 PM until 11 PM'); assert.equal(v.big, '11 PM'); assert.equal(v.caption, 'closes tonight'); assert.equal(v.left, undefined);
+  v = H.tonightView(B, now, H.openAt(B, now.dow, now.rel)); // the same minute under "Open now": the pin shows 5
+  assert.equal(v.line, 'Open until 5 PM · 2 h left'); assert.equal(v.big, '5 PM'); assert.equal(v.left, 120);
+  v = H.tonightView(B, at('2026-11-25T22:30:00Z'), shown); // 5:30 PM, between the two
+  assert.equal(v.line, 'Opens 6 PM · open until 11 PM'); assert.equal(v.big, 'Opens at 6 PM');
+  v = H.tonightView(B, at('2026-11-25T11:00:00Z'), shown); // 6 AM: the next opening is 7 AM, the pin still shows the evening
+  assert.equal(v.line, 'Opens 7 AM · tonight until 11 PM'); assert.equal(v.big, 'Opens at 7 AM');
+  v = H.tonightView(B, at('2026-11-26T00:30:00Z'), shown); // 7:30 PM: in the evening stretch
+  assert.equal(v.line, 'Open until 11 PM · 3 h 30 min left'); assert.equal(v.big, '11 PM'); assert.equal(v.left, 210);
+  // another night: the stretch the pin shows
+  let n = H.nightView(B, 2, shown, 'Wednesday night');
+  assert.equal(n.line, 'Open 6 PM – 11 PM'); assert.equal(n.big, '11 PM'); assert.equal(n.caption, 'closes Wednesday night');
+  n = H.nightView(week([[0, 1440]]), 2, null, 'Wednesday night'); assert.equal(n.big, '24 hours'); assert.equal(n.line, 'Open 24 hours');
+  n = H.nightView([[], [], [], [], [], [], []], 2, null, 'Wednesday night'); assert.equal(n.big, 'Closed'); assert.equal(n.caption, 'not open Wednesday night');
 });
 
 // ---------- visitor confirmations and ratings (latecup/votes.js) ----------

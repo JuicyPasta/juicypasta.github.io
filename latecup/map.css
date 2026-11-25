@@ -53,6 +53,8 @@ body.app{background:#0E1116}
 #place h2{font-size:23px;line-height:1.2;margin:0 0 8px;clear:none}
 #place .st{font-size:16px;margin:0 0 6px}
 #place .big{font-size:46px;line-height:1.05;font-weight:650;font-variant-numeric:tabular-nums;margin:6px 0 2px;letter-spacing:-.5px}
+#place .big.long{font-size:31px;letter-spacing:-.2px;line-height:1.15}
+#clearhood{font:inherit;font-size:13.5px;color:var(--accent);background:none;border:1px solid var(--line);border-radius:999px;padding:3px 10px;margin-left:6px;cursor:pointer}
 #place .bigsub{color:var(--muted);font-size:15px;margin:0 0 12px}
 #place .src{font-size:15px;line-height:1.45;margin:0 0 12px;color:var(--faint)}
 #place .src.ok{color:var(--accent)}

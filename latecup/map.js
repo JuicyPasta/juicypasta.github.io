@@ -21,7 +21,7 @@
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var S = { manifest: null, city: null, places: [], byId: {}, now: null, day: 0, chip: null, chipTouched: false, q: '', indie: false, confirmed: false,
-            user: null, shown: PAGE, selected: null, matched: [], map: null, ready: false, lastChips: '', votes: {}, mine: null, thanks: {} };
+            user: null, hood: null, shown: PAGE, selected: null, matched: [], map: null, ready: false, lastChips: '', votes: {}, mine: null, thanks: {} };
 
   function testNow() { // ?now=2026-11-27T02:30:00Z on localhost, for tests
     var v = local && new URLSearchParams(location.search).get('now'); return v ? new Date(v) : new Date();
@@ -42,36 +42,18 @@
     else if (ids.indexOf(S.chip) < 0) S.chip = ids.indexOf('now') >= 0 ? 'now' : set.def; // a chosen time that has passed collapses into Open now
     return set.chips.filter(function (c) { return c.id === S.chip; })[0];
   }
-  /* One place against the current chip and day → what to draw, or null when it doesn't match. */
+  /* One place against the current chip and night → the stretch its pin shows and what the row
+     and the place say about it (hours.js: the three always agree), or null when it doesn't match. */
   function evaluate(p, chip, di) {
-    var st, m;
-    if (chip.id === 'now') {
-      st = H.status(p.hours, S.now);
-      if (st.kind !== 'open' && st.kind !== 'soon') return null;
-      return { close: st.close, allDay: !!st.allDay, left: st.left, state: st.allDay ? 'plenty' : H.pinState(st.left), openNow: true };
-    }
-    m = H.matches(p.hours, di.dow, chip);
-    if (!m) return null;
-    if (di.isToday) {
-      st = H.status(p.hours, S.now);
-      if ((st.kind === 'open' || st.kind === 'soon') && (st.allDay || st.close === m.close))
-        return { close: m.close, allDay: m.allDay, left: st.left, state: m.allDay ? 'plenty' : H.pinState(st.left), openNow: true };
-    }
-    return { close: m.close, open: m.open, allDay: m.allDay, left: null, state: 'plenty', openNow: false };
+    var shown = chip.id === 'now' ? H.openAt(p.hours, S.now.dow, S.now.rel) : H.matches(p.hours, di.dow, chip);
+    if (!shown) return null;
+    var view = di.isToday ? H.tonightView(p.hours, S.now, shown) : H.nightView(p.hours, di.dow, shown, nightName(di));
+    return { shown: shown, view: view, close: shown.close, allDay: shown.allDay, state: view.left != null && view.left !== Infinity ? H.pinState(view.left) : 'plenty' };
   }
-  function statusText(ev, di) {
-    if (ev.allDay) return { cls: '', text: 'Open 24 hours' };
-    if (ev.openNow) return { cls: ev.state === 'plenty' ? '' : ev.state, text: 'Open until ' + H.clock(ev.close) + ' · ' + H.leftText(ev.left) };
-    if (di.isToday && ev.open > S.now.rel) return { cls: '', text: 'Opens ' + H.clock(ev.open) + ' · open until ' + H.clock(ev.close) };
-    return { cls: '', text: 'Open ' + H.clock(ev.open) + ' – ' + H.clock(ev.close) };
-  }
-  function nowStatusText(p) { // the place panel's status line, always about right now
-    var st = H.status(p.hours, S.now);
-    if (st.kind === 'open' || st.kind === 'soon') return st.allDay ? { cls: '', text: 'Open now · open 24 hours' }
-      : { cls: st.kind === 'soon' ? 'soon' : H.pinState(st.left) === 'under2' ? 'under2' : '', text: (st.kind === 'soon' ? 'Closing soon · ' : 'Open until ' + H.clock(st.close) + ' · ') + H.leftText(st.left) };
-    if (st.kind === 'later') return { cls: 'off', text: 'Closed now · opens at ' + H.clock(st.open) };
-    if (st.nextDow != null) return { cls: 'off', text: 'Closed · opens ' + (st.daysAhead === 1 ? 'tomorrow' : H.DOW[st.nextDow]) + ' at ' + H.clock(st.nextOpen) };
-    return { cls: 'off', text: 'Closed' };
+  /* The place panel: the pin's stretch when the place is on the map under this chip, otherwise what it is doing now (or that night). */
+  function placeView(p, di) {
+    var ev = evaluate(p, currentChip(), di);
+    return ev ? ev.view : di.isToday ? H.tonightView(p.hours, S.now, null) : H.nightView(p.hours, di.dow, null, nightName(di));
   }
   function miles(a, b) {
     var R = 3958.8, r = Math.PI / 180, dLat = (b.lat - a.lat) * r, dLon = (b.lon - a.lon) * r;
@@ -95,6 +77,7 @@
     S.places.forEach(function (p) {
       if (S.indie && p.chain) return;
       if (S.confirmed && !sum(p).marked) return;
+      if (S.hood && p.hood !== S.hood) return; // a neighbourhood page's link: exactly that neighbourhood
       if (q && (p.name + ' ' + p.addr + ' ' + p.hood + ' ' + p.boro).toLowerCase().indexOf(q) < 0) return;
       var ev = evaluate(p, chip, di);
       if (ev) out.push({ p: p, ev: ev });
@@ -105,7 +88,7 @@
   function geojson() {
     return { type: 'FeatureCollection', features: S.matched.map(function (m) {
       return { type: 'Feature', geometry: { type: 'Point', coordinates: [m.p.lon, m.p.lat] },
-        properties: { id: m.p.id, label: H.pinLabel(m.ev), state: m.ev.state, chain: m.p.chain ? 1 : 0, sort: m.ev.allDay ? -9999 : -m.ev.close } };
+        properties: { id: m.p.id, label: H.pinLabel(m.ev.shown), state: m.ev.state, chain: m.p.chain ? 1 : 0, sort: m.ev.allDay ? -9999 : -m.ev.close } };
     }) };
   }
   function renderChips(ctx) {
@@ -126,7 +109,7 @@
     if (hol) { b.hidden = false; b.textContent = hol.name + (ctx.di.isToday ? ' today' : ' that day') + ': hours may differ. Check with the shop before you go.'; } else b.hidden = true;
   }
   function inView() {
-    if (!S.ready || S.q.trim()) return S.matched;
+    if (!S.ready || S.q.trim() || S.hood) return S.matched;
     var b = S.map.getBounds();
     return S.matched.filter(function (m) { return b.contains([m.p.lon, m.p.lat]); });
   }
@@ -137,10 +120,15 @@
       : function (a, b) { return (b.ev.allDay ? 1e6 : b.ev.close) - (a.ev.allDay ? 1e6 : a.ev.close) || (a.p.chain ? 1 : 0) - (b.p.chain ? 1 : 0) || a.p.name.localeCompare(b.p.name); });
     var what = ctx.chip.id === 'now' ? 'open now' : ctx.chip.id === 'all' ? 'open all night' : 'open at ' + ctx.chip.label.replace('+', '').replace('Midnight', 'midnight');
     var when = ctx.chip.id === 'now' ? '' : ' ' + nightName(ctx.di);
-    $('count').textContent = S.q.trim() ? total + (total === 1 ? ' place ' : ' places ') + what + when + ' matching "' + S.q.trim() + '"'
+    // every number here is the length of a list: the one below, or the neighbourhood's own page
+    if (S.hood) {
+      var all = S.places.filter(function (p) { return p.hood === S.hood; }).length;
+      $('count').innerHTML = esc(S.hood) + ': ' + total + ' of its ' + all + (all === 1 ? ' place ' : ' places ') + esc(what + when) + (S.q.trim() ? ' matching "' + esc(S.q.trim()) + '"' : '') +
+        (S.indie || S.confirmed ? ' with these filters' : '') + ' <button type="button" id="clearhood">Whole city</button>';
+    } else $('count').textContent = S.q.trim() ? total + (total === 1 ? ' place ' : ' places ') + what + when + ' matching "' + S.q.trim() + '"'
       : rows.length + ' in view · ' + total + ' across the city ' + what + when + (S.user ? ' · nearest first' : ' · latest closing first');
     var html = rows.slice(0, S.shown).map(function (m) {
-      var st = statusText(m.ev, ctx.di), v = sum(m.p);
+      var st = { cls: m.ev.view.cls, text: m.ev.view.line }, v = sum(m.p);
       return '<li><button type="button" class="row" data-id="' + esc(m.p.id) + '"><span class="top"><span class="nm">' + esc(m.p.name) + '</span>' +
         (S.user ? '<span class="dist">' + distText(m.d) + '</span>' : '') + '</span>' +
         '<span class="hood">' + esc(m.p.hood) + ' · ' + esc(CAT[m.p.cat] || m.p.cat) + '</span>' +
@@ -163,10 +151,8 @@
   /* ---------- place panel ---------- */
   function renderPlace(p, quiet) {
     if (!p) return;
-    var di = dayInfo(), t = H.tonight(p.hours, di.dow), st = nowStatusText(p), src = H.sourceLine(p), hol = holidayFor(di.date);
-    var big = !t ? 'Closed' : t.allDay ? '24 hours' : H.clock(t.close);
-    var over = t && !t.allDay && di.isToday && t.close <= S.now.rel, flagged = sum(p).flagged; // a reported-wrong place loses its mark
-    var bigsub = !t ? 'not open ' + nightName(di) : t.allDay ? 'open ' + nightName(di) : over ? 'closed for tonight at this time' : 'closes ' + nightName(di);
+    var di = dayInfo(), view = placeView(p, di), st = { cls: view.cls, text: view.line }, src = H.sourceLine(p), hol = holidayFor(di.date);
+    var big = view.big, bigsub = view.caption, flagged = sum(p).flagged; // the large line follows the status; a reported-wrong place loses its mark
     var rows = H.DOW.map(function (d, i) { return '<tr' + (i === di.dow ? ' class="today"' : '') + '><td>' + d + '</td><td>' + esc(H.dayText(p.hours, i)) + '</td></tr>'; }).join('');
     var apple = /iPhone|iPad|Macintosh/.test(navigator.userAgent);
     var dir = apple ? 'https://maps.apple.com/?daddr=' + p.lat + ',' + p.lon + '&dirflg=w' : 'https://www.google.com/maps/dir/?api=1&destination=' + p.lat + ',' + p.lon;
@@ -179,13 +165,14 @@
     var prev = quiet && document.querySelector('#place details.wrong');
     if (prev && (prev.open || prev.dataset.sent)) { // don't wipe a report being written
       document.querySelector('#place .st').className = 'st ' + st.cls; document.querySelector('#place .st').textContent = st.text;
+      document.querySelector('#place .big').className = 'big' + (view.long ? ' long' : ''); document.querySelector('#place .big').textContent = big; document.querySelector('#place .bigsub').textContent = bigsub;
       var vb = document.querySelector('#place .votebox'); if (vb) vb.outerHTML = voteHtml(p);
       return;
     }
     $('place').innerHTML = '<button type="button" class="x" id="closeplace">Close</button>' +
       '<p class="meta">' + esc(p.hood) + ' · ' + esc(p.boro) + ' · ' + esc(CAT[p.cat] || p.cat) + '</p><h2>' + esc(p.name) + '</h2>' +
       '<p class="st ' + st.cls + '">' + esc(st.text) + '</p>' +
-      '<p class="big">' + esc(big) + '</p><p class="bigsub">' + esc(bigsub) + '</p>' +
+      '<p class="big' + (view.long ? ' long' : '') + '">' + esc(big) + '</p><p class="bigsub">' + esc(bigsub) + '</p>' +
       '<p class="src' + (src.confirmed && !flagged ? ' ok' : '') + '">' + (src.confirmed && !flagged ? '✓ ' : '') + esc(src.text) + '</p>' + voteHtml(p) +
       (hol ? '<p class="banner">' + esc(hol.name) + ': hours may differ. Check with the shop before you go.</p>' : '') +
       '<table>' + rows + '</table>' +
@@ -327,7 +314,8 @@
     if (h.get('hood')) {
       var name = h.get('hood'), pts = S.places.filter(function (p) { return p.hood === name; });
       if (!pts.length) return;
-      S.q = name; $('q').value = name;
+      S.hood = name; S.q = ''; $('q').value = ''; S.shown = PAGE;
+      if (S.selected) { S.selected = null; $('place').hidden = true; $('place').innerHTML = ''; S.map.setFilter('selected', ['==', ['get', 'id'], '']); }
       var b = new maplibregl.LngLatBounds(); pts.forEach(function (p) { b.extend([p.lon, p.lat]); });
       S.map.fitBounds(b, { padding: 60, maxZoom: 15.5, duration: 0 });
       refresh();
@@ -348,6 +336,10 @@
     var qt; $('q').addEventListener('input', function () { var v = this.value; clearTimeout(qt); qt = setTimeout(function () { S.q = v; S.shown = PAGE; refresh(); }, 160); });
     $('indie').addEventListener('change', function () { S.indie = this.checked; S.shown = PAGE; refresh(); });
     $('confirmed').addEventListener('change', function () { S.confirmed = this.checked; S.shown = PAGE; refresh(); });
+    $('count').addEventListener('click', function (e) {
+      if (e.target.id !== 'clearhood') return;
+      S.hood = null; S.shown = PAGE; history.replaceState(null, '', location.pathname + location.search); refresh();
+    });
     $('more').addEventListener('click', function () { S.shown += PAGE; refresh({ listOnly: true, keepPanel: true }); });
     $('rows').addEventListener('click', function (e) { var b = e.target.closest('[data-id]'); if (b) openPlace(b.dataset.id, true); });
     $('near').addEventListener('click', function () {
@@ -383,7 +375,7 @@
       var p = S.byId[S.selected], f = e.target, d = f.closest('details');
       f.querySelector('button').disabled = true;
       sendReport({ type: f.type.value, place_id: p.id, place_name: p.name, note: f.note.value, app: APP }).then(function () {
-        d.dataset.sent = '1'; f.outerHTML = '<p class="sent" style="margin-top:10px">Sent. Thank you. Reports are checked against the shop\'s own site.</p>';
+        d.dataset.sent = '1'; f.outerHTML = '<p class="sent" style="margin-top:10px">Sent. Thank you. Reports are checked against the shop\'s own site or page, or the chain\'s store locator.</p>';
       }, function () { f.querySelector('button').disabled = false; f.querySelector('.fine').textContent = "That didn't send. Check your connection and try again."; });
     });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && S.selected) closePlace(); });

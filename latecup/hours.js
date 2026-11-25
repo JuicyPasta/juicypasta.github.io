@@ -16,6 +16,7 @@
   'use strict';
   var DAY = 1440, SERVICE_START = 300, SERVICE_END = DAY + SERVICE_START;
   var DOW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  var DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   var THRESHOLDS = [
     { id: '20', label: '8 PM+', rel: 1200 }, { id: '21', label: '9 PM+', rel: 1260 },
     { id: '22', label: '10 PM+', rel: 1320 }, { id: '23', label: '11 PM+', rel: 1380 },
@@ -109,11 +110,44 @@
     }
     var ss = stretches(hours, now.dow);
     for (var i = 0; i < ss.length; i++) if (ss[i][0] > now.rel && ss[i][0] < SERVICE_END) return { kind: 'later', open: ss[i][0], close: ss[i][1], allDay: is24(ss[i]) };
-    for (var d = 1; d <= 7; d++) { // next opening on a later service day
-      var day = hours[(now.dow + d) % 7] || [];
-      if (day.length) return { kind: 'closed', nextDow: (now.dow + d) % 7, nextOpen: day[0][0], daysAhead: d };
+    for (var d = 1; d <= 7; d++) { // the next opening on a later day: a stretch that BEGINS that day, never the tail of the night before
+      var dw = (now.dow + d) % 7, ds = stretches(hours, dw);
+      for (var j = 0; j < ds.length; j++) if (ds[j][0] >= 0 && ds[j][0] < DAY && ds[j][0] + d * DAY > now.rel) return { kind: 'closed', nextDow: dw, nextOpen: ds[j][0], daysAhead: d };
     }
     return { kind: 'closed' };
+  }
+  /* What the list row and the place say about TONIGHT. The line and the large line never
+     contradict the status, and they describe the stretch the pin shows (`shown`: {open, close,
+     allDay}; null when the place is looked at without a pin):
+     - open in that stretch            → "Open until T · time left"; large: T (or 24 hours)
+     - open now, pin shows a later one → "Open until X · reopens A until B"; large: B
+     - not open yet today              → "Opens A · open until B"; large: "Opens at A"
+     - closed for the night            → "Closed · opens DAY at A"; large: "Closed at T"
+     Returns { line, cls, big, caption, long, left }. */
+  function tonightView(hours, now, shown) {
+    var st = status(hours, now), open = st.kind === 'open' || st.kind === 'soon';
+    if (open && (st.allDay || !shown || shown.close === st.close)) {
+      if (st.allDay) return { line: 'Open 24 hours', cls: '', big: '24 hours', caption: 'open tonight', left: Infinity };
+      var ps = pinState(st.left);
+      return { line: 'Open until ' + clock(st.close) + ' · ' + leftText(st.left), cls: ps === 'plenty' ? '' : ps, big: clock(st.close), caption: 'closes tonight', left: st.left };
+    }
+    if (open) return { line: 'Open until ' + clock(st.close) + ' · reopens ' + clock(shown.open) + (shown.allDay ? ', then open 24 hours' : ' until ' + clock(shown.close)), cls: '',
+      big: shown.allDay ? '24 hours' : clock(shown.close), caption: shown.allDay ? 'open tonight' : 'closes tonight' };
+    if (st.kind === 'later') {
+      var end = shown && shown.open > st.open ? shown : st; // a split day: the next opening, then the stretch the pin shows
+      return { line: 'Opens ' + clock(st.open) + ' · ' + (end.allDay ? 'then open 24 hours' : (end === st ? 'open until ' : 'tonight until ') + clock(end.close)), cls: '',
+        big: 'Opens at ' + clock(st.open), caption: '', long: true };
+    }
+    var t = tonight(hours, now.dow), next = st.nextDow != null ? ' · opens ' + DAYS[st.nextDow] + ' at ' + clock(st.nextOpen) : '';
+    if (t && !t.allDay && t.close <= now.rel) return { line: 'Closed' + next, cls: 'off', big: 'Closed at ' + clock(t.close), caption: '', long: true };
+    return { line: 'Closed' + next, cls: 'off', big: 'Closed', caption: 'not open tonight' };
+  }
+  /* The same for another night (the day picker): the stretch the pin shows, or that night's last one. */
+  function nightView(hours, dow, shown, night) {
+    var s = shown || tonight(hours, dow);
+    if (!s) return { line: 'Closed that night', cls: 'off', big: 'Closed', caption: 'not open ' + night };
+    if (s.allDay) return { line: 'Open 24 hours', cls: '', big: '24 hours', caption: 'open ' + night };
+    return { line: s.open <= 0 ? 'Open until ' + clock(s.close) : 'Open ' + clock(s.open) + ' – ' + clock(s.close), cls: '', big: clock(s.close), caption: 'closes ' + night };
   }
   /* plenty | under2 | soon, from minutes left. */
   function pinState(left) { return left < 60 ? 'soon' : left < 120 ? 'under2' : 'plenty'; }
@@ -170,11 +204,11 @@
     return best;
   }
   function sourceLine(p) {
-    if (p.src === 'shop') return { confirmed: true, text: 'Hours confirmed ' + p.checked + " from the shop's website" };
+    if (p.src === 'shop') return { confirmed: true, text: 'Hours confirmed ' + p.checked + " from the shop's own site or page" }; // website, ordering page or official social account
     if (p.src === 'brand') return { confirmed: true, text: 'Hours confirmed ' + p.checked + " from the chain's store locator" };
     return { confirmed: false, text: 'Unconfirmed hours from OpenStreetMap' + (p.checked ? ' (last checked there ' + p.checked + ')' : '') + ': check before you go' };
   }
-  var api = { DAY: DAY, SERVICE_START: SERVICE_START, SERVICE_END: SERVICE_END, DOW: DOW, THRESHOLDS: THRESHOLDS,
+  var api = { DAY: DAY, SERVICE_START: SERVICE_START, SERVICE_END: SERVICE_END, DOW: DOW, DAYS: DAYS, tonightView: tonightView, nightView: nightView, THRESHOLDS: THRESHOLDS,
     cityNow: cityNow, instantOf: instantOf, addDays: addDays, dowOf: dowOf, stretches: stretches, tonight: tonight, openAt: openAt,
     matches: matches, status: status, pinState: pinState, chips: chips, clock: clock, pinLabel: pinLabel, leftText: leftText,
     dayText: dayText, weekClosings: weekClosings, latestClose: latestClose, sourceLine: sourceLine };

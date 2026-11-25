@@ -96,7 +96,7 @@ if (hoods.length < MIN_HOODS) unusable(`only ${hoods.length} neighbourhoods with
 const facts = (ps) => {
   const late = (rel) => ps.filter((p) => { for (let d = 0; d < 7; d++) { const t = H.tonight(p.hours, d); if (t && (t.allDay || t.close > rel)) return true; } return false; }).length;
   return { n: ps.length, ten: late(1320), midnight: late(1440), allDay: ps.filter((p) => H.latestClose(p.hours) === Infinity).length,
-           confirmed: ps.filter((p) => p.src !== 'osm').length, indie: ps.filter((p) => !p.chain).length,
+           confirmed: ps.filter((p) => p.src === 'shop' || p.src === 'brand').length, shop: ps.filter((p) => p.src === 'shop').length, brand: ps.filter((p) => p.src === 'brand').length, indie: ps.filter((p) => !p.chain).length,
            byVisitors: ps.filter((p) => p.src === 'osm' && sum(p).byVisitors).length, rated: ps.filter((p) => sum(p).stars).length };
 };
 const head = (title, desc, path, ld) => `<!doctype html>
@@ -132,7 +132,7 @@ const foot = (up) => `<footer class="page">
 const closings = (p) => H.weekClosings(p.hours).map((g) => `<span>${esc(g.days)} <b>${esc(g.text)}</b></span>`).join('');
 const source = (p) => {
   const v = sum(p);
-  return (p.src === 'osm' ? `<span class="tag">Unconfirmed${p.checked ? ', OSM ' + esc(p.checked) : ''}</span>` : `<span class="tag ok">✓ Confirmed ${esc(p.checked)}</span>`)
+  return (p.src !== 'shop' && p.src !== 'brand' ? `<span class="tag">Unconfirmed${p.checked ? ', OSM ' + esc(p.checked) : ''}</span>` : `<span class="tag ok">✓ ${p.src === 'brand' ? 'Chain\'s store locator' : 'Shop\'s own site or page'}, ${esc(p.checked)}</span>`)
     + (v.flaggedLine ? `<span class="tag warn">${esc(v.flaggedLine)}</span>` : v.visitorLine ? `<span class="tag${v.byVisitors ? ' ok' : ''}">${esc(v.visitorLine)}</span>` : '')
     + (v.stars ? `<span class="tag star">★ ${v.stars.mean.toFixed(1)} · ${v.stars.n} ${v.stars.n === 1 ? 'rating' : 'ratings'}</span>` : '');
 };
@@ -158,8 +158,8 @@ for (const h of hoods) {
   if (f.midnight) bits.push(`${f.midnight} past midnight`);
   if (f.allDay) bits.push(`${f.allDay} ${f.allDay === 1 ? 'is' : 'are'} open 24 hours`);
   const conf = f.confirmed === 0 ? 'None of these hours has been confirmed by us yet: they come from OpenStreetMap, so check with the shop before a late trip.'
-    : f.confirmed === f.n ? 'We confirmed the hours of each one from the shop\'s own site.'
-    : `We confirmed the hours of ${f.confirmed} of them from the shop's own site (marked ✓); the rest come from OpenStreetMap and are marked unconfirmed, so check before a late trip.`;
+    : `We confirmed the hours of ${f.confirmed === f.n ? (f.n === 1 ? 'it' : 'all of them') : f.confirmed + ' of them'} (marked ✓): ${[f.shop ? `${f.shop} from the shop's own site or page` : '', f.brand ? `${f.brand} from the chain's store locator` : ''].filter(Boolean).join(' and ')}.`
+      + (f.confirmed === f.n ? '' : ' The rest come from OpenStreetMap and are marked unconfirmed, so check before a late trip.');
   const visitors = f.byVisitors ? ` Visitors have confirmed the hours of ${f.byVisitors} more (two or more people each).` : '';
   const others = hoods.filter((o) => o.boro === h.boro && o.slug !== h.slug).sort((a, b) => b.places.length - a.places.length).slice(0, 10).sort((a, b) => a.name.localeCompare(b.name));
   const ld = [
@@ -191,7 +191,7 @@ ${sorted.map((p) => `<tr><td><a class="name" href="../../#p=${encodeURIComponent
 
 <h2>How to read this list</h2>
 <ul>
-<li><strong>✓ Confirmed</strong> means we checked the hours against the shop's own website, ordering page or official social account (or, for a chain, its store locator) on the date shown.</li>
+<li><strong>✓</strong> means we confirmed the hours on the date shown, and says from where: "Shop's own site or page" (its website, ordering page or official social account) or "Chain's store locator".</li>
 <li><strong>Unconfirmed</strong> hours come from <a href="https://www.openstreetmap.org/">OpenStreetMap</a>, a map kept up by volunteers. The date, when there is one, is when someone last checked them there.</li>
 <li><strong>Visitors</strong> can confirm a place's hours and rate it from 1 to 5 stars on <a href="../../">the map</a>. Where they have, this list shows how many confirmed the hours now shown, and the star average with its number of ratings.</li>
 <li>Seen a wrong time? Open the place on <a href="../../">the map</a> and choose "Hours wrong?".</li>
@@ -231,7 +231,7 @@ ${BOROS.map((b) => {
 ${hs.map((h) => `<li><a href="${h.slug}/">${esc(h.name)}</a><span class="n">${h.places.length}</span></li>`).join('\n')}
 </ul>` : '';
   }).join('\n')}
-<p class="small muted">The number is how many places in that neighbourhood close at 8 PM or later on at least one night. Neighbourhoods with fewer than ${MIN_PLACES} are on the map only.${f.confirmed ? '' : ' Hours come from OpenStreetMap until we confirm them from each shop\'s own site; unconfirmed hours are labelled.'}</p>
+<p class="small muted">The number beside a neighbourhood is the number of places on its page: those that close at 8 PM or later on at least one night. Neighbourhoods with fewer than ${MIN_PLACES} are on the map only.${f.confirmed ? '' : ' Hours come from OpenStreetMap until we confirm them from the shop\'s own site or page or the chain\'s store locator; unconfirmed hours are labelled.'}</p>
 ${foot('../')}`;
   writeFileSync(join(outDir, 'index.html'), html);
 }
