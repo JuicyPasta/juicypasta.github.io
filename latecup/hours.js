@@ -5,7 +5,11 @@
    - Service day: a night belongs to the day it started on; it runs 05:00 → 05:00.
    - Hours table: 7 days, Monday first; each a list of [open, close] in minutes from that
      weekday's midnight; close may pass 1440. Intervals that touch across midnight are one
-     stretch. A stretch of 24 h or more reads "Open 24 hours".
+     stretch. A stretch reads "Open 24 hours" only when it is 24 h or longer AND runs at
+     least to 05:00 the next morning; a long stretch that ends earlier tonight shows its
+     closing time like any other (the last night of a 24-hour run closes at midnight).
+   - Chips: looking at tonight, "Open now" is always first and thresholds already past are
+     dropped; the default is 8 PM+ while it is still ahead, Open now after that.
    All "rel" values are minutes from the service day's own midnight (so 01:30 the next
    morning is 1530). */
 (function (root) {
@@ -75,7 +79,8 @@
     });
     return out;
   }
-  function is24(s) { return s[1] - s[0] >= DAY; }
+  /* 24 hours: 24 h or longer and still running at 05:00 the next morning (s is in the service day's rel minutes). */
+  function is24(s) { return s[1] - s[0] >= DAY && s[1] >= SERVICE_END; }
   /* Tomorrow's early opening (starts after midnight, runs past 05:00) is tomorrow's, not tonight's. */
   function isTomorrows(s) { return s[0] >= DAY && s[1] > SERVICE_END; }
   /* The stretch that decides "closes tonight" for a service day: the last one that starts
@@ -92,11 +97,8 @@
     for (var i = 0; i < ss.length; i++) if (ss[i][0] <= rel && rel < ss[i][1]) return { open: ss[i][0], close: ss[i][1], allDay: is24(ss[i]) };
     return null;
   }
-  function matches(hours, dow, threshold) {
-    if (threshold.id !== 'all') return openAt(hours, dow, threshold.rel);
-    var late = openAt(hours, dow, threshold.rel), t = tonight(hours, dow); // all night: open at 03:00, or 24 hours
-    return late || (t && t.allDay ? t : null);
-  }
+  /* A threshold chip: open at that clock time tonight, strictly (open ≤ T < close). All night is open at 03:00, nothing else. */
+  function matches(hours, dow, threshold) { return openAt(hours, dow, threshold.rel); }
   /* Status right now. kind: open | soon | later | closed. */
   function status(hours, now) {
     var cur = openAt(hours, now.dow, now.rel);
@@ -115,13 +117,12 @@
   }
   /* plenty | under2 | soon, from minutes left. */
   function pinState(left) { return left < 60 ? 'soon' : left < 120 ? 'under2' : 'plenty'; }
-  /* The chips to offer. Thresholds already past collapse into "Open now"; it is the default
-     once the city clock passes 8 PM, and before that the default is 8 PM+. Another day: all six. */
+  /* The chips to offer. Looking at tonight: "Open now" first, then the thresholds still ahead;
+     the default is 8 PM+ while it is ahead and Open now after that. Another day: all six, 8 PM+. */
   function chips(now, isToday) {
     if (!isToday) return { chips: THRESHOLDS.slice(), def: '20' };
     var future = THRESHOLDS.filter(function (t) { return t.rel > now.rel; });
-    if (future.length === THRESHOLDS.length) return { chips: future, def: '20' };
-    return { chips: [{ id: 'now', label: 'Open now', rel: null }].concat(future), def: 'now' };
+    return { chips: [{ id: 'now', label: 'Open now', rel: null }].concat(future), def: future.length && future[0].id === '20' ? '20' : 'now' };
   }
   function clock(rel) { // 1380 → "11 PM", 1500 → "1 AM", 1290 → "9:30 PM"
     var m = ((rel % DAY) + DAY) % DAY, h = Math.floor(m / 60), mm = m % 60, h12 = h % 12 || 12, ap = h < 12 ? 'AM' : 'PM';
@@ -137,12 +138,14 @@
     if (min < 60) return min + ' min left';
     var h = Math.floor(min / 60), m = min % 60; return h + ' h' + (m ? ' ' + m + ' min' : '') + ' left';
   }
-  /* What to print for one weekday row of the week table. */
+  /* What to print for one weekday row of the week table. A stretch that began before this
+     day and is still open after 05:00 reads "Open until T" (or "Open 24 hours"); a stretch
+     that only spills past midnight from the night before belongs to that night's row. */
   function dayText(hours, dow) {
     var ss = stretches(hours, dow), parts = [], full = false;
     ss.forEach(function (s) {
-      if (s[0] <= 0 && s[1] >= DAY) full = true;
-      else if (s[0] >= 0 && s[0] < DAY) { if (is24(s)) full = true; else parts.push(clock(s[0]) + ' – ' + clock(s[1])); }
+      if (s[0] <= 0 && s[1] > SERVICE_START) { if (is24(s)) full = true; else parts.push('Open until ' + clock(s[1])); }
+      else if (s[0] > 0 && s[0] < DAY) { if (is24(s)) full = true; else parts.push(clock(s[0]) + ' – ' + clock(s[1])); }
     });
     return full ? 'Open 24 hours' : parts.length ? parts.join(', ') : 'Closed';
   }

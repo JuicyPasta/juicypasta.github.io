@@ -61,15 +61,71 @@ t('status: open, closing soon, later', () => {
   s = H.status(hours, at('2026-11-25T11:00:00Z')); assert.equal(s.kind, 'later'); assert.equal(s.open, 480); // 06:00
   s = H.status(hours, at('2026-11-25T04:30:00Z')); assert.equal(s.kind, 'closed'); assert.equal(s.nextDow, 2); assert.equal(s.nextOpen, 480); // 23:30: opens Wed 8 AM
 });
-t('chips', () => {
+t('chips: tonight, Open now is always first; past thresholds are dropped; 8 PM+ is the default while it is ahead', () => {
+  const ids = (c) => c.chips.map((x) => x.id);
   let c = H.chips(at('2026-11-24T19:00:00Z'), true); // 14:00
-  assert.deepEqual(c.chips.map((x) => x.id), ['20', '21', '22', '23', '24', 'all']); assert.equal(c.def, '20');
-  c = H.chips(at('2026-11-25T02:30:00Z'), true);     // 21:30
-  assert.deepEqual(c.chips.map((x) => x.id), ['now', '22', '23', '24', 'all']); assert.equal(c.def, 'now');
+  assert.deepEqual(ids(c), ['now', '20', '21', '22', '23', '24', 'all']); assert.equal(c.def, '20'); assert.equal(c.chips[0].label, 'Open now');
+  c = H.chips(at('2026-11-25T00:59:00Z'), true);     // 19:59
+  assert.deepEqual(ids(c), ['now', '20', '21', '22', '23', '24', 'all']); assert.equal(c.def, '20');
+  c = H.chips(at('2026-11-25T01:00:00Z'), true);     // 20:00 exactly: 8 PM is no longer ahead
+  assert.deepEqual(ids(c), ['now', '21', '22', '23', '24', 'all']); assert.equal(c.def, 'now');
+  c = H.chips(at('2026-11-25T03:40:00Z'), true);     // 22:40
+  assert.deepEqual(ids(c), ['now', '23', '24', 'all']); assert.equal(c.def, 'now');
   c = H.chips(at('2026-11-25T08:30:00Z'), true);     // 03:30, still Tuesday night
-  assert.deepEqual(c.chips.map((x) => x.id), ['now']);
-  c = H.chips(at('2026-11-25T02:30:00Z'), false);
-  assert.equal(c.chips.length, 6); assert.equal(c.def, '20');
+  assert.deepEqual(ids(c), ['now']); assert.equal(c.def, 'now');
+  c = H.chips(at('2026-11-24T10:30:00Z'), true);     // 05:30 on the new service day
+  assert.deepEqual(ids(c), ['now', '20', '21', '22', '23', '24', 'all']); assert.equal(c.def, '20');
+  c = H.chips(at('2026-11-25T03:40:00Z'), false);    // another night: all six, no Open now
+  assert.deepEqual(ids(c), ['20', '21', '22', '23', '24', 'all']); assert.equal(c.def, '20');
+});
+t('"Open 24 hours" needs 24 h or more AND to run at least to 05:00 the next morning', () => {
+  const ALL = H.THRESHOLDS[5], MIDNIGHT = H.THRESHOLDS[4], P11 = H.THRESHOLDS[3];
+  // A: open round the clock Monday to Friday, then 5 AM – 7 PM at the weekend (a live Dunkin', n7700401463)
+  const A = [[[0, 1440]], [[0, 1440]], [[0, 1440]], [[0, 1440]], [[0, 1440]], [[300, 1140]], [[300, 1140]]];
+  assert.equal(H.tonight(A, 3).allDay, true);                                      // Thu: runs through the night
+  assert.equal(H.pinLabel(H.tonight(A, 3)), '24h');
+  const fri = H.tonight(A, 4);                                                    // Fri: the run ends at midnight
+  assert.equal(fri.allDay, false); assert.equal(fri.close, 1440); assert.equal(H.pinLabel(fri), '12 AM');
+  assert.ok(H.matches(A, 4, P11)); assert.equal(H.matches(A, 4, MIDNIGHT), null); assert.equal(H.matches(A, 4, ALL), null);
+  assert.ok(H.matches(A, 3, ALL)); assert.equal(H.matches(A, 3, ALL).allDay, true);
+  assert.equal(H.tonight(A, 5).close, 1140); assert.equal(H.tonight(A, 6).close, 1140); // Sat, Sun: 7 PM
+  assert.equal(H.tonight(A, 0).allDay, true);                                          // Mon: starts 12 AM, runs on
+  let s = H.status(A, at('2026-11-27T15:00:00Z')); // Fri 10:00: open, 14 h to midnight, not "24 hours"
+  assert.equal(s.kind, 'open'); assert.equal(s.allDay, undefined); assert.equal(s.close, 1440); assert.equal(s.left, 840);
+  s = H.status(A, at('2026-11-28T04:30:00Z'));     // Fri 23:30: closing soon
+  assert.equal(s.kind, 'soon'); assert.equal(s.left, 30);
+  s = H.status(A, at('2026-11-26T15:00:00Z'));     // Thu 10:00: 24 hours
+  assert.equal(s.allDay, true); assert.equal(s.left, Infinity);
+  assert.deepEqual(H.weekClosings(A), [{ days: 'Mon–Thu', text: '24 hours' }, { days: 'Fri', text: '12 AM' }, { days: 'Sat–Sun', text: '7 PM' }]);
+  assert.equal(H.latestClose(A), Infinity);
+  assert.deepEqual([0, 3, 4, 5, 6].map((d) => H.dayText(A, d)), ['Open 24 hours', 'Open 24 hours', 'Open until 12 AM', '5 AM – 7 PM', '5 AM – 7 PM']);
+  // B: 6 AM – 4 PM on weekdays, round the clock Saturday and Sunday (n5296489068)
+  const B = [[[360, 960]], [[360, 960]], [[360, 960]], [[360, 960]], [[360, 960]], [[0, 1440]], [[0, 1440]]];
+  assert.equal(H.tonight(B, 5).allDay, true); assert.ok(H.matches(B, 5, ALL));           // Sat
+  assert.equal(H.tonight(B, 6).allDay, false); assert.equal(H.tonight(B, 6).close, 1440); // Sun: closes at midnight
+  assert.equal(H.matches(B, 6, ALL), null); assert.equal(H.pinLabel(H.tonight(B, 6)), '12 AM');
+  assert.equal(H.tonight(B, 4).close, 960);                                              // Fri: 4 PM; Saturday's opening is tomorrow's
+  assert.deepEqual([4, 5, 6].map((d) => H.dayText(B, d)), ['6 AM – 4 PM', 'Open 24 hours', 'Open until 12 AM']);
+  // C: one lone full day, closed around it: closes at midnight, not "24 hours"
+  const C = [[], [], [[0, 1440]], [], [], [], []];
+  assert.deepEqual(H.tonight(C, 2), { open: 0, close: 1440, allDay: false }); assert.equal(H.dayText(C, 2), 'Open until 12 AM'); assert.equal(H.latestClose(C), 1440);
+  // D: Thursday 8 AM straight through to Saturday 2 AM
+  const D = [[], [], [], [[480, 1440]], [[0, 1440]], [[0, 120]], []];
+  assert.equal(H.tonight(D, 3).allDay, true);                                            // Thu: 24 h+ and past 5 AM Friday
+  assert.equal(H.tonight(D, 4).allDay, false); assert.equal(H.tonight(D, 4).close, 1560); // Fri: ends 2 AM
+  assert.equal(H.pinLabel(H.tonight(D, 4)), '2 AM'); assert.ok(H.matches(D, 4, MIDNIGHT)); assert.equal(H.matches(D, 4, ALL), null);
+  assert.equal(H.tonight(D, 5), null); assert.deepEqual([3, 4, 5].map((d) => H.dayText(D, d)), ['Open 24 hours', 'Open until 2 AM', 'Closed']);
+  // E: round the clock, the whole week: unchanged
+  const E = week([[0, 1440]]);
+  for (let d = 0; d < 7; d++) { assert.equal(H.tonight(E, d).allDay, true); assert.ok(H.matches(E, d, ALL)); assert.equal(H.dayText(E, d), 'Open 24 hours'); }
+});
+t('"All night" is open at 03:00 tonight, nothing else', () => {
+  const ALL = H.THRESHOLDS[5];
+  assert.equal(ALL.rel, 1620);
+  assert.equal(H.matches(week([[480, 1620]]), 0, ALL), null);       // closes at 3 AM: not open at 3 AM
+  assert.equal(H.matches(week([[480, 1650]]), 0, ALL).close, 1650); // closes 3:30 AM
+  assert.equal(H.matches(week([[1200, 1500]]), 0, ALL), null);      // 8 PM – 1 AM
+  assert.equal(H.matches(week([[180, 600]]), 0, ALL).close, 2040);  // a 3 AM – 10 AM bakery is open at 3 AM tonight
 });
 t('autumn clock change (2026-11-01): the 1 o\'clock hour happens twice', () => {
   const hours = week([[480, 1560]]); // closes 2 AM
