@@ -12,9 +12,9 @@ const REFRESH_MS = 10 * 60e3;
 const LEVELS = {
   smooth: { rank: 0, name: 'Smooth', color: '#6fbf9b' },
   light: { rank: 1, name: 'Light', color: '#cfe36a' },
-  'light-moderate': { rank: 2, name: 'Light to moderate', color: '#e2d35c' },
+  'light-moderate': { rank: 2, name: 'Light to moderate', color: '#cfe36a', color2: '#f2c14e' },
   moderate: { rank: 3, name: 'Moderate', color: '#f2c14e' },
-  'moderate-severe': { rank: 4, name: 'Moderate to severe', color: '#ee8a3c' },
+  'moderate-severe': { rank: 4, name: 'Moderate to severe', color: '#f2c14e', color2: '#c9503c' },
   severe: { rank: 5, name: 'Severe', color: '#c9503c' },
   extreme: { rank: 6, name: 'Extreme', color: '#c9503c' },
 };
@@ -26,6 +26,7 @@ const VIEWS = {
 const ALTS = { all: () => true, cruise: (r) => r.fl >= 200 };
 
 const $ = (id) => document.getElementById(id);
+const swatch = (lv) => (lv.color2 ? `linear-gradient(90deg, ${lv.color} 50%, ${lv.color2} 50%)` : lv.color);
 const dark = () => matchMedia('(prefers-color-scheme: dark)').matches;
 const sea = () => (dark() ? '#10201f' : '#e4eef0');
 const landColor = () => (dark() ? '#263836' : '#fbfaf5');
@@ -92,10 +93,24 @@ export function draw(canvas, bounds, land, reports) {
     const x = px(r.lon);
     const y = py(r.lat);
     if (x < -r0 || x > w + r0 || y < -r0 || y > h + r0) continue;
+    const rad = lv.rank >= 4 ? r0 + 1.5 : r0;
+    // In-between reports ("light to moderate") are split dots: left half the lower level, right half the higher.
+    if (lv.color2) {
+      ctx.beginPath();
+      ctx.arc(x, y, rad, Math.PI / 2, (3 * Math.PI) / 2);
+      ctx.fillStyle = lv.color;
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(x, y, rad, -Math.PI / 2, Math.PI / 2);
+      ctx.fillStyle = lv.color2;
+      ctx.fill();
+    }
     ctx.beginPath();
-    ctx.arc(x, y, lv.rank >= 4 ? r0 + 1.5 : r0, 0, 2 * Math.PI);
-    ctx.fillStyle = lv.color;
-    ctx.fill();
+    ctx.arc(x, y, rad, 0, 2 * Math.PI);
+    if (!lv.color2) {
+      ctx.fillStyle = lv.color;
+      ctx.fill();
+    }
     ctx.stroke();
     drawn++;
   }
@@ -156,7 +171,7 @@ function renderList(list, reports, now) {
     const li = document.createElement('li');
     const sw = document.createElement('span');
     sw.className = 'dot';
-    sw.style.background = lv.color;
+    sw.style.background = swatch(lv);
     const main = document.createElement('div');
     const title = document.createElement('strong');
     title.textContent = `${lv.name} at ${altitude(r.fl)}`;
