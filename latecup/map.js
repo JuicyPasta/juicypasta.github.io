@@ -214,16 +214,16 @@
         : my ? 'Your rating: ' + my + (my === 1 ? ' star' : ' stars') + (th.star ? '. Saved: the average updates about hourly.' : '. Tap a star to change it.')
         : 'Rate it as a place to be late. Stars only.') + '</p>';
     }
-    return h + '</div>';
+    return h === '<div class="votebox">' ? '<div class="votebox empty"></div>' : h + '</div>';
   }
   function sendVote(p, kind, stars) {
     var t = voteTarget(p), me = mine(), th = S.thanks[p.id] || (S.thanks[p.id] = {}); if (!t) return;
-    var note = kind === 'attest' ? V.attestNote(me.iid, p.hh) : V.rateNote(me.iid, stars), body = new URLSearchParams();
+    var before = JSON.stringify(me), iid = V.ensureId(me); // the random ID is made here, on the first confirmation or rating
+    var note = kind === 'attest' ? V.attestNote(iid, p.hh) : V.rateNote(iid, stars), body = new URLSearchParams();
     var f = { type: kind, place_id: p.id, place_name: p.name, note: note, app: APP };
     Object.keys(t.fields).forEach(function (k) { body.append(t.fields[k], f[k] == null ? '' : String(f[k]).slice(0, 600)); });
     var redraw = function () { var vb = document.querySelector('#place .votebox'); if (vb && S.selected === p.id) vb.outerHTML = voteHtml(p); };
     // shown at once, counted later: record first, take it back only if the request never left
-    var before = JSON.stringify(me);
     if (kind === 'attest') { V.recordAttest(me, p, S.now.calendarDate); th.ok = true; th.okErr = false; } else { V.recordStars(me, p, stars); th.star = true; th.starErr = false; }
     V.save(store, me); redraw();
     fetch(t.url, { method: 'POST', mode: 'no-cors', body: body }).catch(function () {

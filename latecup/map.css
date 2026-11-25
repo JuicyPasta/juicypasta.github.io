@@ -57,6 +57,7 @@ body.app{background:#0E1116}
 #place .src{font-size:15px;line-height:1.45;margin:0 0 12px;color:var(--faint)}
 #place .src.ok{color:var(--accent)}
 .votebox{margin:0 0 12px;padding:10px 12px;background:var(--raised);border:1px solid var(--line);border-radius:12px}
+.votebox.empty{display:none}
 .votebox p{margin:0 0 8px;font-size:15px;line-height:1.4}
 .votebox .vis{color:var(--ink)}
 .votebox .flag{color:var(--soon);font-weight:600}

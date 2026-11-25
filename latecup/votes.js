@@ -10,7 +10,8 @@
    - What this page sends: type attest → note "v=1;iid=<uuid>;hh=<hash>;onsite=0" (the web
      never knows whether you are there, so onsite is always 0); type rate → "v=1;iid=<uuid>;stars=<1-5>".
    - The visitor's own confirmations and stars are kept in the browser (localStorage) with a
-     random install ID, shown at once, and limited to one confirmation per place per day. */
+     random install ID (made the first time the visitor confirms or rates, not before), shown at
+     once, and limited to one confirmation per place per day. */
 (function (root) {
   'use strict';
   var KEY = 'latecup.v1', VISITORS_FOR_MARK = 2;
@@ -52,15 +53,13 @@
   var UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   /* The visitor's own record. `storage` is localStorage or anything with getItem/setItem;
      when it is missing or refuses (private mode) the record lives for this page view only. */
-  function load(storage, c) {
+  function load(storage) { // reading never creates anything: the ID is made on the first confirmation or rating
     var s = null;
     try { s = JSON.parse((storage && storage.getItem(KEY)) || 'null'); } catch (e) { s = null; }
     if (!s || typeof s !== 'object') s = {};
-    var fresh = !UUID.test(s.iid || '');
-    var state = { iid: fresh ? uuid(c) : s.iid, ok: s.ok && typeof s.ok === 'object' ? s.ok : {}, stars: s.stars && typeof s.stars === 'object' ? s.stars : {} };
-    if (fresh) save(storage, state);
-    return state;
+    return { iid: UUID.test(s.iid || '') ? s.iid : null, ok: s.ok && typeof s.ok === 'object' ? s.ok : {}, stars: s.stars && typeof s.stars === 'object' ? s.stars : {} };
   }
+  function ensureId(state, c) { if (!state.iid) state.iid = uuid(c); return state.iid; }
   function save(storage, state) {
     try { storage.setItem(KEY, JSON.stringify(state)); return true; } catch (e) { return false; }
   }
@@ -78,6 +77,6 @@
   function recordStars(state, place, n) { state.stars[place.id] = n; return state; }
   function myAttestLine(a, today) { return a ? 'You confirmed these hours ' + (a.d === today ? 'today' : 'on ' + shortDate(a.d)) : ''; }
   var api = { KEY: KEY, VISITORS_FOR_MARK: VISITORS_FOR_MARK, shortDate: shortDate, summary: summary, attestNote: attestNote, rateNote: rateNote, uuid: uuid,
-    load: load, save: save, myAttest: myAttest, canAttest: canAttest, recordAttest: recordAttest, myStars: myStars, recordStars: recordStars, myAttestLine: myAttestLine };
+    load: load, ensureId: ensureId, save: save, myAttest: myAttest, canAttest: canAttest, recordAttest: recordAttest, myStars: myStars, recordStars: recordStars, myAttestLine: myAttestLine };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.LatecupVotes = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

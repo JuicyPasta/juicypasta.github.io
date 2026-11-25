@@ -137,8 +137,10 @@ t('install ID: a random v4 UUID, made once and kept', () => {
   assert.match(V.uuid(), re); assert.match(V.uuid({}), re); // also without crypto.randomUUID
   assert.match(V.uuid({ getRandomValues: (a) => { for (let i = 0; i < a.length; i++) a[i] = i * 17; return a; } }), re);
   assert.notEqual(V.uuid(), V.uuid());
-  const st = fakeStorage(), a = V.load(st), b = V.load(st);
-  assert.match(a.iid, re); assert.equal(a.iid, b.iid); assert.ok(st.map.has(V.KEY));
+  const st = fakeStorage(), a = V.load(st);
+  assert.equal(a.iid, null); assert.equal(st.map.size, 0, 'looking at a place stores nothing');
+  const id = V.ensureId(a); V.save(st, a);
+  assert.match(id, re); assert.equal(V.ensureId(a), id); assert.equal(V.load(st).iid, id);
 });
 t('one confirmation per place per day; a changed hours table can be confirmed again', () => {
   const st = fakeStorage(), me = V.load(st);
@@ -159,11 +161,11 @@ t('rating: one per place, sending again replaces it', () => {
   assert.equal(V.myStars(V.load(st), osm), 2); assert.equal(Object.keys(V.load(st).stars).length, 1);
 });
 t('storage that is missing, broken or full: the page still works for this view', () => {
-  const me = V.load(null); assert.match(me.iid, /^[0-9a-f-]{36}$/);
+  const me = V.load(null); assert.equal(me.iid, null); assert.match(V.ensureId(me), /^[0-9a-f-]{36}$/);
   assert.equal(V.save(null, me), false);
-  const junk = fakeStorage(); junk.setItem(V.KEY, '{not json'); assert.match(V.load(junk).iid, /^[0-9a-f-]{36}$/);
+  const junk = fakeStorage(); junk.setItem(V.KEY, '{not json'); assert.deepEqual(V.load(junk), { iid: null, ok: {}, stars: {} });
   const tampered = fakeStorage(); tampered.setItem(V.KEY, JSON.stringify({ iid: 'me@example.com', ok: 5 }));
-  const fixed = V.load(tampered); assert.match(fixed.iid, /^[0-9a-f-]{36}$/); assert.deepEqual(fixed.ok, {});
+  const fixed = V.load(tampered); assert.equal(fixed.iid, null, 'anything that is not a UUID is thrown away'); assert.deepEqual(fixed.ok, {});
   assert.equal(V.save({ setItem() { throw new Error('quota'); } }, me), false);
 });
 console.log(`ok: ${n} tests`);
