@@ -12,3 +12,7 @@ h1{font-size:28px}
 .layer{margin:0 0 4px;font-size:15px;font-weight:600}
 .cta-line{font-size:17px}
 @media (max-width:420px){h1{font-size:24px}}
+
+.store-btn{display:inline-block;background:#000;color:#fff!important;text-decoration:none;font-weight:600;padding:10px 16px;border-radius:10px;margin:4px 8px 4px 0}
+.store-btn:hover,.store-btn:focus{background:#333}
+.store-note{font-size:14px;opacity:.8;margin-right:8px}
