@@ -1,5 +1,7 @@
-// The page: airport pickers, data loading, rendering. Logic lives in forecast.js.
+// The page: airport pickers, data loading, rendering. Logic lives in forecast.js
+// (and flights.js for the flight-number box).
 import * as F from './forecast.js';
+import * as Fl from './flights.js';
 
 const DATA_BASE = 'https://juicypasta.github.io/jetcalm-data/v1/';
 const LEVEL_NAMES = ['Calm', 'Light', 'Moderate', 'Strong', 'Severe'];
@@ -129,6 +131,131 @@ function combo(inputId, onChoose = () => {}) {
       return m ? byIata.get(m[1]) ?? null : null;
     },
     set(a) { if (a) choose(a); },
+  };
+}
+
+// ---------- flight number ----------
+// The optional box above the airports only fills them; flights.js has the
+// rules and the words. flightFill is the flight that filled the airports now
+// picked, so the shareable URL can carry it while they still match.
+let airportsReady = null;
+let flightFill = null;
+let flightIndex = null;
+const airlineFiles = new Map();
+
+async function getJson(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`${url} ${res.status}`);
+  return res.json();
+}
+
+function getFlightIndex() {
+  if (!flightIndex) {
+    flightIndex = getJson(`${Fl.BASE}index.json`);
+    flightIndex.catch(() => { flightIndex = null; });
+  }
+  return flightIndex;
+}
+
+function getAirline(file) {
+  if (!airlineFiles.has(file)) {
+    const promise = getJson(Fl.BASE + file);
+    airlineFiles.set(file, promise);
+    promise.catch(() => airlineFiles.delete(file));
+  }
+  return airlineFiles.get(file);
+}
+
+function flightParam(origin, destination) {
+  return flightFill && flightFill.from === origin.iata && flightFill.to === destination.iata ? flightFill.param : null;
+}
+
+function flightBox(from, to) {
+  const input = $('flight-no');
+  const find = $('flight-find');
+  const status = $('flight-status');
+  const legs = $('flight-legs');
+  const key = (s) => s.toUpperCase().replace(/[\s.-]/g, '');
+  let looked = null; // what the shown answer is for
+  let seq = 0;
+  let pending = Promise.resolve();
+
+  const fill = (param, a, b) => {
+    from.set(a);
+    to.set(b);
+    flightFill = { param, from: a.iata, to: b.iata };
+  };
+  const clear = () => {
+    status.textContent = '';
+    status.className = 'flight-status';
+    legs.replaceChildren();
+    find.removeAttribute('aria-busy');
+  };
+  const answer = (o) => {
+    const d = Fl.describe(o, label);
+    status.className = `flight-status ${d.found ? 'found' : 'miss'}`;
+    status.textContent = d.text;
+    if (o.kind === 'one') fill(o.param, ...o.legs[0]);
+    legs.replaceChildren(...d.legs.map((leg) => el('button', {
+      type: 'button', class: 'leg', 'aria-pressed': 'false',
+      onclick: (e) => {
+        for (const b of legs.children) b.setAttribute('aria-pressed', String(b === e.currentTarget));
+        fill(o.param, leg.from, leg.to);
+      },
+    }, leg.text)));
+  };
+  const lookup = () => {
+    const text = input.value;
+    const mine = ++seq;
+    clear();
+    looked = key(text);
+    if (!looked) {
+      flightFill = null;
+      pending = Promise.resolve();
+      return pending;
+    }
+    find.setAttribute('aria-busy', 'true');
+    pending = (async () => {
+      let o;
+      try {
+        await airportsReady;
+        o = await Fl.lookup(text, { index: getFlightIndex, airline: getAirline, known: (iata) => byIata.get(iata) });
+      } catch (error) {
+        o = { kind: 'failed', error };
+      }
+      if (o.kind === 'failed') console.warn('flight lookup', o.error);
+      if (mine !== seq) return;
+      find.removeAttribute('aria-busy');
+      answer(o);
+    })();
+    return pending;
+  };
+
+  find.addEventListener('click', lookup);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); lookup(); }
+  });
+  // Leaving the box after typing a number looks it up too.
+  input.addEventListener('change', () => { if (key(input.value) !== looked) lookup(); });
+  input.addEventListener('input', () => {
+    if (key(input.value) === looked) return;
+    seq++;
+    clear();
+    looked = null;
+  });
+
+  return {
+    settled: () => pending,
+    /** ?flight=BA117: fills the box; looks it up only if the URL has no airports (they win). */
+    restore(param, origin, destination) {
+      const parsed = Fl.parse(param ?? '');
+      if (!parsed) return null;
+      input.value = `${parsed.code} ${parsed.number}`;
+      if (!origin && !destination) return lookup();
+      looked = key(input.value);
+      flightFill = { param: `${parsed.code}${parsed.number}`, from: origin?.iata, to: destination?.iata };
+      return null;
+    },
   };
 }
 
@@ -376,6 +503,8 @@ async function run(from, to, push = true) {
   const departure = F.zonedToUtc(origin.tz, +date[1], +date[2], +date[3], +time[1], +time[2]);
   if (push) {
     const q = new URLSearchParams({ from: origin.iata, to: destination.iata, date: $('date').value, time: `${pad(+time[1])}:${time[2]}` });
+    const flight = flightParam(origin, destination);
+    if (flight) q.set('flight', flight);
     history.replaceState(null, '', `?${q}`);
   }
   const btn = $('go');
@@ -409,9 +538,15 @@ async function main() {
   defaults();
   const from = combo('from', (a) => { $('time-hint').textContent = `Local time at ${a.place} (${a.iata}), as on your ticket.`; });
   const to = combo('to');
-  $('flight').addEventListener('submit', (e) => { e.preventDefault(); run(from, to); });
+  airportsReady = loadAirports();
+  const flight = flightBox(from, to);
+  $('flight').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    await flight.settled(); // a number typed and left is still being looked up
+    run(from, to);
+  });
   try {
-    await loadAirports();
+    await airportsReady;
   } catch (e) {
     setError('The airport list did not load. Reload the page to try again.');
     return;
@@ -421,6 +556,7 @@ async function main() {
   to.set(byIata.get((q.get('to') ?? '').toUpperCase()));
   if (/^\d{4}-\d{2}-\d{2}$/.test(q.get('date') ?? '')) $('date').value = q.get('date');
   if (/^\d{1,2}:\d{2}$/.test(q.get('time') ?? '')) $('time').value = q.get('time').padStart(5, '0');
+  await flight.restore(q.get('flight'), from.value, to.value);
   if (from.value && to.value && q.get('date')) run(from, to, false);
   getManifest().catch(() => {});
   document.body.dataset.ready = '1';

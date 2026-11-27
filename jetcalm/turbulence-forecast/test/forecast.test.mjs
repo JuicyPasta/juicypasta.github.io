@@ -1,7 +1,7 @@
 // Pins the web port (../forecast.js) to the app's Dart forecast code.
 // dart-reference.json is the output of dart_reference.dart, run against the
 // app's own lib/forecast files and the fixture run of 2026-11-22 18Z.
-// Run: node --test jetcalm/turbulence-forecast/test/
+// Run: node --test jetcalm/turbulence-forecast/test/*.test.mjs (Node 24 no longer takes the folder)
 // The fixture tiles live in the app repo (JETCALM_APP, default ~/code/Projects/Jetcalm).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';

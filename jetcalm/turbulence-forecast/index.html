@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Turbulence Forecast for Your Flight: Free Checker | Jetcalm</title>
-<meta name="description" content="Free turbulence checker and forecast for your flight: pick two airports and a departure time and see where bumps are predicted from takeoff to landing, in plain words. From the World Area Forecast System, for flights in the next 48 hours.">
+<meta name="description" content="Free turbulence checker and forecast for your flight: pick two airports or type your flight number, add a departure time and see where bumps are predicted from takeoff to landing, in plain words. From the World Area Forecast System, for flights in the next 48 hours.">
 <link rel="canonical" href="https://juicypasta.github.io/jetcalm/turbulence-forecast/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Jetcalm">
@@ -33,9 +33,18 @@
 </header>
 
 <h1>Turbulence forecast for your flight</h1>
-<p class="lead">A free turbulence checker for your flight. Pick your two airports and your departure time, and you get a timeline from takeoff to landing showing where bumps are predicted, in plain words, from the same World Area Forecast System airlines plan flights with.</p>
+<p class="lead">A free turbulence checker for your flight. Pick your two airports or type your flight number, add your departure time, and you get a timeline from takeoff to landing showing where bumps are predicted, in plain words, from the same World Area Forecast System airlines plan flights with.</p>
 
 <form id="flight" class="card" autocomplete="off" novalidate>
+  <div class="field flight-field">
+    <label for="flight-no">Flight number <span class="opt">(optional)</span></label>
+    <div class="flight-row">
+      <input id="flight-no" name="flight" type="text" placeholder="e.g. BA 117" spellcheck="false" autocapitalize="characters" autocorrect="off" enterkeyhint="search">
+      <button type="button" id="flight-find" class="find">Find</button>
+    </div>
+    <div id="flight-status" class="flight-status" role="status" aria-live="polite"></div>
+    <div id="flight-legs" class="legs" role="group" aria-label="Which part are you on?"></div>
+  </div>
   <div class="field combo">
     <label for="from">Flying from</label>
     <input id="from" name="from" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="from-list" placeholder="City, airport or code" spellcheck="false" autocapitalize="characters" required>
@@ -116,8 +125,8 @@
 </div>
 
 <footer>
-<p>Forecast data: NOAA/NWS (WAFS), NCEP GFS. World Area Forecast System products from the NOAA/NWS Aviation Weather Center and the Global Forecast System from NOAA/NCEP, works of the US government in the public domain. Jetcalm is not affiliated with or endorsed by NOAA or the National Weather Service. Airports: <a href="https://github.com/davidmegginson/ourairports-data">OurAirports</a> (public domain).</p>
-<p>No ads, no cookies, no tracking: the forecast is worked out in your browser from public files, and nothing you type is sent anywhere. <a href="../">Jetcalm</a> · <a href="../privacy.html">Privacy</a></p>
+<p>Forecast data: NOAA/NWS (WAFS), NCEP GFS. World Area Forecast System products from the NOAA/NWS Aviation Weather Center and the Global Forecast System from NOAA/NCEP, works of the US government in the public domain. Jetcalm is not affiliated with or endorsed by NOAA or the National Weather Service. Airports: <a href="https://github.com/davidmegginson/ourairports-data">OurAirports</a> (public domain). Flight numbers: <a href="https://github.com/vradarserver/standing-data">Virtual Radar Server standing data</a> (CC0).</p>
+<p>No ads, no cookies, no tracking: the forecast is worked out in your browser from public files. A flight number only downloads that airline's public list of flights, and the number itself is never sent. <a href="../">Jetcalm</a> · <a href="../privacy.html">Privacy</a></p>
 <p>Jetcalm is made by Jackson Darrow in New York City.</p>
 </footer>
 </main>
