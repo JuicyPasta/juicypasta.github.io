@@ -33,6 +33,7 @@
 <div id="controls">
 <h1>Coffee shops open late in New York City</h1>
 <p id="clock">New York time</p>
+<p id="cover" hidden></p>
 <p id="holiday" class="banner" hidden></p>
 <div class="chips" id="chips" role="group" aria-label="How late"></div>
 <div class="tools">
@@ -44,13 +45,17 @@
 <label><input type="checkbox" id="indie"> Independent shops only</label>
 <label><input type="checkbox" id="confirmed"> Confirmed hours only</label>
 </div>
+<p id="helprow" hidden><label><input type="checkbox" id="helpsw"> <span id="helptext">Help: cafés with no hours yet</span></label></p>
 </div>
-<div id="mapwrap"><div id="map"></div><p id="msg" hidden role="status"></p></div>
+<div id="mapwrap"><div id="map"></div><p id="msg" hidden role="status"></p>
+<div id="pinmark" hidden aria-hidden="true"></div>
+<div id="pinbar" hidden><p id="pintext" role="status"></p><p><button type="button" class="btn" id="pinok" disabled>Use this spot</button> <button type="button" id="pincancel">Cancel</button></p></div></div>
 <div id="list">
 <p id="count" role="status">Loading places…</p>
 <ol id="rows"></ol>
 <button type="button" id="more" hidden>Show more</button>
-<p class="osm"><span id="data"></span><br>Places and unconfirmed hours © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>. ✓ marks hours we confirmed from the shop's own site or page or from the chain's store locator, or that two or more visitors confirmed.</p>
+<div id="helplist" hidden><p id="helpcount" role="status"></p><ol id="helprows"></ol><button type="button" id="helpmore" hidden>Show more</button></div>
+<p class="osm"><span id="data"></span><br>Places and unconfirmed hours © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>. ✓ marks hours we confirmed from the shop's own site or page or from the chain's store locator, or that two or more visitors confirmed<span data-if="v11" hidden> or sent</span>.<span data-if="v11" hidden> A pin with only an outline has unconfirmed hours.</span></p>
 </div>
 <aside id="place" hidden aria-label="Place details"></aside>
 </section>
@@ -60,15 +65,18 @@
 <h2 id="about">It's 9:40 pm. Where can you still get a coffee, and until when?</h2>
 <p>Latecup is a map of coffee shops, tea houses and dessert cafés in New York City that stay open late. Other maps tell you what is open now. Latecup answers the next question: what is still open at 10, at 11, at midnight, and what time each place closes. The closing time is written on the pin, and the pin's color shows how much time is left.</p>
 <p>It is free, with no ads and no account. It covers the five boroughs: Manhattan, Brooklyn, Queens, the Bronx and Staten Island. Browse by area on the <a href="nyc/">neighborhood pages</a>, for example late coffee in the East Village, Koreatown or Astoria.</p>
+<p data-if="many" hidden>The map goes beyond New York now, into <span data-fill="others">several</span> more US metro areas. Zoom out to see them, or type a city in the search box. Outside New York most independent shops still show unconfirmed hours, and each city has a line that says how many we have confirmed.<span data-fill="announced"></span></p>
 <p><strong>The apps for iPhone, iPad and Android are on their way.</strong> Until they are in the stores, this page is the whole product.</p>
 
 <h3>How the map decides what "late" means</h3>
 <ul>
-<li><strong>New York time.</strong> Everything is worked out on New York's clock, wherever you are reading from.</li>
+<li data-if="one"><strong>New York time.</strong> Everything is worked out on New York's clock, wherever you are reading from.</li>
+<li data-if="many" hidden><strong>Each city's own time.</strong> A place is worked out on its own city's clock, wherever you are reading from. The time above the map is the clock of the city in the middle of it.</li>
 <li><strong>A night belongs to the day it started on.</strong> At 1:30 am on Saturday the map is still showing Friday night. The night rolls over at 5 am.</li>
 <li><strong>The chips.</strong> Open now shows what is open this minute. 8 PM+, 9 PM+, 10 PM+, 11 PM+, Midnight+ and All night show the places that are open at that time tonight. A shop that closes at 10 is not counted as open at 10. All night means open at 3 am. A time that has already passed drops off the row.</li>
 <li><strong>"24 hours"</strong> is only for a place that is open round the clock and stays open through the coming night. On the last night of a 24-hour run, a shop that shuts at midnight says midnight.</li>
 <li><strong>Color.</strong> <span style="color:#F5B14C">Amber</span>: two hours or more left. <span style="color:#F0873A">Orange</span>: under two hours. <span style="color:#F2604A">Red-orange</span>: closing within the hour.</li>
+<li data-if="v11" hidden><strong>Solid or outline.</strong> A solid pin has hours that we confirmed, or that visitors did. A pin with only an outline has unconfirmed hours: check before you go.</li>
 <li><strong>Another night.</strong> Use the night picker to check any of the next seven nights.</li>
 </ul>
 
@@ -77,9 +85,10 @@
 <ul>
 <li><strong>Confirmed by us.</strong> Each place says which of two sources we used and the date: "from the shop's own site or page" (its website, its ordering page or its official social account), or "from the chain's store locator". Most confirmed chain shops come from store locators.</li>
 <li><strong>Confirmed by visitors.</strong> People who use Latecup can press <strong>Hours are right</strong> on a place. The place then says how many visitors confirmed its hours and when the latest did. A confirmation is for the hours shown that day: if the hours change, the count starts again.</li>
+<li data-if="v11" hidden><strong>Sent by visitors.</strong> In the app, people can put in a place's hours. When two of them send the same hours (three, if the new hours run later), the place shows those hours and says "Hours from 2 visitors" with the date, until we have read the shop's own page. Hours sent from this web page are a report only: they put the place on the list we check.</li>
 <li><strong>Unconfirmed.</strong> The hours come from <a href="https://www.openstreetmap.org/">OpenStreetMap</a>, a map that volunteers keep up. They are often right and sometimes out of date. Check with the shop before a late trip.</li>
 </ul>
-<p>The ✓ in the list, and the "Confirmed hours only" box, mean confirmed by us or by two or more visitors. If someone reports the hours as wrong after the latest confirmation, the place says "Reported wrong: being checked" and loses its ✓ until we have looked.</p>
+<p>The ✓ in the list, and the "Confirmed hours only" box, mean confirmed by us or by two or more visitors.<span data-if="v11" hidden> Hours sent by visitors count too.</span> If someone reports the hours as wrong after the latest confirmation, the place says "Reported wrong: being checked" and loses its ✓ until we have looked.</p>
 <p>On holidays the map shows a notice: shops change their hours and we never guess holiday hours. Any shop can close early without notice. When a late trip matters, call or check the shop's own page.</p>
 
 <h2 id="help">Help</h2>
@@ -88,20 +97,24 @@
 </div>
 
 <h3>A place has the wrong hours. How do I report it?</h3>
-<p>Open the place (tap its pin or its row in the list) and choose <strong>Hours wrong?</strong> Pick what is wrong, add the right hours if you know them, and send. In the app it is the same button on the place screen. A report contains the place, your choice, what you typed and the app version. Each report is checked against the shop's own site or page, or the chain's store locator, and the map is corrected in a daily update.</p>
+<p data-if="v10">Open the place (tap its pin or its row in the list) and choose <strong>Hours wrong?</strong> Pick what is wrong, add the right hours if you know them, and send. In the app it is the same button on the place screen. A report contains the place, your choice, what you typed and the app version. Each report is checked against the shop's own site or page, or the chain's store locator, and the map is corrected in a daily update.</p>
+<p data-if="v11" hidden>Open the place (tap its pin or its row in the list) and choose <strong>Hours wrong?</strong> The week is filled in with the hours we show. Change the days that are wrong and send. A day can be marked closed or open 24 hours, and when the whole week is the same, tick "Same hours each day" and fill in one line. If you don't know the right hours, the line under the table reports them as wrong without any. Hours sent from this page are a report: the place goes on the list we check, and the map changes once we have read the shop's own page. A place that has closed for good, or isn't a café, is reported from the same menu.</p>
 
 <h3>How do I confirm hours or rate a café?</h3>
 <p>Open the place. <strong>Hours are right</strong> confirms the hours you are looking at, once per place per day. The stars rate the café as a place to be late, from 1 to 5; tap again to change your rating. You don't need an account. Your own answers show at once on your device, and the totals that everybody sees are recounted about once an hour. Ratings are stars only: there are no written reviews.</p>
 <p>A confirmation or rating sends the place, your answer, the app version and a random ID made by the app or by this page, so that one person counts once. It sends nothing about where you are, and you don't have to be at the café. The random ID isn't linked to your name, an account or your device. The <a href="privacy.html">privacy policy</a> has the detail.</p>
 
 <h3>A late coffee shop is missing.</h3>
-<p>A place is on the map only when we know its hours and it closes at 8 PM or later on at least one night. If a shop you know is missing, email its name and street to the address above. If you edit OpenStreetMap, adding the shop's <code>opening_hours</code> there fixes it for everybody.</p>
+<p data-if="v10">A place is on the map only when we know its hours and it closes at 8 PM or later on at least one night. If a shop you know is missing, email its name and street to the address above. If you edit OpenStreetMap, adding the shop's <code>opening_hours</code> there fixes it for everybody.</p>
+<p data-if="v11" hidden>A place is on the map only when we know its hours and it closes at 8 PM or later on at least one night. Search for the shop by name. If we know the café but not its hours, it comes up under the search with "No hours yet": tap it and put its hours in. The <strong>Help</strong> switch shows all of those as gray dots on the map. If we don't know the café at all, the search offers to add it: you place a pin on the map and give its name, what kind of place it is, its hours, and its website or Instagram if you know it. It goes on the map after we have found the café's own page. If you edit OpenStreetMap, adding the shop's <code>opening_hours</code> there fixes it for everybody.</p>
 
 <h3>I run a shop and want my listing fixed or removed.</h3>
 <p>Email the address above from the shop's own address, or send a link to the page that shows your hours. We update or remove the listing.</p>
 
-<h3>Why does it only cover New York City?</h3>
-<p>Confirming hours takes work, so Latecup starts with one city. Tell us which city you want.</p>
+<h3 data-if="one">Why does it only cover New York City?</h3>
+<p data-if="one">Confirming hours takes work, so Latecup starts with one city. Tell us which city you want.</p>
+<h3 data-if="many" hidden>Which cities does it cover?</h3>
+<p data-if="many" hidden>New York City and <span data-fill="others">several</span> more US metro areas. Zoom out on the map to see them.<span data-fill="pages"></span> Confirming hours takes work, so outside New York most independent shops still show unconfirmed hours. Tell us which city you want next, or want checked first.</p>
 <div class="card note">
 <strong>Want Latecup in your city?</strong>
 <form class="ask" id="cityform"><input type="text" name="city" maxlength="80" placeholder="Your city" aria-label="Your city" required><button class="btn" type="submit">Ask for it</button></form>
@@ -109,7 +122,7 @@
 </div>
 
 <h3>Does the map know where I am?</h3>
-<p>Only if you press <strong>Near me</strong>, and then your location stays in this page to sort the list by distance. It is never sent to us or anyone else. A confirmation or a rating says nothing about where you are. See the <a href="privacy.html">privacy policy</a>.</p>
+<p>Only if you press <strong>Near me</strong>, and then your location stays in this page to sort the list by distance. It is never sent to us or anyone else. A confirmation or a rating says nothing about where you are.<span data-if="v11" hidden> When you add a café, the pin you place is sent with it: it starts in the middle of the map on your screen, not on you, and it marks the café, not you.</span> See the <a href="privacy.html">privacy policy</a>.</p>
 
 <h3>What do I need to use the app?</h3>
 <p>An iPhone or iPad with iOS 15 or later, or an Android phone or tablet with Android 7 or later, once the app is in each store. The list, search and saved places keep working without a connection; the map background needs one.</p>
@@ -118,8 +131,8 @@
 <p>Latecup has no account, so there is very little to delete, and most of it is on your own device.</p>
 <ul>
 <li><strong>On your device.</strong> Saved places, settings, your own confirmations and ratings and the random ID live in the app. Deleting the app removes them (if your phone's own backup restores the app's data, they can come back with it). On the web map they live in this browser: the button below removes them, and so does clearing this site's data.</li>
-<li><strong>What you sent us.</strong> Reports ("Hours wrong?", a city request), confirmations ("Hours are right") and star ratings are kept until you ask us to remove them. Email <a href="mailto:dangochains@googlegroups.com?subject=Latecup%20delete%20my%20data">dangochains@googlegroups.com</a> with "Latecup delete my data" in the subject and either your random ID, or the place and the day and time you sent it. We remove the matching entries within 30 days, and the public counts and star averages are recounted without them within about an hour of that.</li>
-<li><strong>Your random ID.</strong> It is what lets us find your confirmations and ratings; nothing else ties them to you. On the web map: <button type="button" class="linkbtn" id="showid">show the ID kept in this browser</button> <span id="myid" class="muted"></span> · <button type="button" class="linkbtn" id="forgetid">remove it and my answers from this browser</button>. If you can't find your ID, the place and the time are enough for us to look.</li>
+<li><strong>What you sent us.</strong> Reports ("Hours wrong?", a city request), confirmations ("Hours are right") and star ratings are kept until you ask us to remove them.<span data-if="v11" hidden> So are hours you put in for a place and a café you added.</span> Email <a href="mailto:dangochains@googlegroups.com?subject=Latecup%20delete%20my%20data">dangochains@googlegroups.com</a> with "Latecup delete my data" in the subject and either your random ID, or the place and the day and time you sent it. We remove the matching entries within 30 days, and the public counts and star averages are recounted without them within about an hour of that.</li>
+<li><strong>Your random ID.</strong> It is what lets us find your confirmations and ratings; nothing else ties them to you.<span data-if="v11" hidden> Hours you put in and a café you added carry it too.</span> On the web map: <button type="button" class="linkbtn" id="showid">show the ID kept in this browser</button> <span id="myid" class="muted"></span> · <button type="button" class="linkbtn" id="forgetid">remove it and my answers from this browser</button>. If you can't find your ID, the place and the time are enough for us to look.</li>
 </ul>
 <p class="small muted">Nothing we hold says who you are: no name, no email address, no location, no device identifier. A confirmation older than 120 days stops being counted whether or not you ask. The <a href="privacy.html">privacy policy</a> lists what each kind of message contains.</p>
 
@@ -139,6 +152,8 @@
 <script src="lib/maplibre-gl.js"></script>
 <script src="hours.js"></script>
 <script src="votes.js"></script>
+<script src="areas.js"></script>
+<script src="table.js"></script>
 <script src="config.js"></script>
 <script src="map.js"></script>
 </body>
