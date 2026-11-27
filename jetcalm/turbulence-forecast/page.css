@@ -93,4 +93,5 @@ td:first-child{white-space:nowrap}
 @media (max-width:420px){h1{font-size:26px}.headline h2{font-size:23px}main{padding-top:20px}}
 .pro-note{font-size:15px;border-left:4px solid var(--accent);padding-left:10px}
 #message .route{border-top:0;margin-top:0;padding-top:0}
-
+/* Dark mode: the date and time pickers' own icons were near black on the dark field. */
+@media (prefers-color-scheme:dark){input[type=date],input[type=time]{color-scheme:dark}}
