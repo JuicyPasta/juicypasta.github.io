@@ -499,7 +499,12 @@
 
   /* ---------- the week editor (table.js holds its model and its rules) ---------- */
   function hhmm(min) { return min === null || min === undefined ? '' : ('0' + Math.floor(min / 60)).slice(-2) + ':' + ('0' + min % 60).slice(-2); }
-  function clockOf(text) { var m = /^(\d\d):(\d\d)/.exec(text || ''); return m ? +m[1] * 60 + +m[2] : null; }
+  function clockOf(text) { // "20:30" from a time field; "8:30 pm" or "8 pm" where a browser gives a plain text field in its place
+    var m = /^\s*(\d{1,2})(?::(\d\d))?(?::\d\d)?\s*(?:([ap])\.?\s*m?\.?)?\s*$/i.exec(text || ''); if (!m) return null;
+    var h = +m[1], mm = +(m[2] || 0), ap = (m[3] || '').toLowerCase();
+    if (ap) { if (h < 1 || h > 12) return null; h = h % 12 + (ap === 'p' ? 12 : 0); }
+    return h > 23 || mm > 59 ? null : h * 60 + mm;
+  }
   function editorHtml(m) {
     var h = '<div class="ed' + (m.same ? ' same' : '') + '"><label class="edsame"><input type="checkbox" data-ed="same"' + (m.same ? ' checked' : '') + '> Same hours each day</label>';
     (m.same ? [0] : [0, 1, 2, 3, 4, 5, 6]).forEach(function (d) {
