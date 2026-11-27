@@ -206,6 +206,11 @@
   function sourceLine(p) {
     if (p.src === 'shop') return { confirmed: true, text: 'Hours confirmed ' + p.checked + " from the shop's own site or page" }; // website, ordering page or official social account
     if (p.src === 'brand') return { confirmed: true, text: 'Hours confirmed ' + p.checked + " from the chain's store locator" };
+    if (p.src === 'visitors') { // sent by visitors who agree with each other (the feed's `visitors` is how many; `checked` is the day of the newest)
+      var n = p.visitors >= 1 ? Math.floor(p.visitors) : 0, m = /^\d{4}-(\d\d)-(\d\d)$/.exec(p.checked || '');
+      return { confirmed: true, text: 'Hours from ' + (n === 1 ? '1 visitor' : n ? n + ' visitors' : 'visitors') +
+        (m ? (n === 1 ? ' · ' : ' · latest ') + ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][+m[1] - 1] + ' ' + (+m[2]) : '') };
+    }
     return { confirmed: false, text: 'Unconfirmed hours from OpenStreetMap' + (p.checked ? ' (last checked there ' + p.checked + ')' : '') + ': check before you go' };
   }
   var api = { DAY: DAY, SERVICE_START: SERVICE_START, SERVICE_END: SERVICE_END, DOW: DOW, DAYS: DAYS, tonightView: tonightView, nightView: nightView, THRESHOLDS: THRESHOLDS,

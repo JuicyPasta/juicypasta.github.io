@@ -4,7 +4,9 @@
    - Totals come from the feed's votes file: {"ok": [n, newest date], "bad": [n, newest date],
      "stars": [mean, n]}; any of the three may be missing, and further elements are ignored.
    - Two kinds of "confirmed", never merged in wording: ours (src shop/brand) and visitors'.
-     The mark and the "Confirmed hours only" filter accept ours, or 2 or more visitors.
+     The mark and the "Confirmed hours only" filter accept ours, or 2 or more visitors, or
+     hours that visitors sent and agreed on (src visitors, since the 1.1 feed).
+   - The pin says the same thing before a tap: solid where the mark is, an outline elsewhere.
    - A place with a newer "hours wrong" report than its newest visitor confirmation reads
      "Reported wrong on DATE: being checked" and loses the mark.
    - What this page sends: type attest → note "v=1;iid=<uuid>;hh=<hash>"; type rate →
@@ -27,18 +29,21 @@
     var ok = num(vote.ok, 0) > 0 ? { n: Math.floor(num(vote.ok, 0)), date: String(vote.ok[1] || '') } : null;
     var bad = num(vote.bad, 0) > 0 ? { n: Math.floor(num(vote.bad, 0)), date: String(vote.bad[1] || '') } : null;
     var stars = num(vote.stars, 1) > 0 && num(vote.stars, 0) >= 1 && num(vote.stars, 0) <= 5 ? { mean: Math.round(vote.stars[0] * 10) / 10, n: Math.floor(vote.stars[1]) } : null;
-    var ours = place.src === 'shop' || place.src === 'brand';
+    var ours = place.src === 'shop' || place.src === 'brand', theirs = place.src === 'visitors';
     var flagged = !!bad && (!ok || bad.date > ok.date);
     return {
-      ours: ours, ok: ok, bad: bad, stars: stars, flagged: flagged,
+      ours: ours, theirs: theirs, ok: ok, bad: bad, stars: stars, flagged: flagged,
       byVisitors: !flagged && !!ok && ok.n >= VISITORS_FOR_MARK,
-      marked: !flagged && (ours || (!!ok && ok.n >= VISITORS_FOR_MARK)),
+      marked: !flagged && (ours || theirs || (!!ok && ok.n >= VISITORS_FOR_MARK)),
       visitorLine: ok ? (ok.n === 1 ? '1 visitor confirmed these hours' + (ok.date ? ' · ' + shortDate(ok.date) : '')
         : ok.n + ' visitors confirmed these hours' + (ok.date ? ' · latest ' + shortDate(ok.date) : '')) : '',
       flaggedLine: flagged ? 'Reported wrong' + (bad.date ? ' on ' + shortDate(bad.date) : '') + ': being checked' : '',
       starsLine: stars ? stars.mean.toFixed(1) + ' · ' + stars.n + (stars.n === 1 ? ' rating' : ' ratings') : ''
     };
   }
+  /* How sure the pin looks: solid for hours the mark accepts (shop, brand, visitors, or osm with
+     2 or more visitor confirmations, and no newer wrong-hours report), an outline for the rest. */
+  function pin(place, vote) { return summary(place, vote).marked ? 'solid' : 'outline'; }
   function attestNote(iid, hh) { return 'v=1;iid=' + iid + ';hh=' + hh; }
   function rateNote(iid, stars) { return 'v=1;iid=' + iid + ';stars=' + stars; }
   function uuid(c) { // RFC 4122 version 4
@@ -77,7 +82,7 @@
   function myStars(state, place) { var n = state.stars[place.id]; return n >= 1 && n <= 5 ? n : 0; }
   function recordStars(state, place, n) { state.stars[place.id] = n; return state; }
   function myAttestLine(a, today) { return a ? 'You confirmed these hours ' + (a.d === today ? 'today' : 'on ' + shortDate(a.d)) : ''; }
-  var api = { KEY: KEY, VISITORS_FOR_MARK: VISITORS_FOR_MARK, shortDate: shortDate, summary: summary, attestNote: attestNote, rateNote: rateNote, uuid: uuid,
+  var api = { KEY: KEY, VISITORS_FOR_MARK: VISITORS_FOR_MARK, shortDate: shortDate, summary: summary, pin: pin, attestNote: attestNote, rateNote: rateNote, uuid: uuid,
     load: load, ensureId: ensureId, save: save, myAttest: myAttest, canAttest: canAttest, recordAttest: recordAttest, myStars: myStars, recordStars: recordStars, myAttestLine: myAttestLine };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.LatecupVotes = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
