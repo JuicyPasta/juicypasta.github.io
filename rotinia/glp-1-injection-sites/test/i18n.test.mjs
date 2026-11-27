@@ -6,6 +6,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { EN, fill, mergeStrings, missingKeys, requiredKeys } from '../i18n.js';
 import { SITE_IDS } from '../rotation.js';
+import { faqLd } from '../../../_tools/rotinia-faq/build.mjs';
 
 const rotinia = fileURLToPath(new URL('../../', import.meta.url));
 const PAGES = {
@@ -65,6 +66,27 @@ for (const [lang, rel] of Object.entries(PAGES)) {
     }
     // Loads the one shared planner, not a copy.
     assert.match(html, /<script type="module" src="\.\.\/\.\.\/glp-1-injection-sites\/app\.js"><\/script>/);
+  });
+}
+
+for (const [lang, rel] of Object.entries(PAGES)) {
+  test(`${lang} page: names tirzepatida, FAQ markup says what the page shows, no doses`, () => {
+    const { html } = pageStrings(rel);
+    const title = html.match(/<title>(.*?)<\/title>/)[1];
+    assert.ok(title.length <= 60, `${lang} title is ${title.length} characters`);
+    assert.match(title, /Mounjaro \(tirzepatida\)/);
+    assert.match(html.match(/<h1>(.*?)<\/h1>/)[1], /Mounjaro \(tirzepatida\)/);
+    const blocks = [...html.matchAll(/<script type="application\/ld\+json">\n([\s\S]*?)\n<\/script>/g)].map((m) => JSON.parse(m[1]));
+    const faq = blocks.find((b) => b['@type'] === 'FAQPage');
+    assert.ok(faq, `${lang}: no FAQPage block`);
+    // Rebuilt from the visible section: node _tools/rotinia-faq/build.mjs
+    assert.deepEqual(faq, faqLd(html));
+    assert.ok(faq.mainEntity.length >= 4);
+    assert.ok(faq.mainEntity.every((q) => /tirzepatida/i.test(q.name)), `${lang}: every question names tirzepatida`);
+    const visible = html.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<[^>]+>/g, ' ');
+    assert.doesNotMatch(visible, /\d\s?mg\b/i, `${lang}: no doses`);
+    assert.doesNotMatch(html, /\u2014/, `${lang}: no em dashes`);
+    assert.doesNotMatch(html, /googletagmanager|google-analytics|gtag\(/);
   });
 }
 
