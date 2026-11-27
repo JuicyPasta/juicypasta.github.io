@@ -1,5 +1,7 @@
 // Per-drug content for the four English injection-site pages. Every label
-// statement is from the US label on DailyMed (SPL text read 2026-11-24).
+// statement is from the US label on DailyMed (SPL text read 2026-11-24; the
+// "best place to inject" sections added 2026-11-27 from the same label versions).
+// bestQ + best are the section under the short answer and the page's FAQ markup.
 const DM = 'https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=';
 const ZE = DM + '487cd7e7-434c-4925-99fa-aa80b1cc776b';
 const MO = DM + 'd2d7da5d-ad07-4228-955f-cf7e355c8cc0';
@@ -12,9 +14,17 @@ export const DRUGS = [
   {
     slug: 'zepbound-injection-sites',
     name: 'Zepbound', generic: 'tirzepatide', maker: 'Eli Lilly', owner: 'Eli Lilly and Company', device: 'pen or vial',
-    title: 'Zepbound injection sites: where to inject and how to rotate',
-    h1: 'Zepbound injection sites: where to inject and how to rotate',
-    description: 'Where to inject Zepbound, from the US label: stomach (abdomen), thigh, or the back of the upper arm by someone else. Rotate every week. Pen, vial and KwikPen basics, plus a free rotation planner.',
+    title: 'Zepbound injection sites: best place to inject',
+    h1: 'Zepbound injection sites: where to inject, and is there a best place?',
+    description: 'Zepbound injection sites from the US label: stomach or thigh, or the back of the upper arm by another person. The best place to inject Zepbound? The label names no single best site. Free rotation planner.',
+    bestQ: 'Where is the best place to inject Zepbound?',
+    best: `
+<p>The Zepbound label doesn't name one best place. It lists the <strong>stomach (abdomen) and thigh</strong>, plus the <strong>back of the upper arm</strong> when another person gives the injection, and says "Similar exposure was achieved with subcutaneous administration of tirzepatide in the abdomen, thigh, or upper arm" (exposure is how much of the medicine reaches the bloodstream). The pen instructions say: "Your healthcare provider can help you choose the injection site that is best for you."</p>
+<ul>
+<li><strong>Rotate:</strong> "Change (rotate) your injection site each week. You may use the same area of your body but be sure to choose a different injection site in that area."</li>
+<li><strong>Avoid:</strong> the vial instructions say "Do not inject where the skin has pits, is thickened, or has lumps" and "Do not inject where the skin is tender, bruised, scaly or hard, or into scars or damaged skin." The KwikPen instructions keep stomach injections "at least 2 inches from the belly button".</li>
+<li><strong>Under the skin only:</strong> "Do not inject ZEPBOUND into a muscle (intramuscularly) or vein (intravenously)." (Medication Guide)</li>
+</ul>`,
     printSub: 'Zepbound: stomach (abdomen) or thigh; back of the upper arm only by another person. Change the site every week. Follow the Instructions for Use for your pen or vial.',
     answer: `
 <p><strong>Short answer:</strong> inject Zepbound under the skin of your <strong>stomach (abdomen) or thigh</strong>. The <strong>back of the upper arm</strong> works too, but the label says <strong>another person</strong> should give that injection. Change (rotate) the spot <strong>every week</strong>: the same area is fine, but not the same spot as last time, and the KwikPen instructions add <strong>at least 2 inches from the belly button</strong>.</p>`,
@@ -55,15 +65,25 @@ ${notDose('Zepbound')}
     sources: `
 <p class="small">From the US Zepbound label on DailyMed (US National Library of Medicine), label version of 2026-11-16, read on 2026-11-24:</p>
 <ul class="small">
-<li><a href="${ZE}">Zepbound (tirzepatide) injection, Eli Lilly and Company</a>: prescribing information section 2 (Dosage and Administration), Medication Guide, and the Instructions for Use for the single-dose pen, the single-dose vial, the multi-dose vial and the KwikPen</li>
+<li><a href="${ZE}">Zepbound (tirzepatide) injection, Eli Lilly and Company</a>: prescribing information sections 2 (Dosage and Administration) and 12.3 (Pharmacokinetics), Medication Guide, and the Instructions for Use for the single-dose pen, the single-dose vial, the multi-dose vial and the KwikPen</li>
 </ul>`,
   },
   {
     slug: 'mounjaro-injection-sites',
     name: 'Mounjaro', generic: 'tirzepatide', maker: 'Eli Lilly', owner: 'Eli Lilly and Company', device: 'pen',
-    title: 'Mounjaro injection sites: where to inject and how to rotate',
-    h1: 'Mounjaro injection sites: where to inject and how to rotate',
-    description: 'Where to inject Mounjaro, from the US label: stomach (abdomen), thigh, or the back of the upper arm by someone else. Rotate every week; with insulin, same area but not next to each other. Free rotation planner.',
+    title: 'Mounjaro injection sites: best place to inject',
+    h1: 'Mounjaro injection sites: where to inject, and is there a best place?',
+    description: 'Mounjaro injection sites from the US label: stomach or thigh, or the back of the upper arm by another person. The best place to inject Mounjaro? The label names no single best site. Free rotation planner.',
+    langs: `<p class="langs">Mounjaro in other languages: <a href="../pt/onde-aplicar-mounjaro/" hreflang="pt-BR" lang="pt-BR">Onde aplicar Mounjaro</a> (português) · <a href="../es/donde-aplicar-mounjaro/" hreflang="es" lang="es">Dónde aplicar Mounjaro</a> (español)</p>`,
+    bestQ: 'Where is the best place to inject Mounjaro?',
+    best: `
+<p>The Mounjaro label doesn't name one best place. It lists the <strong>stomach (abdomen) and thigh</strong>, plus the <strong>back of the upper arm</strong> when another person gives the injection, and says "Similar exposure was achieved with subcutaneous administration of tirzepatide in the abdomen, thigh, or upper arm" (exposure is how much of the medicine reaches the bloodstream). The pen instructions say: "Your healthcare provider can help you choose the injection site that is best for you."</p>
+<ul>
+<li><strong>Rotate:</strong> "Change (rotate) your injection site each week. You may use the same area of your body but be sure to choose a different injection site in that area."</li>
+<li><strong>Avoid:</strong> the vial instructions say "Do not inject where the skin has pits, is thickened, or has lumps" and "Do not inject where the skin is tender, bruised, scaly or hard, or into scars or damaged skin." The KwikPen instructions keep stomach injections "at least 2 inches from the belly button".</li>
+<li><strong>Under the skin only:</strong> "Do not inject MOUNJARO into a muscle (intramuscularly) or vein (intravenously)." (Medication Guide)</li>
+<li><strong>With insulin:</strong> the same body area is fine, "but not right next to each other."</li>
+</ul>`,
     printSub: 'Mounjaro: stomach (abdomen) or thigh; back of the upper arm only by another person. Change the site every week. With insulin: separate shots, not next to each other.',
     answer: `
 <p><strong>Short answer:</strong> inject Mounjaro under the skin of your <strong>stomach (abdomen) or thigh</strong>, or have <strong>another person</strong> inject it in the <strong>back of your upper arm</strong>. Change (rotate) the site <strong>with each weekly injection</strong>; the same area is fine if the spot is different, and the KwikPen instructions say <strong>at least 2 inches from the belly button</strong>. If you also take insulin, inject them <strong>separately, never mixed</strong>: the same body area is fine, but not right next to each other.</p>`,
@@ -99,15 +119,24 @@ ${notDose('Mounjaro')}
     sources: `
 <p class="small">From the US Mounjaro label on DailyMed (US National Library of Medicine), label version of 2026-11-16, read on 2026-11-24:</p>
 <ul class="small">
-<li><a href="${MO}">Mounjaro and Mounjaro KwikPen (tirzepatide) injection, Eli Lilly and Company</a>: prescribing information section 2.2 (Important Administration Instructions), Medication Guide, and the Instructions for Use for the single-dose pen, the single-dose and multi-dose vials and the KwikPen</li>
+<li><a href="${MO}">Mounjaro and Mounjaro KwikPen (tirzepatide) injection, Eli Lilly and Company</a>: prescribing information sections 2.2 (Important Administration Instructions) and 12.3 (Pharmacokinetics), Medication Guide, and the Instructions for Use for the single-dose pen, the single-dose and multi-dose vials and the KwikPen</li>
 </ul>`,
   },
   {
     slug: 'wegovy-injection-sites',
     name: 'Wegovy', generic: 'semaglutide', maker: 'Novo Nordisk', owner: 'Novo Nordisk A/S', device: 'pen',
-    title: 'Wegovy injection sites: where to inject and how to rotate',
-    h1: 'Wegovy injection sites: where to inject and how to rotate',
-    description: 'Where to inject Wegovy, from the US label: lower stomach 2 inches from the belly button, front of the thigh, or upper arm. Rotate every week. Wegovy pen basics and a free rotation planner.',
+    title: 'Wegovy injection sites: best place to inject',
+    h1: 'Wegovy injection sites: where to inject, and is there a best place?',
+    description: 'Wegovy injection sites from the US label: stomach, thigh or upper arm. The best place to inject Wegovy? The label names no single best site. What to avoid, plus a free rotation planner.',
+    bestQ: 'Where is the best place to inject Wegovy?',
+    best: `
+<p>The Wegovy label doesn't name one best place. It lists three areas, the <strong>stomach (abdomen), thigh and upper arm</strong>, and says "Similar exposure was achieved with subcutaneous administration of semaglutide in the abdomen, thigh, or upper arm" (exposure is how much of the medicine reaches the bloodstream). The pen instructions say: "Your healthcare provider can help you choose the injection site that is best for you."</p>
+<ul>
+<li><strong>Rotate:</strong> "You may inject in the same body area each week, but make sure it is not in the same spot each time."</li>
+<li><strong>Avoid:</strong> "Do not inject into an area where the skin is tender, bruised, red, or hard. Avoid injecting into areas with scars or stretch marks." On the lower stomach, "keep 2 inches away from your belly button".</li>
+<li><strong>Under the skin only:</strong> "Do not inject WEGOVY into a muscle (intramuscularly) or vein (intravenously)." (Medication Guide)</li>
+<li><strong>If injecting is hard:</strong> the pen instructions suggest changing "to a more firm injection site, such as upper leg, or upper arm".</li>
+</ul>`,
     printSub: 'Wegovy: lower stomach (2 inches from the belly button), front of the thigh, or upper arm. Not the same spot each week. Follow the Instructions for Use for your pen.',
     answer: `
 <p><strong>Short answer:</strong> inject Wegovy under the skin of your <strong>stomach (abdomen), thigh or upper arm</strong>. The pen instructions say the <strong>lower stomach, keeping 2 inches from your belly button</strong>, the <strong>front of the thighs</strong>, or the upper arm. Inject <strong>once a week</strong>, and change (rotate) the spot each time: the same body area is fine, but not the same spot.</p>`,
@@ -146,9 +175,18 @@ ${notDose('Wegovy')}
   {
     slug: 'ozempic-injection-sites',
     name: 'Ozempic', generic: 'semaglutide', maker: 'Novo Nordisk', owner: 'Novo Nordisk A/S', device: 'pen',
-    title: 'Ozempic injection sites: where to inject and how to rotate',
-    h1: 'Ozempic injection sites: where to inject and how to rotate',
-    description: 'Where to inject Ozempic, from the US label: stomach (abdomen), thigh or upper arm, a different spot each week. How to inject with the Ozempic pen, insulin in the same area, and a free rotation planner.',
+    title: 'Ozempic injection sites: best place to inject',
+    h1: 'Ozempic injection sites: where to inject, and is there a best place?',
+    description: 'Ozempic injection sites from the US label: stomach, thigh or upper arm. The best place to inject Ozempic? The label names no single best site. Rotating, insulin, and a free rotation planner.',
+    langs: `<p class="langs">Ozempic in other languages: <a href="../pt/onde-aplicar-mounjaro/#ozempic" hreflang="pt-BR" lang="pt-BR">Onde aplicar Ozempic</a> (português) · <a href="../es/donde-aplicar-mounjaro/#ozempic" hreflang="es" lang="es">Dónde aplicar Ozempic</a> (español)</p>`,
+    bestQ: 'Where is the best place to inject Ozempic?',
+    best: `
+<p>The Ozempic label doesn't name one best place. It lists three areas, the <strong>stomach (abdomen), thigh and upper arm</strong>, and says "Similar exposure is achieved with subcutaneous administration of semaglutide in the abdomen, thigh, or upper arm" (exposure is how much of the medicine reaches the bloodstream). The prefilled syringe instructions say: "Your healthcare provider can help you choose the injection site that is best for you."</p>
+<ul>
+<li><strong>Rotate:</strong> "Change (rotate) your injection site with each injection. Do not use the same site for each injection." (Medication Guide)</li>
+<li><strong>Avoid:</strong> "Do not inject OZEMPIC into a muscle (intramuscularly) or vein (intravenously)." The syringe instructions keep stomach injections "at least 2 inches from the belly button" and say the back of the upper arm is "only with help from someone else".</li>
+<li><strong>With insulin:</strong> the same body area is fine, "but not right next to each other."</li>
+</ul>`,
     printSub: 'Ozempic: stomach (abdomen), thigh or upper arm; a different spot each week. New needle every time. With insulin: separate shots, not next to each other.',
     answer: `
 <p><strong>Short answer:</strong> inject Ozempic under the skin of your <strong>stomach (abdomen), thigh or upper arm</strong>, once a week on the same day. Use a <strong>different spot each week</strong>, even within the same area. If you also take insulin, give them as <strong>separate injections, never mixed</strong>; the same body area is fine, but not right next to each other.</p>`,

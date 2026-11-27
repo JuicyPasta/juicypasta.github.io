@@ -15,6 +15,8 @@ const cta = generic.match(/<section class="app-cta card">[\s\S]*?\n<\/section>/)
 
 const SITE = 'https://juicypasta.github.io/rotinia/';
 const esc = (s) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+// Plain text of a block of page HTML, so the FAQ markup says exactly what the page shows.
+const text = (h) => h.replace(/<\/(p|li)>/g, ' ').replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
 
 for (const d of DRUGS) {
   const url = SITE + d.slug + '/';
@@ -30,6 +32,10 @@ for (const d of DRUGS) {
     applicationCategory: 'HealthApplication', operatingSystem: 'Any',
     offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
     description: `Free injection site rotation planner and printable log for once-weekly ${d.name} (${d.generic}) injections.`,
+  };
+  const faq = {
+    '@context': 'https://schema.org', '@type': 'FAQPage',
+    mainEntity: [{ '@type': 'Question', name: d.bestQ, acceptedAnswer: { '@type': 'Answer', text: text(d.best) } }],
   };
   const related = [
     ...others.map((o) => `<li><a href="../${o.slug}/">${o.name} injection sites</a> (${o.generic}, ${o.maker})</li>`),
@@ -58,6 +64,9 @@ for (const d of DRUGS) {
 <script type="application/ld+json">
 ${JSON.stringify(ld)}
 </script>
+<script type="application/ld+json">
+${JSON.stringify(faq)}
+</script>
 <script type="application/json" id="planner-strings">
 ${JSON.stringify(EN, null, 2)}
 </script>
@@ -69,7 +78,7 @@ ${JSON.stringify(EN, null, 2)}
 <a href="../"><img src="../icon.png" alt="Rotinia" width="64" height="64"></a>
 <div><p class="brand"><a href="../">Rotinia</a></p><p>Free, no ads, no sign-up</p></div>
 </header>
-<p class="langs">Other pens: ${others.map((o) => `<a href="../${o.slug}/">${o.name}</a>`).join(' · ')} · <a href="../glp-1-injection-sites/">all GLP-1 pens</a></p>
+<p class="langs">Other pens: ${others.map((o) => `<a href="../${o.slug}/">${o.name}</a>`).join(' · ')} · <a href="../glp-1-injection-sites/">all GLP-1 pens</a></p>${d.langs ? '\n' + d.langs.trim() : ''}
 
 <h1>${d.h1}</h1>
 
@@ -77,6 +86,9 @@ ${JSON.stringify(EN, null, 2)}
 ${d.answer.trim()}
 <p>The planner below keeps the rotation for you: tap the site you used last and it shows the next one.</p>
 </div>
+
+<h2 id="best">${d.bestQ}</h2>
+${d.best.trim()}
 
 ${planner}
 
