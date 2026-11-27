@@ -9,7 +9,7 @@
 //                                   (on the Mac: Playwright 1.58.2 wants build 1208 and the cache holds 1255, so
 //                                   CHROME=~/Library/Caches/ms-playwright/chromium_headless_shell-1255/chrome-headless-shell-mac-arm64/chrome-headless-shell).
 //                                   Point it at what is there; do not download a browser for this.
-//   --quick                         one clock, and the places; about two minutes, not eight
+//   --quick                         one clock, the places and one window size; about five minutes, not eleven
 //
 // Both pages run on localhost, each on its own port, from serve.mjs. Nothing reaches the real
 // report form: the newer page sends to the stand-in by itself, the older one knows none, so
@@ -33,7 +33,13 @@ const serve = async (root) => { // serve.mjs on a free port; resolves when it an
   child.kill(); throw new Error('the local server did not start');
 };
 let failures = 0, checks = 0;
-const same = (what, a, b) => { checks++; if (JSON.stringify(a) !== JSON.stringify(b)) { failures++; console.log(`DIFFERENT: ${what}\n   old: ${JSON.stringify(a).slice(0, 600)}\n   new: ${JSON.stringify(b).slice(0, 600)}`); } };
+const same = (what, a, b) => { // on a difference: the two values from a little before the place where they part
+  checks++;
+  const x = JSON.stringify(a), y = JSON.stringify(b); if (x === y) return;
+  let i = 0; while (i < x.length && i < y.length && x[i] === y[i]) i++;
+  const from = Math.max(0, i - 120);
+  failures++; console.log(`DIFFERENT: ${what}${from ? ` (the same for the first ${i} characters)` : ''}\n   old: ${x.slice(from, from + 500)}\n   new: ${y.slice(from, from + 500)}`);
+};
 
 const INIT = () => { // keep the map object the page makes, so its layers and data can be read
   let real, wrapped;
@@ -82,6 +88,14 @@ const snap = (page) => page.evaluate(async () => {
     stored: JSON.stringify(Object.fromEntries(Object.keys(localStorage).map((k) => [k, localStorage.getItem(k).replace(/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/g, '<uuid>')]))),
   };
 });
+/* Each run of text that is drawn, with the element it sits in. An element more inside a sentence, even a hidden one, cuts a run in
+   two, and the letters beside the cut are drawn a shade differently: the same words, not the same picture. The text that never
+   changes (below the map, and the line under the list) is compared once, at the end; what the script draws, in each state. */
+const RUNS = (fixed) => {
+  const out = [], walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT), range = document.createRange(); let node;
+  while ((node = walk.nextNode())) { if (!!node.parentElement.closest('main.text, .osm') !== fixed) continue; range.selectNodeContents(node); if (range.getClientRects().length) out.push(node.parentElement.tagName + '|' + node.nodeValue); }
+  return out;
+};
 /* Two screenshots, pixel by pixel. A headless browser does not always round an anti-aliased edge the same way in
    two pages (one level out of 255, in a pixel or two), so a pixel counts as different from 3 levels up. Returns how many are. */
 let bench;
@@ -101,7 +115,8 @@ const settle = async (page) => { await page.waitForTimeout(250); await page.wait
 async function both(browser, opts, steps) { // the same steps on the old page and the new, compared after each
   const o = await open(browser, OLD, opts), n = await open(browser, NEW, opts);
   const uu = (v) => JSON.parse(JSON.stringify(v).replace(/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/g, '<uuid>'));
-  const cmp = async (label) => { const a = uu(await snap(o.page)), b = uu(await snap(n.page)); for (const k of Object.keys(a)) same(`${label}: ${k}`, a[k], b[k]); return [a, b]; };
+  const all = async (page) => uu({ ...(await snap(page)), runs: await page.evaluate(RUNS, false) });
+  const cmp = async (label) => { const a = await all(o.page), b = await all(n.page); for (const k of Object.keys(a)) same(`${label}: ${k}`, a[k], b[k]); return [a, b]; };
   await steps(o, n, cmp);
   same('page errors, old', o.errors, []); same('page errors, new', n.errors, []);
   return [o, n];
@@ -216,7 +231,16 @@ const each = async (o, n, fn) => { await fn(o.page); await fn(n.page); await set
   for (const viewport of QUICK ? [{ width: 390, height: 844 }] : [{ width: 390, height: 844 }, { width: 360, height: 640 }, { width: 820, height: 1180 }, { width: 1920, height: 1080 }]) {
     const [o, n] = await both(browser, { now: NOWS.fri2240, viewport }, async (o, n, cmp) => {
       await cmp(`${viewport.width} wide`);
-      same(`${viewport.width} wide: the whole page from top to bottom, pixels that differ`, await differing(browser, await o.page.screenshot({ fullPage: true }), await n.page.screenshot({ fullPage: true })), 0);
+      // the whole page from top to bottom, a screen at a time (one picture of it all is too tall for the browser to take on a phone)
+      const height = await o.page.evaluate(() => document.documentElement.scrollHeight);
+      same(`${viewport.width} wide: the page is as tall`, await n.page.evaluate(() => document.documentElement.scrollHeight), height);
+      let screens = 0, off = 0;
+      for (let y = 0; y < height; y += viewport.height) {
+        await each(o, n, (p) => p.evaluate((top) => window.scrollTo(0, top), y));
+        off += await differing(browser, await o.page.screenshot(), await n.page.screenshot()); screens++;
+      }
+      same(`${viewport.width} wide: the whole page from top to bottom, ${screens} screens, pixels that differ`, off, 0);
+      await each(o, n, (p) => p.evaluate(() => window.scrollTo(0, 0)));
       const [po, pn] = [await o.page.screenshot({ fullPage: false }), await n.page.screenshot({ fullPage: false })];
       if (OUT) { fs.writeFileSync(path.join(OUT, `${viewport.width}-old.png`), po); fs.writeFileSync(path.join(OUT, `${viewport.width}-new.png`), pn); }
       await each(o, n, (p) => p.evaluate(() => document.getElementById('list').scrollIntoView())); await o.page.waitForTimeout(300);
@@ -231,10 +255,17 @@ const each = async (o, n, fn) => { await fn(o.page); await fn(n.page); await set
   }
   // 4. The real clock, and the page's text below the map
   {
-    const [o, n] = await both(browser, {}, async (o, n, cmp) => { const [a] = await cmp('the real clock'); console.log('now:', a.clock, '|', a.count); });
+    const [o, n] = await both(browser, {}, async (o, n, cmp) => {
+      // each page reads the clock when it draws: draw both again in the same minute, away from the turn of it
+      const sec = new Date().getSeconds(); if (sec > 40 || sec < 3) await new Promise((r) => setTimeout(r, ((63 - sec) % 60) * 1000));
+      await each(o, n, (p) => p.click('#chips [data-chip]'));
+      const [a] = await cmp('the real clock'); console.log('now:', a.clock, '|', a.count);
+    });
     same('the whole text of the page', await o.page.evaluate(() => document.querySelector('main.text').innerText), await n.page.evaluate(() => document.querySelector('main.text').innerText));
+    same('the text that never changes, run by run', await o.page.evaluate(RUNS, true), await n.page.evaluate(RUNS, true));
     same('hidden extras stay hidden', await n.page.evaluate(() => ['cover', 'helprow', 'pinmark', 'pinbar', 'helplist'].map((id) => getComputedStyle(document.getElementById(id)).display)), ['none', 'none', 'none', 'none', 'none']);
     same('paragraphs for the other feed stay hidden', await n.page.evaluate(() => [...document.querySelectorAll('[data-if=many],[data-if=v11],[data-if=vis],[data-fill]')].filter((el) => el.offsetParent !== null || el.getClientRects().length > 0).length), 0);
+    same('no sentence for the other feed was put into a paragraph', await n.page.evaluate(() => [...document.querySelectorAll('[data-after]')].filter((el) => !el.hasAttribute('data-more') || el.textContent.includes(el.getAttribute('data-say'))).length), 0);
     await o.context.close(); await n.context.close();
   }
   await browser.close();
