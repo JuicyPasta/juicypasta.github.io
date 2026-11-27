@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Índice UV hoje na sua cidade, hora a hora | Solei</title>
+<meta name="description" content="Índice UV de hoje e de amanhã hora a hora para a sua cidade ou a sua localização: o máximo, o de agora, os horários acima de 3, 6 e 8 e o que a OMS recomenda. Grátis, sem anúncios. Dados do MET Norway.">
+<link rel="canonical" href="https://juicypasta.github.io/solei/pt/indice-uv-hoje/">
+<link rel="alternate" hreflang="pt-BR" href="https://juicypasta.github.io/solei/pt/indice-uv-hoje/">
+<link rel="alternate" hreflang="es" href="https://juicypasta.github.io/solei/es/indice-uv-hoy/">
+<link rel="alternate" hreflang="en" href="https://juicypasta.github.io/solei/uv-tanning-calculator/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:site_name" content="Solei">
+<meta property="og:title" content="Índice UV hoje na sua cidade, hora a hora">
+<meta property="og:description" content="O índice UV de hoje hora a hora: o máximo, o de agora e em que horários passa de 3, de 6 e de 8, com o que a OMS recomenda.">
+<meta property="og:url" content="https://juicypasta.github.io/solei/pt/indice-uv-hoje/">
+<meta property="og:image" content="https://juicypasta.github.io/solei/icon.png">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#0b5d6e">
+<link rel="icon" href="../../icon.png">
+<link rel="stylesheet" href="../../style.css">
+<link rel="stylesheet" href="../../uv-tanning-calculator/page.css">
+<link rel="stylesheet" href="../../live-uv/page.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"Índice UV hoje (Solei)","url":"https://juicypasta.github.io/solei/pt/indice-uv-hoje/","inLanguage":"pt-BR","applicationCategory":"WeatherApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"BRL"},"description":"O índice UV de hoje e de amanhã hora a hora para a sua cidade ou a sua localização, com as categorias e a proteção que a OMS recomenda. Dados do MET Norway (CC BY 4.0)."}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"O que é o índice UV?","acceptedAnswer":{"@type":"Answer","text":"É a escala da Organização Mundial da Saúde que mede o quanto o sol queima num lugar e num horário. Começa em 0 à noite e sobe com o sol: de 0 a 2 é baixo, de 3 a 5 moderado, de 6 a 7 alto, de 8 a 10 muito alto e de 11 para cima extremo. Quanto mais alto, menos tempo a pele leva para queimar."}},
+{"@type":"Question","name":"Que horas o índice UV é mais alto?","acceptedAnswer":{"@type":"Answer","text":"Nas quatro horas em torno do meio-dia solar, quando o sol está mais alto. Segundo a OMS, o meio-dia solar cai entre 12h e 14h no relógio, conforme o lugar e o horário de verão. No Brasil, que não tem horário de verão desde 2019, o pico costuma ficar perto do meio-dia. De manhã cedo e no fim da tarde o índice é bem mais baixo."}},
+{"@type":"Question","name":"Qual índice UV é perigoso?","acceptedAnswer":{"@type":"Answer","text":"A partir de 3 a OMS recomenda se proteger: sombra nas horas centrais do dia, camiseta, protetor solar e chapéu. A partir de 8 pede proteção extra e evitar ficar ao ar livre perto do meio-dia. 11 ou mais é extremo. Com índice 8, uma pele muito clara chega ao limite seguro sem protetor em uns 11 minutos, e uma pele média em uns 16."}},
+{"@type":"Question","name":"Nuvens diminuem o índice UV?","acceptedAnswer":{"@type":"Answer","text":"Nuvens grossas diminuem, mas nuvens finas ou espalhadas deixam passar quase todo o UV e às vezes até aumentam um pouco. Por isso esta página mostra o índice com céu limpo, o máximo possível para cada hora, e ao lado a nebulosidade prevista. Água, areia e principalmente neve refletem UV e somam mais."}},
+{"@type":"Question","name":"Quanto tempo posso ficar no sol hoje?","acceptedAnswer":{"@type":"Answer","text":"Depende do seu tipo de pele e do protetor. Para cada dia, esta página mostra o tempo até o limite seguro sem protetor no horário do máximo, para os seis tipos de pele. Com protetor, a calculadora do Solei (em inglês) faz a conta com o seu FPS e diz quando reaplicar."}},
+{"@type":"Question","name":"De onde vêm os dados?","acceptedAnswer":{"@type":"Answer","text":"Da previsão do MET Norway, o instituto de meteorologia da Noruega, que cobre o mundo todo e publica os dados sob a licença CC BY 4.0. Esta página não guarda a sua localização: só envia ao MET Norway as coordenadas arredondadas para cerca de 1 km para pedir a previsão."}}
+]}
+</script>
+<script type="application/json" id="uv-strings">
+{
+  "countries": {"BR": "Brasil", "PT": "Portugal", "ES": "Espanha", "MX": "México", "AR": "Argentina", "CL": "Chile", "CO": "Colômbia", "PE": "Peru"},
+  "cat": {"low": "Baixo", "moderate": "Moderado", "high": "Alto", "veryHigh": "Muito alto", "extreme": "Extremo"},
+  "advice": {
+    "low": "A maioria das pessoas não precisa de proteção.",
+    "moderate": "Use protetor solar e procure sombra perto do meio-dia.",
+    "high": "Proteja-se: sombra, roupa e protetor solar.",
+    "veryHigh": "Reforce a proteção. Evite o sol do meio-dia.",
+    "extreme": "Fique fora do sol do meio-dia. Proteção total é indispensável."
+  },
+  "step": {"none": "Sem proteção especial", "needed": "Proteção necessária", "extra": "Proteção extra"},
+  "stepText": {
+    "none": "Segundo a OMS, dá para ficar ao ar livre sem problema.",
+    "needed": "A OMS recomenda procurar sombra nas horas centrais do dia e usar camiseta, protetor solar e chapéu.",
+    "extra": "A OMS recomenda evitar ficar ao ar livre nas horas centrais e procurar sombra. Camiseta, protetor solar e chapéu são indispensáveis."
+  },
+  "today": "Hoje",
+  "tomorrow": "Amanhã",
+  "maxToday": "Máximo de hoje",
+  "maxFromNow": "Máximo daqui para a frente",
+  "maxDay": "Máximo",
+  "at": "às {t}",
+  "now": "Agora ({t})",
+  "clearSky": "com céu limpo",
+  "spanLine": "UV {n} ou mais",
+  "spanFromTo": "das {from} às {to}",
+  "spanOne": "por volta das {from}",
+  "spanNone": "nenhum horário",
+  "noUvLeft": "Em {place} não tem mais UV hoje. Abaixo está o de amanhã.",
+  "noUvHours": "Não há mais horários com UV hoje.",
+  "hourCol": "Hora",
+  "uvCol": "Índice UV",
+  "cloudCol": "Nuvens",
+  "hourCaption": "Índice UV hora a hora com céu limpo ({when})",
+  "localTime": "horário local",
+  "placeTime": "horário de {place}",
+  "skinCaption": "Tempo até o limite seguro sem protetor, com UV {uv}, por tipo de pele",
+  "skinTypes": ["I: muito clara", "II: clara", "III: média", "IV: oliva", "V: morena", "VI: negra"],
+  "skinNote": "Tipos de pele de I (muito clara, sempre queima) a VI (negra). O limite seguro é dois terços da dose que costuma deixar a pele vermelha. São estimativas, não orientação médica. Com protetor solar:",
+  "calcLink": "calculadora de tempo no sol (em inglês)",
+  "noLimit": "mais de 1 dia",
+  "sourceData": "Dados:",
+  "sourceClear": "Índice UV com céu limpo e nebulosidade prevista.",
+  "sourceUpdated": "Previsão atualizada às {t} ({when}).",
+  "sourceChanges": "Os horários locais, o máximo e as faixas são calculados nesta página.",
+  "loading": "Carregando a previsão de {place}…",
+  "error": "Não foi possível carregar a previsão do MET Norway. Tente de novo daqui a pouco.",
+  "geoAsk": "Pedindo a sua localização ao navegador…",
+  "geoDenied": "Não deu para usar a sua localização. Digite a sua cidade ou escolha a mais próxima.",
+  "geoUnsupported": "Este navegador não informa a localização. Digite a sua cidade.",
+  "myPlace": "Sua localização",
+  "guessed": "Mostrando {place} pelo fuso horário do seu aparelho. Troque a cidade ou use a sua localização.",
+  "noMatch": "Não está na lista. Use a sua localização ou escolha a cidade grande mais próxima."
+}
+</script>
+<script type="module" src="../../live-uv/app.js"></script>
+</head>
+<body>
+<main>
+<header>
+<a href="../../"><img src="../../icon.png" alt="Solei" width="64" height="64"></a>
+<div><p class="brand"><a href="../../">Solei</a></p><p>Grátis, sem anúncios, sem cadastro</p></div>
+</header>
+<p class="langs">Também em: <a href="../../es/indice-uv-hoy/" hreflang="es" lang="es">Español</a> · <a href="../../uv-tanning-calculator/" hreflang="en" lang="en">English (UV tanning calculator)</a></p>
+
+<h1>Índice UV hoje na sua cidade, hora a hora</h1>
+<p class="lead">Escolha a sua cidade ou use a sua localização para ver o índice UV de hoje e de amanhã: o máximo, o de agora, em que horários ele passa de 3, de 6 e de 8, e o que a OMS recomenda para cada nível. Os dados são da previsão do MET Norway, o instituto de meteorologia da Noruega.</p>
+
+<form id="picker" class="card live" autocomplete="off" role="search">
+  <h2><label for="city">Onde você está?</label></h2>
+  <div class="pick">
+    <div class="combo">
+      <input id="city" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="city-list" placeholder="Digite a sua cidade" spellcheck="false">
+      <ul id="city-list" role="listbox" aria-label="Cidades" hidden></ul>
+    </div>
+    <button id="locate" class="btn" type="button">Usar minha localização</button>
+  </div>
+  <p class="quick">Ou escolha:
+    <button type="button" data-city="br-sao-paulo">São Paulo</button>
+    <button type="button" data-city="br-rio-de-janeiro">Rio de Janeiro</button>
+    <button type="button" data-city="br-brasilia">Brasília</button>
+    <button type="button" data-city="br-salvador">Salvador</button>
+    <button type="button" data-city="br-fortaleza">Fortaleza</button>
+    <button type="button" data-city="br-belo-horizonte">Belo Horizonte</button>
+    <button type="button" data-city="br-recife">Recife</button>
+    <button type="button" data-city="br-porto-alegre">Porto Alegre</button>
+    <button type="button" data-city="pt-lisboa">Lisboa</button>
+  </p>
+  <p id="status" class="hint" role="status"></p>
+</form>
+<noscript><p class="card note">O índice UV ao vivo precisa de JavaScript. A tabela da OMS abaixo funciona sem ele.</p></noscript>
+
+<section id="result" aria-live="polite" hidden></section>
+
+<section class="app-cta card">
+<h2>O app Solei acompanha o UV do dia para você</h2>
+<p>O Solei usa esta mesma previsão onde você estiver, soma a dose de UV minuto a minuto de acordo com o seu tipo de pele e o seu protetor, e avisa quando reaplicar e quando você chega ao seu limite. Está em português. O app básico é grátis, sem anúncios, sem conta e sem rastreamento.</p>
+<p><strong>Em breve na App Store e no Google Play.</strong> <a href="../../">Sobre o app (em inglês)</a></p>
+</section>
+
+<h2>O que fazer conforme o índice UV</h2>
+<div class="table-wrap">
+<table class="who">
+<caption>Categorias do índice UV e a proteção recomendada pela OMS</caption>
+<thead><tr><th scope="col">Índice UV</th><th scope="col">Categoria</th><th scope="col">O que fazer</th></tr></thead>
+<tbody>
+<tr><td><span class="dot c-low"></span>0 a 2</td><td>Baixo</td><td>Não precisa de proteção especial. Dá para ficar ao ar livre sem problema.</td></tr>
+<tr><td><span class="dot c-moderate"></span>3 a 5</td><td>Moderado</td><td>Precisa de proteção: procure sombra nas horas centrais do dia e use camiseta, protetor solar e chapéu.</td></tr>
+<tr><td><span class="dot c-high"></span>6 a 7</td><td>Alto</td><td>Precisa de proteção, como no moderado. Sem protetor, uma pele clara chega ao limite em menos de 20 minutos.</td></tr>
+<tr><td><span class="dot c-veryHigh"></span>8 a 10</td><td>Muito alto</td><td>Proteção extra: evite ficar ao ar livre nas horas centrais e procure sombra. Camiseta, protetor solar e chapéu são indispensáveis.</td></tr>
+<tr><td><span class="dot c-extreme"></span>11 ou mais</td><td>Extremo</td><td>Proteção extra, como no muito alto. Perto do meio-dia uma pele muito clara chega ao limite em menos de 10 minutos.</td></tr>
+</tbody>
+</table>
+</div>
+<p class="small muted">Fonte: Organização Mundial da Saúde, <a href="https://www.who.int/publications/i/item/9241590076" hreflang="en">Global Solar UV Index: A Practical Guide</a> (2002) e a <a href="https://www.who.int/news-room/questions-and-answers/item/radiation-the-ultraviolet-(uv)-index" hreflang="en">página de perguntas sobre o índice UV</a>. Os minutos são estimativas do Solei para pele tipo II e I.</p>
+
+<section class="faq">
+<h2>Perguntas frequentes</h2>
+<h3>O que é o índice UV?</h3>
+<p>É a escala da Organização Mundial da Saúde que mede o quanto o sol queima num lugar e num horário. Começa em 0 à noite e sobe com o sol: de 0 a 2 é baixo, de 3 a 5 moderado, de 6 a 7 alto, de 8 a 10 muito alto e de 11 para cima extremo. Quanto mais alto, menos tempo a pele leva para queimar.</p>
+<h3>Que horas o índice UV é mais alto?</h3>
+<p>Nas quatro horas em torno do meio-dia solar, quando o sol está mais alto. Segundo a OMS, o meio-dia solar cai entre 12h e 14h no relógio, conforme o lugar e o horário de verão. No Brasil, que não tem horário de verão desde 2019, o pico costuma ficar perto do meio-dia. A tabela acima mostra o horário do máximo na sua cidade. De manhã cedo e no fim da tarde o índice é bem mais baixo.</p>
+<h3>Qual índice UV é perigoso?</h3>
+<p>A partir de 3 a OMS recomenda se proteger: sombra nas horas centrais do dia, camiseta, protetor solar e chapéu. A partir de 8 pede proteção extra e evitar ficar ao ar livre perto do meio-dia. 11 ou mais é extremo. Com índice 8, uma pele muito clara chega ao limite seguro sem protetor em uns 11 minutos, e uma pele média em uns 16.</p>
+<h3>Nuvens diminuem o índice UV?</h3>
+<p>Nuvens grossas diminuem, mas nuvens finas ou espalhadas deixam passar quase todo o UV e às vezes até aumentam um pouco. Por isso esta página mostra o índice com céu limpo, o máximo possível para cada hora, e ao lado a nebulosidade prevista. Água, areia e principalmente neve refletem UV e somam mais.</p>
+<h3>Quanto tempo posso ficar no sol hoje?</h3>
+<p>Depende do seu tipo de pele e do protetor. Para cada dia, esta página mostra o tempo até o limite seguro sem protetor no horário do máximo, para os seis tipos de pele. Com protetor, a <a href="../../uv-tanning-calculator/" hreflang="en">calculadora do Solei</a> (em inglês) faz a conta com o seu FPS e diz quando reaplicar.</p>
+<h3>De onde vêm os dados?</h3>
+<p>Da previsão do <a href="https://www.met.no/en">MET Norway</a>, o instituto de meteorologia da Noruega, que cobre o mundo todo e publica os dados sob a licença <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Esta página não guarda a sua localização: só envia ao MET Norway as coordenadas arredondadas para cerca de 1 km para pedir a previsão.</p>
+</section>
+
+<footer>
+<p>Sem anúncios, sem cookies, sem rastreamento. A sua localização só serve para pedir a previsão e não é guardada. <a href="../../">Solei</a> · <a href="../../privacy.html">Privacidade (em inglês)</a></p>
+<p>Dados meteorológicos: <a href="https://www.met.no/en">MET Norway</a> (CC BY 4.0). O Solei é feito por Jackson Darrow em Nova York.</p>
+</footer>
+</main>
+</body>
+</html>
