@@ -9,7 +9,10 @@ Apps and free tools by Jackson Darrow.
 - [Turbulence tracker](https://juicypasta.github.io/jetcalm/turbulence-tracker/): the latest pilot turbulence reports from the last 3 hours on a map, smooth to severe.
 - [UV tanning calculator](https://juicypasta.github.io/solei/uv-tanning-calculator/): enter the UV index, your skin type and your sunscreen to estimate how long you can stay in the sun before your safe limit, and when to reapply.
 - [GLP-1 injection sites and rotation planner](https://juicypasta.github.io/rotinia/glp-1-injection-sites/): where the labels say to inject Ozempic, Wegovy, Mounjaro and Zepbound, how to rotate, and a printable rotation log.
+- [Zepbound injection sites](https://juicypasta.github.io/rotinia/zepbound-injection-sites/), [Mounjaro injection sites](https://juicypasta.github.io/rotinia/mounjaro-injection-sites/), [Wegovy injection sites](https://juicypasta.github.io/rotinia/wegovy-injection-sites/) and [Ozempic injection sites](https://juicypasta.github.io/rotinia/ozempic-injection-sites/): one page per pen, with where its US label says to inject, what it says about a best place, and the same planner.
 - [Onde aplicar Mounjaro (português)](https://juicypasta.github.io/rotinia/pt/onde-aplicar-mounjaro/) and [Dónde aplicar Mounjaro (español)](https://juicypasta.github.io/rotinia/es/donde-aplicar-mounjaro/): the same guide and planner, from the Brazilian (Anvisa) and EU labels.
+- [Coffee shops open late in NYC](https://juicypasta.github.io/latecup/): a map of New York City coffee shops, tea houses and dessert cafés that are open late, with the closing time on each pin.
+- [Late-night coffee shops by NYC neighborhood](https://juicypasta.github.io/latecup/nyc/): late-night coffee shops, tea houses and dessert cafés listed by neighborhood, with the usual closing time for each night.
 - [DangoChains daily Japanese word puzzle](https://dangochains.com/play/): 16 Japanese words, 4 hidden groups, free in the browser.
 
 ## Apps (support and privacy)
