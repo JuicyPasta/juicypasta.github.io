@@ -126,6 +126,7 @@ ${notDose('Mounjaro')}
     slug: 'wegovy-injection-sites',
     name: 'Wegovy', generic: 'semaglutide', maker: 'Novo Nordisk', owner: 'Novo Nordisk A/S', device: 'pen',
     title: 'Wegovy injection sites: best place to inject',
+    langs: `<p class="langs">Wegovy in other languages: <a href="../pt/onde-aplicar-ozempic/#wegovy" hreflang="pt-BR" lang="pt-BR">Onde aplicar Wegovy</a> (português) · <a href="../es/donde-aplicar-ozempic/#wegovy" hreflang="es" lang="es">Dónde aplicar Wegovy</a> (español)</p>`,
     h1: 'Wegovy injection sites: where to inject, and is there a best place?',
     description: 'Wegovy injection sites from the US label: stomach, thigh or upper arm. The best place to inject Wegovy? The label names no single best site. What to avoid, plus a free rotation planner.',
     bestQ: 'Where is the best place to inject Wegovy?',
@@ -178,7 +179,9 @@ ${notDose('Wegovy')}
     title: 'Ozempic injection sites: best place to inject',
     h1: 'Ozempic injection sites: where to inject, and is there a best place?',
     description: 'Ozempic injection sites from the US label: stomach, thigh or upper arm. The best place to inject Ozempic? The label names no single best site. Rotating, insulin, and a free rotation planner.',
-    langs: `<p class="langs">Ozempic in other languages: <a href="../pt/onde-aplicar-mounjaro/#ozempic" hreflang="pt-BR" lang="pt-BR">Onde aplicar Ozempic</a> (português) · <a href="../es/donde-aplicar-mounjaro/#ozempic" hreflang="es" lang="es">Dónde aplicar Ozempic</a> (español)</p>`,
+    // The Portuguese and Spanish Ozempic pages are this page's translations (hreflang both ways).
+    alternates: { 'pt-BR': 'pt/onde-aplicar-ozempic/', es: 'es/donde-aplicar-ozempic/' },
+    langs: `<p class="langs">Ozempic in other languages: <a href="../pt/onde-aplicar-ozempic/" hreflang="pt-BR" lang="pt-BR">Onde aplicar Ozempic</a> (português) · <a href="../es/donde-aplicar-ozempic/" hreflang="es" lang="es">Dónde aplicar Ozempic</a> (español)</p>`,
     bestQ: 'Where is the best place to inject Ozempic?',
     best: `
 <p>The Ozempic label doesn't name one best place. It lists three areas, the <strong>stomach (abdomen), thigh and upper arm</strong>, and says "Similar exposure is achieved with subcutaneous administration of semaglutide in the abdomen, thigh, or upper arm" (exposure is how much of the medicine reaches the bloodstream). The prefilled syringe instructions say: "Your healthcare provider can help you choose the injection site that is best for you."</p>
@@ -209,7 +212,7 @@ ${notDose('Wegovy')}
 </ol>
 <p>"Do not share your OZEMPIC pen with other people, even if the needle has been changed." If blood appears, press lightly with a gauze pad or cotton ball; don't rub.</p>
 ${notDose('Ozempic')}
-<p>Wegovy is the same medicine (semaglutide) in a single-dose pen: <a href="../wegovy-injection-sites/">Wegovy injection sites</a>. Ozempic in Portuguese and Spanish (Brazilian and Latin American labels): <a href="../pt/onde-aplicar-mounjaro/#ozempic" hreflang="pt-BR" lang="pt-BR">Onde aplicar Ozempic</a> · <a href="../es/donde-aplicar-mounjaro/#ozempic" hreflang="es" lang="es">Dónde aplicar Ozempic</a>.</p>`,
+<p>Wegovy is the same medicine (semaglutide) in a single-dose pen: <a href="../wegovy-injection-sites/">Wegovy injection sites</a>. Ozempic in Portuguese and Spanish (Brazilian and EU labels): <a href="../pt/onde-aplicar-ozempic/" hreflang="pt-BR" lang="pt-BR">Onde aplicar Ozempic</a> · <a href="../es/donde-aplicar-ozempic/" hreflang="es" lang="es">Dónde aplicar Ozempic</a>.</p>`,
     sources: `
 <p class="small">From the US Ozempic label on DailyMed (US National Library of Medicine), label version of 2026-06-01, read on 2026-11-24:</p>
 <ul class="small">

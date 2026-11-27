@@ -41,7 +41,13 @@ for (const d of DRUGS) {
     ...others.map((o) => `<li><a href="../${o.slug}/">${o.name} injection sites</a> (${o.generic}, ${o.maker})</li>`),
     '<li><a href="../glp-1-injection-sites/">GLP-1 injection sites: all four pens side by side</a></li>',
     '<li><a href="../pt/onde-aplicar-mounjaro/" hreflang="pt-BR" lang="pt-BR">Onde aplicar Mounjaro</a> (português) · <a href="../es/donde-aplicar-mounjaro/" hreflang="es" lang="es">Dónde aplicar Mounjaro</a> (español)</li>',
+    '<li><a href="../pt/onde-aplicar-ozempic/" hreflang="pt-BR" lang="pt-BR">Onde aplicar Ozempic</a> (português) · <a href="../es/donde-aplicar-ozempic/" hreflang="es" lang="es">Dónde aplicar Ozempic</a> (español)</li>',
   ].join('\n');
+  // A page with translations lists them, itself and x-default; the others have no alternates.
+  const alternates = d.alternates
+    ? [['en', url], ...Object.entries(d.alternates).map(([lang, path]) => [lang, SITE + path]), ['x-default', url]]
+      .map(([lang, href]) => `\n<link rel="alternate" hreflang="${lang}" href="${href}">`).join('')
+    : '';
   const html = `<!doctype html>
 <html lang="en">
 <head>
@@ -49,7 +55,7 @@ for (const d of DRUGS) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${d.title} | Rotinia</title>
 <meta name="description" content="${esc(d.description)}">
-<link rel="canonical" href="${url}">
+<link rel="canonical" href="${url}">${alternates}
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Rotinia">
 <meta property="og:title" content="${esc(d.title)}">

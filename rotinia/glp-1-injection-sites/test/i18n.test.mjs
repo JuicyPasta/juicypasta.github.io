@@ -9,10 +9,13 @@ import { SITE_IDS } from '../rotation.js';
 import { faqLd } from '../../../_tools/rotinia-faq/build.mjs';
 
 const rotinia = fileURLToPath(new URL('../../', import.meta.url));
-const PAGES = {
-  'pt-BR': 'pt/onde-aplicar-mounjaro/index.html',
-  es: 'es/donde-aplicar-mounjaro/index.html',
-};
+// Translated pages: [lang, file, brand in the title, active ingredient, English page of the hreflang set].
+const PAGES = [
+  ['pt-BR', 'pt/onde-aplicar-mounjaro/index.html', 'Mounjaro', 'tirzepatida', 'glp-1-injection-sites/'],
+  ['es', 'es/donde-aplicar-mounjaro/index.html', 'Mounjaro', 'tirzepatida', 'glp-1-injection-sites/'],
+  ['pt-BR', 'pt/onde-aplicar-ozempic/index.html', 'Ozempic', 'semaglutida', 'ozempic-injection-sites/'],
+  ['es', 'es/donde-aplicar-ozempic/index.html', 'Ozempic', 'semaglutida', 'ozempic-injection-sites/'],
+];
 // English pages per medicine: same planner, strings in their own block.
 const DRUG_PAGES = ['zepbound', 'mounjaro', 'wegovy', 'ozempic'].map((d) => `${d}-injection-sites/index.html`);
 
@@ -47,8 +50,8 @@ test('mergeStrings overrides by key and falls back to English', () => {
   assert.equal(EN.sites.thigh_l, 'Left thigh');
 });
 
-for (const [lang, rel] of Object.entries(PAGES)) {
-  test(`${lang} page: every string translated, placeholders kept`, () => {
+for (const [lang, rel] of PAGES) {
+  test(`${rel}: every string translated, placeholders kept`, () => {
     const { html, strings } = pageStrings(rel);
     assert.match(html, new RegExp(`<html lang="${lang}">`));
     assert.deepEqual(missingKeys(strings), []);
@@ -69,23 +72,31 @@ for (const [lang, rel] of Object.entries(PAGES)) {
   });
 }
 
-for (const [lang, rel] of Object.entries(PAGES)) {
-  test(`${lang} page: names tirzepatida, FAQ markup says what the page shows, no doses`, () => {
+for (const [lang, rel, brand, generic, english] of PAGES) {
+  test(`${rel}: names ${generic}, FAQ markup says what the page shows, no doses, hreflang both ways`, () => {
     const { html } = pageStrings(rel);
     const title = html.match(/<title>(.*?)<\/title>/)[1];
-    assert.ok(title.length <= 60, `${lang} title is ${title.length} characters`);
-    assert.match(title, /Mounjaro \(tirzepatida\)/);
-    assert.match(html.match(/<h1>(.*?)<\/h1>/)[1], /Mounjaro \(tirzepatida\)/);
+    assert.ok(title.length <= 60, `${rel} title is ${title.length} characters`);
+    assert.ok(title.includes(`${brand} (${generic})`), `${rel} title`);
+    assert.ok(html.match(/<h1>(.*?)<\/h1>/)[1].includes(`${brand} (${generic})`), `${rel} h1`);
+    // The page, its English page and the other language all list each other.
+    const self = `https://juicypasta.github.io/rotinia/${rel.replace('index.html', '')}`;
+    assert.ok(html.includes(`<link rel="canonical" href="${self}">`), `${rel} canonical`);
+    assert.ok(html.includes(`<link rel="alternate" hreflang="${lang}" href="${self}">`), `${rel} lists itself`);
+    assert.ok(html.includes(`<link rel="alternate" hreflang="en" href="https://juicypasta.github.io/rotinia/${english}">`), `${rel} lists its English page`);
+    assert.ok(readFileSync(rotinia + english + 'index.html', 'utf8').includes(`<link rel="alternate" hreflang="${lang}" href="${self}">`), `${english} lists ${rel}`);
+    assert.ok(readFileSync(rotinia + '../sitemap.xml', 'utf8').includes(`<loc>${self}</loc>`), `${rel} in sitemap`);
     const blocks = [...html.matchAll(/<script type="application\/ld\+json">\n([\s\S]*?)\n<\/script>/g)].map((m) => JSON.parse(m[1]));
     const faq = blocks.find((b) => b['@type'] === 'FAQPage');
-    assert.ok(faq, `${lang}: no FAQPage block`);
+    assert.ok(faq, `${rel}: no FAQPage block`);
     // Rebuilt from the visible section: node _tools/rotinia-faq/build.mjs
     assert.deepEqual(faq, faqLd(html));
     assert.ok(faq.mainEntity.length >= 4);
-    assert.ok(faq.mainEntity.every((q) => /tirzepatida/i.test(q.name)), `${lang}: every question names tirzepatida`);
+    const named = generic === 'semaglutida' ? /semaglutida|Ozempic/i : /tirzepatida/i;
+    assert.ok(faq.mainEntity.every((q) => named.test(q.name)), `${rel}: every question names ${generic}`);
     const visible = html.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<[^>]+>/g, ' ');
-    assert.doesNotMatch(visible, /\d\s?mg\b/i, `${lang}: no doses`);
-    assert.doesNotMatch(html, /\u2014/, `${lang}: no em dashes`);
+    assert.doesNotMatch(visible, /\d\s?mg\b/i, `${rel}: no doses`);
+    assert.doesNotMatch(html, /\u2014/, `${rel}: no em dashes`);
     assert.doesNotMatch(html, /googletagmanager|google-analytics|gtag\(/);
   });
 }
@@ -108,7 +119,9 @@ for (const rel of DRUG_PAGES) {
     assert.equal((html.match(/<script type="module"/g) || []).length, 1);
     const dir = rel.replace('index.html', '');
     assert.ok(html.includes(`<link rel="canonical" href="https://juicypasta.github.io/rotinia/${dir}">`), `${rel} canonical`);
-    assert.doesNotMatch(html, /hreflang="[^"]*" href=/, `${rel}: not a translation, no alternates`);
+    // Only the Ozempic page has translations (pt/onde-aplicar-ozempic, es/donde-aplicar-ozempic).
+    const alternates = (html.match(/<link rel="alternate" hreflang="[^"]*" href=/g) || []).length;
+    assert.equal(alternates, rel.startsWith('ozempic') ? 4 : 0, `${rel}: alternates`);
     assert.doesNotMatch(html, /\b\d+(\.\d+)?\s?mg\b/i, `${rel}: no doses`);
     assert.match(html, /not affiliated with or endorsed by Eli Lilly or Novo Nordisk/);
     assert.match(html, /talk to your doctor or pharmacist/i);
