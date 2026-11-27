@@ -115,7 +115,7 @@ ${notDose('Zepbound')}
 <li>Vials: a new syringe and needle each time; the needle stays in the skin for at least 5 seconds.</li>
 </ul>
 ${notDose('Mounjaro')}
-<p>Prescribed Zepbound instead? It is the same medicine with its own label and vial options: <a href="../zepbound-injection-sites/">Zepbound injection sites</a>. In Portuguese and Spanish, with the Brazilian and Latin American labels: <a href="../pt/onde-aplicar-mounjaro/" hreflang="pt-BR" lang="pt-BR">Onde aplicar Mounjaro</a> · <a href="../es/donde-aplicar-mounjaro/" hreflang="es" lang="es">Dónde aplicar Mounjaro</a>.</p>`,
+<p>Prescribed Zepbound instead? It is the same medicine with its own label and vial options: <a href="../zepbound-injection-sites/">Zepbound injection sites</a>. In Portuguese and Spanish, with the Brazilian and EU labels: <a href="../pt/onde-aplicar-mounjaro/" hreflang="pt-BR" lang="pt-BR">Onde aplicar Mounjaro</a> · <a href="../es/donde-aplicar-mounjaro/" hreflang="es" lang="es">Dónde aplicar Mounjaro</a>.</p>`,
     sources: `
 <p class="small">From the US Mounjaro label on DailyMed (US National Library of Medicine), label version of 2026-11-16, read on 2026-11-24:</p>
 <ul class="small">
