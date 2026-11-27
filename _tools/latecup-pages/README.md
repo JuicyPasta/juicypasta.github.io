@@ -2,11 +2,23 @@
 
 Not published (the folder starts with `_`). Run from the repo root.
 
-- `node _tools/latecup-pages/build.mjs` rebuilds `latecup/nyc/` (one page per neighborhood with 3 or more late places, plus the index) from the live feed and rewrites the Latecup lines of `sitemap.xml`. `--feed <folder or URL>` reads another copy of the feed.
-- **It runs by itself:** `.github/workflows/latecup-pages.yml`, at 10:05 and 16:05 UTC (after the feed's refreshes at 09:17 and 15:17) and on demand (`gh workflow run latecup-pages.yml`). It runs the tests, builds, and commits only if `latecup/` or `sitemap.xml` changed; Pages deploys from `main`, so the commit publishes.
+- `node _tools/latecup-pages/build.mjs` rebuilds the pages from the live feed and rewrites the Latecup lines of `sitemap.xml`:
+  - `latecup/nyc/`: New York's hub and one page per neighborhood with 3 or more late places;
+  - `latecup/<area id>/`: one page for each other area the feed's manifest lists ("Coffee shops open late in Chicago"), with its coverage line at the top;
+  - `latecup/cities/`: the list of those pages, once there is more than one area.
+  - `--feed <folder or URL>` reads another copy of the feed. `--out <folder>` writes under another folder, for a look before publishing.
+- **It follows the manifest.** The live manifest lists New York alone today, so New York's pages are all it builds, byte for byte what it built before areas. The other cities' pages are not in the repo on purpose.
+- **The day the feed lists more areas: `gh workflow run latecup-pages.yml`.** That is the whole step. It builds a page for each area, the list of cities and the sitemap lines, and commits them. (Left alone it does the same at its next run, 10:05 or 16:05 UTC.) Then ask Search Console to read the sitemap again. The map page needs nothing: it reads the manifest and shows the "Cities" link once `latecup/cities/` exists.
+- **It runs by itself:** `.github/workflows/latecup-pages.yml`, at 10:05 and 16:05 UTC (after the feed's refreshes at 09:17 and 15:17) and on demand. It runs the tests, builds, and commits only if `latecup/` or `sitemap.xml` changed; Pages deploys from `main`, so the commit publishes.
 - **A bad feed changes nothing.** The build checks the feed before it deletes or writes a file (format 1, the places file matches the manifest's sha256, at least 200 places and 10 neighborhoods, under 5% malformed places, not under half the count the current pages were built from) and otherwise exits with code 3; the workflow then ends green with a warning and no commit. `--force` skips the half-the-count check for a real shrink.
-- `node _tools/latecup-pages/test.mjs` tests `latecup/hours.js`, the "late" rules shared by the web map and these pages (service day, chains across midnight, chips, both clock changes).
-- `latecup/votes.js` holds the rules for visitor confirmations and star ratings (the two kinds of "confirmed", the reported-wrong flag, the note strings, the random install ID and the once-a-day limit); its tests are in the same `test.mjs`. The pages show visitor counts and star averages when the feed's manifest names a votes file, and say nothing when it doesn't.
-- `og.html` is the source of `latecup/og.png`: serve the repo (`python3 -m http.server`), open the file at 1200×630 in a headless browser and screenshot it.
+  - Those checks are New York's. Another area that fails its own (its file, its sha256, 20 places, half of last time) keeps the page it has and stops nothing else. A manifest that suddenly lists under half the areas that have pages is refused whole; with `--force` the pages of the areas that are gone are removed.
+- `node _tools/latecup-pages/test.mjs` tests what the map and the pages share:
+  - `latecup/hours.js`, the "late" rules (service day, chains across midnight, chips, both clock changes). The app has the same tests (`test/hours/web_parity_test.dart`): change a rule in both or in neither.
+  - `latecup/votes.js`, visitor confirmations and star ratings (the two kinds of "confirmed", the reported-wrong flag, the note strings, the random install ID, the once-a-day limit) and the pin rule (solid or outline).
+  - `latecup/areas.js`, areas: which area a point is in, the coverage line, a 1.0 manifest against a 1.1 one.
+  - `latecup/table.js`, the week of hours a visitor sends: the string, the `fix` and `add` notes held to the report sheet's patterns (`Latecup/marketing/report-form.md`), and the week editor's model.
+  - the builder: a bad feed, one area, many areas.
+- `node _tools/latecup-pages/serve.mjs [--feed <folder>]` serves the repo on localhost with a stand-in for the report form. **A page opened on localhost never posts to the real form**: `map.js` sends everything to `/__report` there, and the server lists what it got at the same address. `?feed=/__feed/` reads the folder given with `--feed`, `?now=2026-11-28T03:40:00Z` fixes the clock. Both work on localhost only.
+- `og.html` is the source of `latecup/og.png`: serve the repo, open the file at 1200×630 in a headless browser and screenshot it.
 - `latecup/lib/` holds MapLibre GL JS, copied unmodified from npm (version in `latecup/lib/README.txt`).
 - `latecup/config.js` holds the report form's address until the feed's manifest carries it (`Latecup/marketing/report-form.md`).
