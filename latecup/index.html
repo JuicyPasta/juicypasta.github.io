@@ -55,7 +55,7 @@
 <ol id="rows"></ol>
 <button type="button" id="more" hidden>Show more</button>
 <div id="helplist" hidden><p id="helpcount" role="status"></p><ol id="helprows"></ol><button type="button" id="helpmore" hidden>Show more</button></div>
-<p class="osm"><span id="data"></span><br>Places and unconfirmed hours © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>. ✓ marks hours we confirmed from the shop's own site or page or from the chain's store locator, or that two or more visitors confirmed<span data-if="v11" hidden> or sent</span>.<span data-if="v11" hidden> A pin with only an outline has unconfirmed hours.</span></p>
+<p class="osm"><span id="data"></span><br>Places and unconfirmed hours © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>. ✓ marks hours we confirmed from the shop's own site or page or from the chain's store locator, or that two or more visitors confirmed.<span data-if="v11" hidden> A pin with only an outline has unconfirmed hours.</span></p>
 </div>
 <aside id="place" hidden aria-label="Place details"></aside>
 </section>
@@ -85,10 +85,11 @@
 <ul>
 <li><strong>Confirmed by us.</strong> Each place says which of two sources we used and the date: "from the shop's own site or page" (its website, its ordering page or its official social account), or "from the chain's store locator". Most confirmed chain shops come from store locators.</li>
 <li><strong>Confirmed by visitors.</strong> People who use Latecup can press <strong>Hours are right</strong> on a place. The place then says how many visitors confirmed its hours and when the latest did. A confirmation is for the hours shown that day: if the hours change, the count starts again.</li>
-<li data-if="v11" hidden><strong>Sent by visitors.</strong> In the app, people can put in a place's hours. When two of them send the same hours (three, if the new hours run later), the place shows those hours and says "Hours from 2 visitors" with the date, until we have read the shop's own page. Hours sent from this web page are a report only: they put the place on the list we check.</li>
+<li data-if="v11" hidden><strong>Sent by you.</strong> If you put in a place's hours, that is a report: the place goes on the list we check, and its hours change once we have read the shop's own page.</li>
+<li data-if="vis" hidden><strong>Sent by visitors.</strong> In some cities, hours that two people sent alike from the app are shown before we have read the shop's own page. Those places say "Hours from 2 visitors" with the date.</li>
 <li><strong>Unconfirmed.</strong> The hours come from <a href="https://www.openstreetmap.org/">OpenStreetMap</a>, a map that volunteers keep up. They are often right and sometimes out of date. Check with the shop before a late trip.</li>
 </ul>
-<p>The ✓ in the list, and the "Confirmed hours only" box, mean confirmed by us or by two or more visitors.<span data-if="v11" hidden> Hours sent by visitors count too.</span> If someone reports the hours as wrong after the latest confirmation, the place says "Reported wrong: being checked" and loses its ✓ until we have looked.</p>
+<p>The ✓ in the list, and the "Confirmed hours only" box, mean confirmed by us or by two or more visitors.<span data-if="vis" hidden> Where a place says "Hours from 2 visitors", that counts too.</span> If someone reports the hours as wrong after the latest confirmation, the place says "Reported wrong: being checked" and loses its ✓ until we have looked.</p>
 <p>On holidays the map shows a notice: shops change their hours and we never guess holiday hours. Any shop can close early without notice. When a late trip matters, call or check the shop's own page.</p>
 
 <h2 id="help">Help</h2>

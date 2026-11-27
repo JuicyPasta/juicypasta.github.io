@@ -59,28 +59,20 @@
     });
     return check(t) ? null : t;
   }
-  /* The same opening hours, with a night written on the day it started: a day that ends at
-     midnight and whose next day opens at midnight becomes one span past 1440, when that span is
-     24 hours or shorter (Fri 480-1440 + Sat 0-60 → Fri 480-1500). A valid table stays valid. */
-  function fold(t) {
-    var out = t.map(function (day) { return day.map(function (s) { return [s[0], s[1]]; }); });
-    for (var d = 0; d < 7; d++) {
-      var day = out[d], next = out[(d + 1) % 7], last = day[day.length - 1], first = next[0];
-      if (last && first && last[1] === DAY && first[0] === 0 && first[1] <= last[0]) { last[1] = DAY + first[1]; next.shift(); }
-    }
-    return out;
-  }
-  function same(a, b) { var x = encode(fold(a)), y = encode(fold(b)); return x !== null && x === y; }
-
   /* ---------- the week editor's model ----------
      { same: bool, days: [7 × { state: 'open' | 'closed' | 'all', spans: [[open, close], …] }] }
      Times are clock minutes (0..1439), or null while a field is empty; a close at or before
-     its open is the next morning. With `same`, the first day stands for the whole week. */
+     its open is the next morning. With `same`, the first day stands for the whole week.
+     The model holds the feed's own days, span for span: nothing is merged, split or written
+     another way, and an after-midnight tail such as [0, 120] stays on the day the feed has it
+     on. So a day the visitor does not touch goes back out exactly as it came in. The pipeline
+     counts on that: it compares which days are empty, and holds a whole table for review when
+     an untouched day arrives re-written. */
   function blankDay() { return { state: 'open', spans: [[null, null]] }; }
   function copyDay(day) { return { state: day.state, spans: day.spans.map(function (s) { return [s[0], s[1]]; }) }; }
   function blank() { var days = []; for (var d = 0; d < 7; d++) days.push(blankDay()); return { same: true, days: days }; }
-  function rows(table) { // what we show → the editor
-    var days = fold(table).map(function (day) {
+  function rows(table) { // the feed's table → the editor, day for day
+    var days = table.map(function (day) {
       if (!day.length) return { state: 'closed', spans: [[null, null]] };
       if (day.length === 1 && day[0][0] === 0 && day[0][1] === DAY) return { state: 'all', spans: [[null, null]] };
       return { state: 'open', spans: day.map(function (s) { return [s[0], s[1] % DAY]; }) };
@@ -94,44 +86,54 @@
     return model;
   }
   function clockMin(x) { return whole(x) && x >= 0 && x < DAY; }
-  /* The editor → { table } or { error, day }. error: blank (a time is missing) | overlap (two
-     openings of one day run into each other) | midnight (a night runs on past the end of the
-     next day's first opening). A night that only runs into the next day's first opening is
-     kept, cut where that opening starts: the hours are the same. */
-  function table(model) {
-    var t = [], d, i;
+  function build(day) { // one day of the editor → its spans, or what is wrong with it
+    var spans = [], out = [], i;
+    if (day.state === 'closed') return { spans: [] };
+    if (day.state === 'all') return { spans: [[0, DAY]] };
+    for (i = 0; i < day.spans.length; i++) {
+      var o = day.spans[i][0], c = day.spans[i][1];
+      if (o === null && c === null && day.spans.length > 1) continue; // an extra line left empty
+      if (!clockMin(o) || !clockMin(c)) return { error: 'blank' };
+      spans.push([o, c > o ? c : c + DAY]);
+    }
+    if (!spans.length) return { error: 'blank' };
+    spans.sort(function (a, b) { return a[0] - b[0]; });
+    for (i = 0; i < spans.length; i++) {
+      var last = out[out.length - 1];
+      if (last && spans[i][0] < last[1]) return { error: 'overlap' };
+      if (last && spans[i][0] === last[1]) { // touching: one opening, which may not be longer than a day
+        if (spans[i][1] - last[0] > DAY) return { error: 'overlap' };
+        last[1] = spans[i][1];
+      } else out.push(spans[i]);
+    }
+    return { spans: out };
+  }
+  /* The editor → { table, touched } or { error, day }. `feed` is the table the editor was filled
+     from (none for an empty editor): a day whose fields still say what the feed says is that
+     day of the feed, untouched.
+     error: blank (a time is missing) | overlap (two openings of one day run into each other) |
+     midnight (a night runs on past the end of the next day's first opening).
+     A night that only runs into the next day's first opening is kept: "Friday until 1:30 AM"
+     with "Saturday 24 hours" are the same hours whichever day gives way. The day the visitor
+     touched gives way, never a day they left alone. */
+  function table(model, feed) {
+    var t = [], touched = [], d;
     for (d = 0; d < 7; d++) {
-      var day = model.days[model.same ? 0 : d], spans = [];
-      if (day.state === 'closed') { t.push([]); continue; }
-      if (day.state === 'all') { t.push([[0, DAY]]); continue; }
-      for (i = 0; i < day.spans.length; i++) {
-        var o = day.spans[i][0], c = day.spans[i][1];
-        if (o === null && c === null && day.spans.length > 1) continue; // an extra line left empty
-        if (!clockMin(o) || !clockMin(c)) return { error: 'blank', day: d };
-        spans.push([o, c > o ? c : c + DAY]);
-      }
-      if (!spans.length) return { error: 'blank', day: d };
-      spans.sort(function (a, b) { return a[0] - b[0]; });
-      var merged = [];
-      for (i = 0; i < spans.length; i++) {
-        var last = merged[merged.length - 1];
-        if (last && spans[i][0] < last[1]) return { error: 'overlap', day: d };
-        if (last && spans[i][0] === last[1]) { // touching: one opening, which may not be longer than a day
-          if (spans[i][1] - last[0] > DAY) return { error: 'overlap', day: d };
-          last[1] = spans[i][1];
-        } else merged.push([spans[i][0], spans[i][1]]);
-      }
-      t.push(merged);
+      var r = build(model.days[model.same ? 0 : d]);
+      if (r.error) return { error: r.error, day: d };
+      touched.push(!feed || JSON.stringify(r.spans) !== JSON.stringify(feed[d]));
+      t.push(r.spans);
     }
-    for (d = 0; d < 7; d++) { // a night that runs into the next day's first opening
-      var night = t[d][t[d].length - 1], first = t[(d + 1) % 7][0];
+    for (d = 0; d < 7; d++) {
+      var e = (d + 1) % 7, night = t[d][t[d].length - 1], first = t[e][0];
       if (!night || night[1] <= DAY || !first || first[0] >= night[1] - DAY) continue;
-      if (first[1] < night[1] - DAY) return { error: 'midnight', day: d }; // it runs on past that opening's end: the two cannot both be meant
-      night[1] = DAY + first[0]; // "Friday until 1:30 AM" and "Saturday 24 hours": the same hours, written so that the night stops where the day takes over
+      if (first[1] < night[1] - DAY || (!touched[d] && !touched[e])) return { error: 'midnight', day: d }; // it runs on past that opening's end: the two cannot both be meant
+      if (touched[d]) night[1] = DAY + first[0];            // the visitor's night stops where the next day takes over
+      else if (first[1] === night[1] - DAY) t[e].shift();   // the visitor's opening lies inside a night the feed already has
+      else first[0] = night[1] - DAY;                       // the visitor's opening starts where the feed's night ends
     }
-    t = fold(t);
     var bad = check(t);
-    return bad ? { error: bad, day: -1 } : { table: t };
+    return bad ? { error: bad, day: -1 } : { table: t, touched: touched };
   }
 
   /* ---------- the notes ---------- */
@@ -153,7 +155,7 @@
     var note = head + linkPart(link, NOTE_MAX - head.length);
     return ADD.test(note) ? note : null;
   }
-  var api = { DAY: DAY, MAX_SPANS: MAX_SPANS, NOTE_MAX: NOTE_MAX, CATS: CATS, FIX: FIX, ADD: ADD, check: check, encode: encode, decode: decode, fold: fold, same: same,
+  var api = { DAY: DAY, MAX_SPANS: MAX_SPANS, NOTE_MAX: NOTE_MAX, CATS: CATS, FIX: FIX, ADD: ADD, check: check, encode: encode, decode: decode,
     blank: blank, blankDay: blankDay, rows: rows, setSame: setSame, table: table, fixNote: fixNote, addNote: addNote };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.LatecupTable = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

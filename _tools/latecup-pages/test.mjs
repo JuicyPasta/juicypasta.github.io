@@ -389,7 +389,10 @@ t('a 1.0 manifest and a 1.1 manifest', () => {
   assert.equal(A.v11([NYC]), false, 'one area and none of the new fields: the page stays as it was');
   assert.equal(A.v11([{ ...NYC, indie: 334, indie_confirmed: 123 }]), true);
   assert.equal(A.v11([{ ...NYC, help: { file: 'nyc-help.json', sha256: 'x', bytes: 1, count: 780 } }]), true);
-  assert.equal(A.v11([NYC, CHI]), true);
+  assert.equal(A.v11([NYC, CHI]), true); assert.equal(A.v11([{ ...NYC, visitors: true }]), true);
+  // hours that visitors sent are published only where the area says so, in so many words
+  assert.equal(A.visitors({ ...CHI, visitors: true }), true);
+  for (const off of [CHI, { ...CHI, visitors: false }, { ...CHI, visitors: 'true' }, { ...CHI, visitors: 1 }, null]) assert.equal(A.visitors(off), false);
   assert.deepEqual(A.help({ ...NYC, help: { file: 'nyc-help.json', sha256: 'x', bytes: 1, count: 780 } }), { file: 'nyc-help.json', count: 780 });
   assert.deepEqual(A.help({ ...NYC, help: { file: 'nyc-help.json' } }), { file: 'nyc-help.json', count: null });
   for (const bad of [NYC, { ...NYC, help: null }, { ...NYC, help: 'nyc-help.json' }, { ...NYC, help: { file: '../nyc-help.json' } }, { ...NYC, help: { file: 'https://example.com/x.json' } }, { ...NYC, help: {} }])
@@ -428,28 +431,35 @@ t('each area on its own clock: the same instant is a different night in each zon
   assert.equal(H.cityNow('America/Phoenix', july).minutes, 22 * 60); assert.equal(H.cityNow('America/Denver', july).minutes, 23 * 60); assert.equal(H.cityNow('America/Los_Angeles', july).minutes, 22 * 60);
 });
 t('the pin says how sure we are: solid where the list has its mark, an outline elsewhere', () => {
-  const p = (src) => ({ id: 'n1', src, hh: 'aa11' });
-  assert.equal(V.pin(p('shop')), 'solid'); assert.equal(V.pin(p('brand')), 'solid'); assert.equal(V.pin(p('visitors')), 'solid');
+  const p = (src) => ({ id: 'n1', src, hh: 'aa11' }), ON = true; // ON: the place's area publishes hours that visitors sent
+  assert.equal(V.pin(p('shop')), 'solid'); assert.equal(V.pin(p('brand')), 'solid'); assert.equal(V.pin(p('visitors'), undefined, ON), 'solid');
   assert.equal(V.pin(p('osm')), 'outline'); assert.equal(V.pin(p('osm'), { ok: [1, '2026-12-01'] }), 'outline');
   assert.equal(V.pin(p('osm'), { ok: [2, '2026-12-01'] }), 'solid', 'unconfirmed hours that two visitors confirmed');
   assert.equal(V.pin(p('osm'), { ok: [3, '2026-12-01'], bad: [1, '2026-12-02'] }), 'outline', 'a newer wrong-hours report');
   assert.equal(V.pin(p('osm'), { ok: [3, '2026-12-02'], bad: [1, '2026-12-01'] }), 'solid', 'an older one');
-  for (const src of ['shop', 'brand', 'visitors']) assert.equal(V.pin(p(src), { bad: [1, '2026-12-02'] }), 'outline', `${src}: reported wrong, nobody has confirmed since`);
+  for (const src of ['shop', 'brand', 'visitors']) assert.equal(V.pin(p(src), { bad: [1, '2026-12-02'] }, ON), 'outline', `${src}: reported wrong, nobody has confirmed since`);
   assert.equal(V.pin(p('somethingnew')), 'outline', 'a source this page does not know is not a confirmation');
   assert.equal(V.pin(p('osm'), { ok: [1, '2026-12-01'], prop: { hours: [], n: 1, date: '2026-12-01' } }), 'outline', 'a proposed table changes nothing here');
+  // off by default: where the area does not publish visitors' hours, a place that carries them anyway is unconfirmed
+  for (const off of [undefined, false, 'true', 1]) { assert.equal(V.pin(p('visitors'), undefined, off), 'outline'); assert.equal(V.summary(p('visitors'), undefined, off).marked, false); }
+  assert.equal(V.pin(p('visitors'), { ok: [2, '2026-12-01'] }), 'solid', 'two confirmations still count there, as for any place');
   // the mark of the list and the pin are one rule
-  for (const [src, vote] of [['shop', undefined], ['osm', { ok: [2, '2026-12-01'] }], ['visitors', { bad: [1, '2026-12-02'] }], ['osm', undefined]])
-    assert.equal(V.pin(p(src), vote) === 'solid', V.summary(p(src), vote).marked);
-  assert.equal(V.summary(p('visitors')).ours, false, "visitors' hours are never worded as ours"); assert.equal(V.summary(p('visitors')).theirs, true);
+  for (const [src, vote, on] of [['shop', undefined], ['osm', { ok: [2, '2026-12-01'] }], ['visitors', { bad: [1, '2026-12-02'] }, ON], ['visitors', undefined, ON], ['visitors', undefined], ['osm', undefined]])
+    assert.equal(V.pin(p(src), vote, on) === 'solid', V.summary(p(src), vote, on).marked);
+  assert.equal(V.summary(p('visitors'), undefined, ON).ours, false, "visitors' hours are never worded as ours"); assert.equal(V.summary(p('visitors'), undefined, ON).theirs, true);
 });
-t('the visitors source line, beside the three others', () => {
-  assert.equal(H.sourceLine({ src: 'visitors', visitors: 2, checked: '2026-12-03' }).text, 'Hours from 2 visitors · latest Dec 3');
-  assert.equal(H.sourceLine({ src: 'visitors', visitors: 3, checked: '2026-12-31' }).text, 'Hours from 3 visitors · latest Dec 31');
-  assert.equal(H.sourceLine({ src: 'visitors', visitors: 2, checked: '2026-12-03' }).confirmed, true);
-  assert.equal(H.sourceLine({ src: 'visitors', checked: '2026-12-03' }).text, 'Hours from visitors · latest Dec 3'); // a count that is missing is not made up
-  assert.equal(H.sourceLine({ src: 'visitors', visitors: 2, checked: null }).text, 'Hours from 2 visitors');
-  assert.doesNotMatch(H.sourceLine({ src: 'visitors', visitors: 2, checked: '2026-12-03' }).text, /confirm|OpenStreetMap/);
+t('the visitors source line, beside the three others, only where the area publishes those hours', () => {
+  const ON = true;
+  assert.equal(H.sourceLine({ src: 'visitors', visitors: 2, checked: '2026-12-03' }, ON).text, 'Hours from 2 visitors · latest Dec 3');
+  assert.equal(H.sourceLine({ src: 'visitors', visitors: 3, checked: '2026-12-31' }, ON).text, 'Hours from 3 visitors · latest Dec 31');
+  assert.equal(H.sourceLine({ src: 'visitors', visitors: 2, checked: '2026-12-03' }, ON).confirmed, true);
+  assert.equal(H.sourceLine({ src: 'visitors', checked: '2026-12-03' }, ON).text, 'Hours from visitors · latest Dec 3'); // a count that is missing is not made up
+  assert.equal(H.sourceLine({ src: 'visitors', visitors: 2, checked: null }, ON).text, 'Hours from 2 visitors');
+  assert.doesNotMatch(H.sourceLine({ src: 'visitors', visitors: 2, checked: '2026-12-03' }, ON).text, /confirm|OpenStreetMap/);
+  // off by default: without the area's flag no place says "Hours from N visitors", and it is not credited to OpenStreetMap either
+  for (const off of [undefined, false, 'true', 1]) assert.deepEqual(H.sourceLine({ src: 'visitors', visitors: 2, checked: '2026-12-03' }, off), { confirmed: false, text: 'Unconfirmed hours: check before you go' });
   assert.equal(H.sourceLine({ src: 'shop', checked: '2026-11-24' }).text, "Hours confirmed 2026-11-24 from the shop's own site or page");
+  assert.equal(H.sourceLine({ src: 'brand', checked: '2026-11-24' }, ON).text, "Hours confirmed 2026-11-24 from the chain's store locator");
   assert.equal(H.sourceLine({ src: 'osm', checked: '2026-10-24' }).text, 'Unconfirmed hours from OpenStreetMap (last checked there 2026-10-24): check before you go');
   assert.equal(H.sourceLine({ src: 'somethingnew', checked: null }).confirmed, false);
 });
@@ -496,18 +506,6 @@ t('only a valid feed table is sent or read', () => {
     '600-540.x.x.x.x.x.x', '1440-1500.x.x.x.x.x.x', '480-720,720-900.x.x.x.x.x.x', '1320-1560.60-300.x.x.x.x.x', '480-99999.x.x.x.x.x.x', '1-2,3-4,5-6,7-8,9-10.x.x.x.x.x.x', null, 480])
     assert.equal(T.decode(text), null, JSON.stringify(text));
 });
-t('a night is written on the day it started; the hours themselves do not change', () => {
-  const split = [[[480, 1320]], [[480, 1320]], [[480, 1320]], [[480, 1320]], [[480, 1440]], [[0, 60], [480, 1440]], [[480, 1320]]];
-  assert.equal(T.encode(T.fold(split)), '480-1320.480-1320.480-1320.480-1320.480-1500.480-1440.480-1320'); // Friday 8 AM to 1 AM, Saturday 8 AM to midnight
-  assert.deepEqual(T.fold([[[0, 120]], [], [], [], [], [], [[600, 1440]]]), [[], [], [], [], [], [], [[600, 1560]]], 'Sunday night into Monday');
-  assert.deepEqual(T.fold(week([[0, 1440]])), week([[0, 1440]]), 'round the clock stays as it is');
-  const run = [[], [], [], [[480, 1440]], [[0, 1440]], [[0, 120]], []]; // Thursday 8 AM straight through to Saturday 2 AM: no span may pass 24 hours
-  assert.deepEqual(T.fold(run), run);
-  assert.deepEqual(T.fold([[[600, 1440]], [[0, 700], [900, 1200]], [], [], [], [], []]), [[[600, 1440]], [[0, 700], [900, 1200]], [], [], [], [], []], 'a tail longer than the day allows stays where it is');
-  const minutes = (tb) => { const on = new Uint8Array(10080); tb.forEach((day, d) => day.forEach(([a, b]) => { for (let m = a; m < b; m++) on[(d * 1440 + m) % 10080] = 1; })); return on.join(''); };
-  for (const tb of TABLES) { const f = T.fold(tb); assert.equal(T.check(f), '', JSON.stringify(f)); assert.equal(minutes(f), minutes(tb)); assert.deepEqual(T.fold(f), f); assert.equal(T.same(tb, f), true); }
-  assert.equal(T.same(SPEC_TABLE, week([[480, 1380]])), false);
-});
 t('what a fix sends: the note of the contract, and nothing the sheet would blank', () => {
   assert.equal(T.fixNote(IID, '9f2c41aa', SPEC_TABLE), `v=2;iid=${IID};hh=9f2c41aa;t=${SPEC_TEXT}`);
   assert.equal(T.fixNote(IID, '0', week([])), `v=2;iid=${IID};hh=0;t=x.x.x.x.x.x.x`);
@@ -536,13 +534,33 @@ t('what an add sends: the pin with 5 decimals, the kind, the week, and the link 
   assert.equal(T.addNote(IID, NaN, -73.9, 'coffee', SPEC_TABLE), null); assert.equal(T.addNote(IID, '40.7', -73.9, 'coffee', SPEC_TABLE), null);
   assert.equal(T.addNote(IID, 140.7, -73.9, 'coffee', SPEC_TABLE), null, 'three digits of latitude are not a place');
 });
-t('the week editor: filled in with what we show, and back to the same table', () => {
-  for (const tb of TABLES) { const r = T.table(T.rows(tb)); assert.equal(r.error, undefined, JSON.stringify(tb)); assert.equal(T.encode(r.table), T.encode(T.fold(tb))); }
+t('the week editor holds the feed\'s days as they are: an untouched day goes out span for span', () => {
+  for (const tb of TABLES) { // nothing is merged, split or written another way
+    const r = T.table(T.rows(tb), tb);
+    assert.equal(r.error, undefined, JSON.stringify(tb)); assert.deepEqual(r.table, tb); assert.deepEqual(r.touched, [false, false, false, false, false, false, false]);
+    assert.equal(T.encode(r.table), T.encode(tb));
+  }
   const m = T.rows(SPEC_TABLE);
   assert.equal(m.same, false); assert.deepEqual(m.days[4], { state: 'open', spans: [[480, 60]] }, 'Friday 8 AM to 1 AM: the closing is a clock time');
   assert.equal(T.rows(week([[480, 1380]])).same, true); assert.equal(T.rows(week([])).days[0].state, 'closed'); assert.equal(T.rows(week([[0, 1440]])).days[0].state, 'all');
-  const split = T.rows([[[480, 1320]], [[480, 1320]], [[480, 1320]], [[480, 1320]], [[480, 1440]], [[0, 60], [480, 1440]], [[480, 1320]]]);
-  assert.deepEqual(split.days[4].spans, [[480, 60]]); assert.deepEqual(split.days[5].spans, [[480, 0]], 'Saturday shows 8 AM to midnight, not the tail of Friday night');
+  // a night the feed writes as two halves: Friday to midnight, and the tail on Saturday
+  const SPLIT = [[[480, 1320]], [[480, 1320]], [[480, 1320]], [[480, 1320]], [[480, 1440]], [[0, 60], [480, 1440]], [[480, 1320]]];
+  const split = T.rows(SPLIT);
+  assert.deepEqual(split.days[4].spans, [[480, 0]]); assert.deepEqual(split.days[5].spans, [[0, 60], [480, 0]], 'the tail stays on the day the feed has it on');
+  split.days[6].spans[0][1] = 1380; // the visitor changes Sunday only
+  let r = T.table(split, SPLIT);
+  assert.equal(T.encode(r.table), '480-1320.480-1320.480-1320.480-1320.480-1440.0-60,480-1440.480-1380'); assert.deepEqual(r.touched, [false, false, false, false, false, false, true]);
+  split.days[5].spans[0][1] = 120; // and then Friday night's end, which the feed keeps on Saturday
+  r = T.table(split, SPLIT);
+  assert.equal(T.encode(r.table), '480-1320.480-1320.480-1320.480-1320.480-1440.0-120,480-1440.480-1380'); assert.deepEqual(r.touched, [false, false, false, false, false, true, true]);
+  // one day changed in each table: the other six are the feed's own arrays, whatever shape they have
+  for (const tb of TABLES) for (let d = 0; d < 7; d++) {
+    const model = T.rows(tb); T.setSame(model, false); model.days[d] = { state: tb[d].length ? 'closed' : 'all', spans: [[null, null]] };
+    const out = T.table(model, tb); if (out.error) continue; // a day opened round the clock beside a night that runs past it: refused, nothing sent
+    for (let k = 0; k < 7; k++) if (!out.touched[k]) assert.deepEqual(out.table[k], tb[k]);
+    assert.equal(out.touched[d], true);
+    assert.ok(out.touched.filter(Boolean).length <= 2, 'at most the day itself and, when it is opened into a night, nothing of the days left alone');
+  }
 });
 t('the week editor: same hours each day, closed, 24 hours', () => {
   const m = T.blank();
@@ -578,12 +596,25 @@ t('the week editor: what it refuses, and what it tidies', () => {
   assert.equal(T.encode(T.table(one(1, [[480, 720], [null, null]])).table).split('.')[1], '480-720', 'an extra line left empty is ignored');
   assert.equal(T.encode(T.table(one(4, [[480, 0]])).table).split('.')[4], '480-1440', 'closing at 12:00 AM is midnight');
   const night = T.rows(week([[480, 1020]])); T.setSame(night, false); night.days[4].spans = [[480, 0]]; night.days[5].spans = [[0, 60], [480, 1020]];
-  assert.equal(T.encode(T.table(night).table), '480-1020.480-1020.480-1020.480-1020.480-1500.480-1020.480-1020', 'typed as two halves of one night: sent as the night it is');
-  for (const tb of TABLES) for (const day of T.table(T.rows(tb)).table) assert.ok(day.length <= T.MAX_SPANS);
+  assert.equal(T.encode(T.table(night).table), '480-1020.480-1020.480-1020.480-1020.480-1440.0-60,480-1020.480-1020', 'typed as two halves of one night: sent as typed');
+  // the day the visitor touched gives way, never a day they left alone
+  const FEED = [[[660, 1380]], [[660, 1380]], [[660, 1380]], [[660, 1380]], [[660, 1560]], [[660, 1560]], [[660, 1320]]]; // Friday and Saturday until 2 AM
+  let mm = T.rows(FEED); mm.days[5] = { state: 'all', spans: [[null, null]] };        // Saturday becomes 24 hours; Friday is left alone
+  let rr = T.table(mm, FEED);
+  assert.equal(T.encode(rr.table).split('.').slice(4, 6).join('.'), '660-1560.120-1440', 'Friday as the feed has it; Saturday starts where Friday night ends');
+  assert.deepEqual(rr.touched, [false, false, false, false, false, true, false]); assert.equal(minutes(rr.table), minutes([FEED[0], FEED[1], FEED[2], FEED[3], FEED[4], [[0, 1440]], FEED[6]]));
+  mm = T.rows(FEED); mm.days[4].spans[0][1] = 180; mm.days[5].spans = [[120, 1380]];    // Friday now until 3 AM, Saturday now 2 AM to 11 PM: both touched
+  rr = T.table(mm, FEED); assert.equal(T.encode(rr.table).split('.').slice(4, 6).join('.'), '660-1560.120-1380', 'both touched: the night stops where the day takes over');
+  assert.deepEqual(rr.touched, [false, false, false, false, true, true, false]);
+  mm = T.rows(FEED); mm.days[6].spans[0][0] = 60;                                       // Sunday now opens at 1 AM, inside Saturday night, which is left alone
+  rr = T.table(mm, FEED); assert.equal(T.encode(rr.table).split('.').slice(5).join('.'), '660-1560.120-1320'); assert.deepEqual(rr.touched.slice(5), [false, true]);
+  mm = T.rows(FEED); mm.days[6].spans = [[30, 120], [660, 1320]];                       // an opening that lies wholly inside the night the feed already has
+  rr = T.table(mm, FEED); assert.equal(T.encode(rr.table), T.encode(FEED));
+  for (const tb of TABLES) for (const day of T.table(T.rows(tb), tb).table) assert.ok(day.length <= T.MAX_SPANS);
 });
 
 // ---------- wording: what the page and the builder say never promises ----------
-import { readFileSync, readdirSync as ls, existsSync as there, mkdirSync as mk } from 'node:fs';
+import { readFileSync, readdirSync as ls, mkdirSync as mk } from 'node:fs';
 const SITE_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'latecup');
 const BANNED = /\b(accurate|accuracy|guarantee\w*|verified|every|always open)\b/i;
 const words = (html) => html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, ' ').replace(/<[^>]+>/g, ' ');
@@ -622,7 +653,8 @@ const fakeFeed = (dir, { areas = [], breakSha = [], drop = [] } = {}) => { // Ne
     for (let i = 0; i < n; i++) ps.push({ id: `n${id.length}${5000 + i}`, name: i < 10 ? `Indie ${i}` : 'Starbucks', lat: a.center[0] + i / 1000, lon: a.center[1], addr: `${i + 1} Main St`, city: i % 3 ? 'Evanston' : 'Chicago',
       cat: i === 3 ? 'tea' : 'coffee', chain: i < 10 ? null : 'starbucks', hours: i === 0 ? [[[0, 1440]], [[0, 1440]], [[0, 1440]], [[0, 1440]], [[0, 1440]], [[0, 1440]], [[0, 1440]]] : HOURS,
       src: i < 2 ? 'shop' : i === 2 ? 'visitors' : i < 10 ? 'osm' : 'brand', checked: i < 2 ? '2026-12-01' : i === 2 ? '2026-12-03' : i < 10 ? null : '2026-11-30', hh: 'bb22', ...(i === 2 ? { visitors: 2 } : {}) });
-    put({ ...a, indie: Math.min(n, 10), indie_confirmed: Math.min(n, 3) }, ps, { [`n${id.length}5004`]: { ok: [2, '2026-12-02'], stars: [4.5, 2] }, [`n${id.length}5005`]: { ok: [3, '2026-12-01'], bad: [1, '2026-12-02'] } });
+    // Chicago publishes hours that visitors sent ("visitors": true); the others carry such a place too, and must not show it as that
+    put({ ...a, indie: Math.min(n, 10), indie_confirmed: Math.min(n, id === 'chicago' ? 3 : 2), ...(id === 'chicago' ? { visitors: true } : {}) }, ps, { [`n${id.length}5004`]: { ok: [2, '2026-12-02'], stars: [4.5, 2] }, [`n${id.length}5005`]: { ok: [3, '2026-12-01'], bad: [1, '2026-12-02'] } });
   }
   writeFileSync(join(dir, 'manifest.json'), JSON.stringify(man));
   return dir;
@@ -658,7 +690,13 @@ t('more areas: a page for each, the coverage line at the top, the same source la
   assert.match(chi, /<span class="tag ok">2 visitors confirmed these hours · latest Dec 2<\/span><span class="tag star">★ 4\.5 · 2 ratings<\/span>/); assert.match(chi, /<span class="tag warn">Reported wrong on Dec 2: being checked<\/span>/);
   assert.match(chi, /href="\.\.\/#p=n75002&amp;a=chicago"/); assert.match(chi, /href="\.\.\/#a=chicago"/); assert.match(chi, /1 Main St, Chicago · Coffee/);
   assert.doesNotMatch(chi, /<a[^>]+href="(?:https:\/\/juicypasta\.github\.io|\/)/, 'links inside the site are relative');
-  assert.match(page(out, 'la'), /<h1>Coffee shops open late in Los Angeles and Orange County<\/h1>/);
+  assert.match(chi, /"Hours from 2 visitors" means that many people sent the same hours from the app/);
+  const la = page(out, 'la');
+  assert.match(la, /<h1>Coffee shops open late in Los Angeles and Orange County<\/h1>/);
+  // Los Angeles does not publish visitors' hours: the place that carries them is unconfirmed there, and nothing says otherwise
+  assert.doesNotMatch(la, /Hours from|sent by visitors|sent the same hours/); assert.equal(la.split('<span class="tag">Unconfirmed</span>').length - 1, 8);
+  assert.match(la, /<strong>Los Angeles \+ Orange County · 10 late independents · 2 confirmed<\/strong><br>The hours of 2 of the 10 independent shops here are confirmed \(marked ✓\): 2 from the shop's own site or page\. The other 8 come from OpenStreetMap/);
+  assert.match(la, /put the right hours in\. That puts the place on the list we check against the shop's own page\./);
   const cities = page(out, 'cities');
   assert.match(cities, /<tr><td><a href="\.\.\/nyc\/">New York City<\/a><\/td><td>220<\/td><td>110<\/td><td>220<\/td><\/tr>\n<tr><td><a href="\.\.\/chicago\/">Chicago<\/a><\/td><td>10<\/td><td>3<\/td><td>30<\/td><\/tr>/);
   const hub = page(out, 'nyc');
@@ -666,7 +704,8 @@ t('more areas: a page for each, the coverage line at the top, the same source la
   const map = readFileSync(join(out, 'sitemap.xml'), 'utf8');
   for (const u of ['cities/', 'chicago/', 'la/', 'nyc/', 'nyc/hood-0/']) assert.ok(map.includes(`<loc>https://juicypasta.github.io/latecup/${u}</loc><lastmod>2026-12-06</lastmod>`), u);
   assert.doesNotMatch(map, /tiny|broken|gone/);
-  for (const html of [chi, cities, hub, page(out, 'la')]) { assert.doesNotMatch(words(html), BANNED); assert.doesNotMatch(words(html), /—|!/); }
+  assert.match(cities, /in the cities where we show those, that visitors of the app sent the same hours/);
+  for (const html of [chi, cities, hub, la]) { assert.doesNotMatch(words(html), BANNED); assert.doesNotMatch(words(html), /—|!/); }
 
   // the next run: Chicago's file is half published. Its page stays as it is, the others are built again.
   const before = chi, feed2 = fakeFeed(join(scratch, 'feed-many-2'), { areas: [['chicago', 30], ['la', 50]], breakSha: ['chicago'] });
@@ -683,6 +722,9 @@ t('more areas: a page for each, the coverage line at the top, the same source la
   const r5 = build(join(scratch, 'feed-one'), out, '--force');
   assert.equal(r5.status, 0, r5.stderr); assert.deepEqual(ls(join(out, 'latecup')), ['nyc']); assert.doesNotMatch(readFileSync(join(out, 'sitemap.xml'), 'utf8'), /cities|chicago/);
   assert.equal(page(out, 'nyc'), page(join(scratch, 'one'), 'nyc'), 'and New York\'s hub is again what a one-area feed builds');
+  // no area publishes visitors' hours: the list of cities does not mention them
+  const out2 = join(scratch, 'quiet'), r6 = build(fakeFeed(join(scratch, 'feed-quiet'), { areas: [['la', 25]] }), out2);
+  assert.equal(r6.status, 0, r6.stderr); assert.doesNotMatch(page(out2, 'cities') + page(out2, 'la') + page(out2, 'nyc'), /visitors of the app|Hours from \d+ visitors|sent by visitors/);
 });
 rmSync(scratch, { recursive: true });
 console.log(`ok: ${n} tests`);

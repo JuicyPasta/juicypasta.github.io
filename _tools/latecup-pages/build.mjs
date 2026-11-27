@@ -92,7 +92,8 @@ if (!/^\d{4}-\d\d-\d\dT/.test(city.updated || '') || !city.tz) unusable('the cit
 // Visitor confirmations and star ratings: an optional file. Without it the pages simply say nothing about them.
 let votes = {};
 if (city.votes) { try { const v = await get(city.votes); if (v && v.votes && typeof v.votes === 'object') votes = v.votes; } catch { console.warn(`no votes file (${city.votes}): pages built without visitor counts`); } }
-const sum = (p) => V.summary(p, votes[p.id]), sumNyc = sum;
+const visNyc = A.visitors(city); // hours that visitors sent are published only where the area's entry says "visitors": true
+const sum = (p) => V.summary(p, votes[p.id], visNyc), sumNyc = sum;
 const updated = new Intl.DateTimeFormat('en-CA', { timeZone: city.tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(city.updated)); // the city's date, YYYY-MM-DD
 
 // group by neighborhood; a name that shows up in two boroughs is a data error: skip it and say so
@@ -144,15 +145,15 @@ for (const a of otherAreas) {
   if (had && ps.length < builtFrom(a.id) / 2 && !force) { keep(`${ps.length} places, under half of the ${builtFrom(a.id)} its page was built from`); continue; }
   let v = {};
   if (a.votes) { try { const d = await get(a.votes); if (d && d.votes && typeof d.votes === 'object') v = d.votes; } catch { /* built without visitor counts */ } }
-  metros.push({ area: a, places: ps, sum: (p) => V.summary(p, v[p.id]), updated: dayOf(a) });
+  metros.push({ area: a, places: ps, vis: A.visitors(a), sum: (p) => V.summary(p, v[p.id], A.visitors(a)), updated: dayOf(a) });
 }
 const cityPages = [...metros.map((m) => m.area), ...kept]; // the other areas that have a page after this run
 const many = cityPages.length > 0;
 
 const openPast = (p, rel) => { for (let d = 0; d < 7; d++) { const t = H.tonight(p.hours, d); if (t && (t.allDay || t.close > rel)) return true; } return false; };
-const facts = (ps, sum = sumNyc) => {
+const facts = (ps, sum = sumNyc, vis = visNyc) => {
   const late = (rel) => ps.filter((p) => openPast(p, rel)).length;
-  return { sent: ps.filter((p) => p.src === 'visitors').length, n: ps.length, ten: late(1320), midnight: late(1440), allDay: ps.filter((p) => H.latestClose(p.hours) === Infinity).length,
+  return { sent: ps.filter((p) => vis && p.src === 'visitors').length, n: ps.length, ten: late(1320), midnight: late(1440), allDay: ps.filter((p) => H.latestClose(p.hours) === Infinity).length,
            confirmed: ps.filter((p) => p.src === 'shop' || p.src === 'brand').length, shop: ps.filter((p) => p.src === 'shop').length, brand: ps.filter((p) => p.src === 'brand').length, indie: ps.filter((p) => !p.chain).length,
            byVisitors: ps.filter((p) => p.src === 'osm' && sum(p).byVisitors).length, rated: ps.filter((p) => sum(p).stars).length };
 };
@@ -187,9 +188,9 @@ const foot = (up) => `<footer class="page">
 </html>
 `;
 const closings = (p) => H.weekClosings(p.hours).map((g) => `<span>${esc(g.days)} <b>${esc(g.text)}</b></span>`).join('');
-const source = (p, of = sum) => { // the same labels as the map: ours, visitors', or unconfirmed
+const source = (p, of = sum, vis = visNyc) => { // the same labels as the map: ours, visitors' where the area publishes those, or unconfirmed
   const v = of(p);
-  return (p.src === 'visitors' ? `<span class="tag ok">✓ ${esc(H.sourceLine(p).text)}</span>`
+  return (p.src === 'visitors' ? (vis ? `<span class="tag ok">✓ ${esc(H.sourceLine(p, true).text)}</span>` : '<span class="tag">Unconfirmed</span>')
     : p.src !== 'shop' && p.src !== 'brand' ? `<span class="tag">Unconfirmed${p.checked ? ', OSM ' + esc(p.checked) : ''}</span>` : `<span class="tag ok">✓ ${p.src === 'brand' ? 'Chain\'s store locator' : 'Shop\'s own site or page'}, ${esc(p.checked)}</span>`)
     + (v.flaggedLine ? `<span class="tag warn">${esc(v.flaggedLine)}</span>` : v.visitorLine ? `<span class="tag${v.byVisitors ? ' ok' : ''}">${esc(v.visitorLine)}</span>` : '')
     + (v.stars ? `<span class="tag star">★ ${v.stars.mean.toFixed(1)} · ${v.stars.n} ${v.stars.n === 1 ? 'rating' : 'ratings'}</span>` : '');
@@ -301,7 +302,7 @@ const until = (p) => { const c = H.latestClose(p.hours); return c === Infinity ?
 const byLatest = (a, b) => H.latestClose(b.hours) - H.latestClose(a.hours) || (a.chain ? 1 : 0) - (b.chain ? 1 : 0) || a.name.localeCompare(b.name);
 const num = (n) => n.toLocaleString('en-US');
 const coverOf = (a, ps) => { // the manifest's line; the file's own count while the manifest does not carry one
-  const indie = ps.filter((p) => !p.chain), own = A.coverage({ name: a.name, indie: indie.length, indie_confirmed: indie.filter((p) => p.src === 'shop' || p.src === 'brand' || p.src === 'visitors').length });
+  const indie = ps.filter((p) => !p.chain), own = A.coverage({ name: a.name, indie: indie.length, indie_confirmed: indie.filter((p) => p.src === 'shop' || p.src === 'brand' || (p.src === 'visitors' && A.visitors(a))).length });
   const said = A.coverage(a);
   if (said && said.rest !== own.rest) console.warn(`${a.id}: the manifest says "${said.rest}", its places file gives "${own.rest}"`);
   return said || own;
@@ -311,9 +312,10 @@ for (const a of kept) pageOf[a.id] = { name: a.name, n: builtFrom(a.id), cover: 
 for (const m of metros) pageOf[m.area.id] = { name: m.area.name, n: m.places.length, cover: coverOf(m.area, m.places) };
 const cityList = [...cityPages].sort((x, y) => x.name.localeCompare(y.name));
 for (const m of metros) {
-  const a = m.area, ps = m.places, of = m.sum, name = A.prose(a.name), path = `${a.id}/`, c = pageOf[a.id].cover, f = facts(ps, of);
+  const a = m.area, ps = m.places, of = m.sum, name = A.prose(a.name), path = `${a.id}/`, c = pageOf[a.id].cover, f = facts(ps, of, m.vis);
   const indie = ps.filter((p) => !p.chain).sort(byLatest), chains = ps.filter((p) => p.chain);
-  const by = (list, k) => list.filter((p) => p.src === k).length, conf = by(indie, 'shop') + by(indie, 'brand') + by(indie, 'visitors');
+  const srcOf = (p) => (p.src === 'visitors' && !m.vis ? 'osm' : p.src); // visitors' hours count as that only where the area publishes them
+  const by = (list, k) => list.filter((p) => srcOf(p) === k).length, conf = by(indie, 'shop') + by(indie, 'brand') + by(indie, 'visitors');
   const from = list([by(indie, 'shop') ? `${by(indie, 'shop')} from the shop's own site or page` : '', by(indie, 'brand') ? `${by(indie, 'brand')} from a chain's store locator` : '',
     by(indie, 'visitors') ? `${by(indie, 'visitors')} sent by visitors who agree with each other` : ''].filter(Boolean));
   const note = !indie.length ? 'No independent shop here is on the late map yet, only chain stores.'
@@ -361,7 +363,7 @@ ${indie.length ? `
 <h2>Independent shops (${indie.length})</h2>
 <table class="places">
 <tr><th>Place</th><th>Closes</th><th>Hours</th></tr>
-${indie.map((p) => `<tr><td><a class="name" href="../#p=${encodeURIComponent(p.id)}&amp;a=${a.id}">${esc(p.name)}</a><span class="sub">${esc(A.address(p))} · ${esc(CAT[p.cat] || p.cat)}</span></td><td class="closings">${closings(p)}</td><td>${source(p, of)}</td></tr>`).join('\n')}
+${indie.map((p) => `<tr><td><a class="name" href="../#p=${encodeURIComponent(p.id)}&amp;a=${a.id}">${esc(p.name)}</a><span class="sub">${esc(A.address(p))} · ${esc(CAT[p.cat] || p.cat)}</span></td><td class="closings">${closings(p)}</td><td>${source(p, of, m.vis)}</td></tr>`).join('\n')}
 </table>
 <p class="small muted">Closing times are the end of each night's last opening, so "1 AM" on Friday means 1 AM on Saturday morning. A night runs until 5 AM. Hours change on holidays, and a shop can close early without notice.</p>
 ` : ''}${chains.length ? `
@@ -375,10 +377,10 @@ ${brands.map((b) => `<tr><td>${esc(b.name)}</td><td>${num(b.n)}</td><td>${num(b.
 ` : ''}
 <h2>How to read this list</h2>
 <ul>
-<li><strong>✓</strong> means the hours are confirmed, and the label says by whom and when: "Shop's own site or page" (its website, ordering page or official social account) and "Chain's store locator" are ours; "Hours from 2 visitors" means that many people sent the same hours from the app.</li>
+<li><strong>✓</strong> means the hours are confirmed, and the label says from where and when: "Shop's own site or page" (its website, ordering page or official social account) or "Chain's store locator".${m.vis ? ' "Hours from 2 visitors" means that many people sent the same hours from the app, and we have not read the shop\'s own page yet.' : ''}</li>
 <li><strong>Unconfirmed</strong> hours come from <a href="https://www.openstreetmap.org/">OpenStreetMap</a>, a map kept up by volunteers. The date, when there is one, is when someone last checked them there.</li>
 <li><strong>Visitors</strong> can confirm a place's hours and rate it from 1 to 5 stars on <a href="../#a=${a.id}">the map</a>. Where they have, this list shows how many confirmed the hours now shown, and the star average with its number of ratings.</li>
-<li>Seen a wrong time? Open the place on <a href="../#a=${a.id}">the map</a>, choose "Hours wrong?" and put the right hours in.</li>
+<li>Seen a wrong time? Open the place on <a href="../#a=${a.id}">the map</a>, choose "Hours wrong?" and put the right hours in. That puts the place on the list we check against the shop's own page.</li>
 </ul>
 
 <h2>Other cities</h2>
@@ -415,7 +417,7 @@ for (const id of onDisk) if (!cityPages.some((a) => a.id === id)) rmSync(join(RO
 <tr><th>City</th><th>Late independents</th><th>Confirmed</th><th>All late places</th></tr>
 ${rows.map((o) => { const x = pageOf[o.id]; return `<tr><td><a href="../${o.id}/">${esc(o.name)}</a></td><td>${x.cover ? num(x.cover.indie) : ''}</td><td>${x.cover ? num(x.cover.confirmed) : ''}</td><td>${x.n ? num(x.n) : ''}</td></tr>`; }).join('\n')}
 </table>
-<p class="small muted">A late place closes at 8 PM or later on at least one night, and "all late places" counts chain stores too. Confirmed means we read the hours on the shop's own site or page or on its chain's store locator, or visitors of the app sent the same hours. Want another city, or yours checked first? <a href="../#help">Ask on the map page</a>.</p>
+<p class="small muted">A late place closes at 8 PM or later on at least one night, and "all late places" counts chain stores too. Confirmed means we read the hours on the shop's own site or page or on its chain's store locator${[city, ...cityPages].some(A.visitors) ? ', or, in the cities where we show those, that visitors of the app sent the same hours' : ''}. Want another city, or yours checked first? <a href="../#help">Ask on the map page</a>.</p>
 ${foot('../')}`;
     mkdirSync(dir, { recursive: true });
     writeFileSync(file, html);

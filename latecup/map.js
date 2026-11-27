@@ -12,7 +12,8 @@
      map, the Cities list, "Latecup isn't here yet";
    - `indie` / `indie_confirmed`: the coverage line;
    - `help`: the Help switch, Add hours, and Add a café when a search finds nothing;
-   - any of these (S.v11): outline pins for unconfirmed hours, Fix the hours, `app` = "web 2". */
+   - any of these (S.v11): outline pins for unconfirmed hours, Fix the hours, `app` = "web 2";
+   - `"visitors": true` on an area: its places may show "Hours from N visitors". Without it none does. */
 (function () {
   'use strict';
   var H = window.LatecupHours, V = window.LatecupVotes, A = window.LatecupAreas, T = window.LatecupTable;
@@ -39,7 +40,7 @@
   var S = { manifest: null, areas: [], multi: false, v11: false, focus: null, loaded: {}, all: [], byId: {}, now: null, nows: {}, day: 0, chip: null, chipTouched: false,
             q: '', indie: false, confirmed: false, user: null, userArea: null, hood: null, hoodArea: null, shown: PAGE, selected: null, matched: [], map: null, ready: false,
             lastChips: '', mine: null, thanks: {}, overview: false, outside: false, away: null, rowsHtml: null,
-            helpOn: false, help: {}, helpById: {}, helpShown: PAGE, ed: null, add: null };
+            cities: false, helpOn: false, help: {}, helpById: {}, helpShown: PAGE, ed: null, add: null };
 
   function testNow() { // ?now=2026-11-27T02:30:00Z on localhost, for tests
     var v = local && new URLSearchParams(location.search).get('now'); return v ? new Date(v) : new Date();
@@ -50,7 +51,7 @@
   function app() { return S.v11 ? 'web 2' : 'web 1'; }
   function areaById(id) { for (var i = 0; i < S.areas.length; i++) if (S.areas[i].id === id) return S.areas[i]; return null; }
   function placeById(id) { return S.byId[id] || S.helpById[id] || null; }
-  function sum(p) { var st = !p._help && S.loaded[p._a.id]; return V.summary(p, st ? st.votes[p.id] : undefined); }
+  function sum(p) { var st = !p._help && S.loaded[p._a.id]; return V.summary(p, st ? st.votes[p.id] : undefined, A.visitors(p._a)); }
   /* A page opened on this machine never posts to the real form: _tools/latecup-pages/serve.mjs answers /__report. */
   function form(r) { return r && local ? { kind: r.kind, url: location.origin + '/__report', fields: r.fields } : r; }
   /* Confirmations and ratings go only to the feed's own endpoint, and only for a place whose hours table has a hash. */
@@ -190,6 +191,10 @@
     var b = S.map.getBounds();
     return S.matched.filter(function (m) { return b.contains([m.p.lon, m.p.lat]); });
   }
+  /* "Show more". On the page as it has been, the button's own style keeps it on screen even when there is nothing more
+     (map.css gives it display:block, which beats the hidden attribute). That page is left as it is; with the 1.1 feed,
+     where short lists are the rule, the button really goes away. */
+  function more(on) { $('more').hidden = !on; if (S.v11) $('more').style.display = on ? '' : 'none'; }
   function setRows(html) { if (S.rowsHtml !== html) { S.rowsHtml = html; $('rows').innerHTML = html; } } // untouched while it says the same, so a form inside it keeps what was typed
   function rowHtml(m, near) {
     var st = { cls: m.ev.view.cls, text: m.ev.view.line }, v = sum(m.p);
@@ -201,13 +206,13 @@
   }
   function renderList(ctx) {
     helpList();
-    if (S.multi && S.overview) return citiesList();
+    if (S.multi && (S.overview || S.cities)) return citiesList();
     if (S.multi && (S.outside || S.away)) return outsideList();
     var st = S.loaded[S.focus.id];
     if (!st || st.state !== 'ok') { // an area the map has just reached
       $('count').textContent = st && st.state === 'failed' ? '' : 'Loading places…';
       setRows(st && st.state === 'failed' ? '<li class="empty">The list of places could not be loaded. Check your connection and reload the page.</li>' : '');
-      $('more').hidden = true; return;
+      more(false); return;
     }
     var q = S.q.trim(), near = !!S.user && (!S.multi || S.userArea === S.focus);
     var rows = inView().slice(), total = S.multi ? S.matched.filter(inFocus).length : S.matched.length;
@@ -221,12 +226,15 @@
       var all = S.loaded[S.hoodArea.id].places.filter(function (p) { return p.hood === S.hood; }).length;
       $('count').innerHTML = esc(S.hood) + ': ' + total + ' of its ' + all + (all === 1 ? ' place ' : ' places ') + esc(what + when) + (q ? ' matching "' + esc(q) + '"' : '') +
         (S.indie || S.confirmed ? ' with these filters' : '') + ' <button type="button" id="clearhood">Whole city</button>';
-    } else $('count').textContent = q ? total + (total === 1 ? ' place ' : ' places ') + what + when + ' matching "' + q + '"'
-      : rows.length + ' in view · ' + total + (S.multi ? ' across ' + A.prose(S.focus.name) + ' ' : ' across the city ') + what + when + (near ? ' · nearest first' : ' · latest closing first');
+    } else {
+      $('count').textContent = q ? total + (total === 1 ? ' place ' : ' places ') + what + when + ' matching "' + q + '"'
+        : rows.length + ' in view · ' + total + (S.multi ? ' across ' + A.prose(S.focus.name) + ' ' : ' across the city ') + what + when + (near ? ' · nearest first' : ' · latest closing first');
+      if (S.multi) $('count').insertAdjacentHTML('beforeend', ' <button type="button" id="showcities">Cities</button>'); // every area by name, one tap away
+    }
     var html = rows.slice(0, S.shown).map(function (m) { return rowHtml(m, near); }).join('');
     setRows(cityMatches(q) + (html || '<li class="empty">' + (total ? 'Nothing in this part of the map. Zoom out or move the map.' : 'No places match. Try an earlier time or clear the filters.') + '</li>') +
       (total ? '' : searchMore(q, what + when)));
-    $('more').hidden = rows.length <= S.shown;
+    more(rows.length > S.shown);
   }
   function refresh(opts) {
     if (!S.all.length) return;
@@ -260,21 +268,22 @@
     return '<p class="q">Want Latecup in your city?</p><form class="ask cityask"><input type="text" name="city" maxlength="80" placeholder="Your city" aria-label="Your city" required><button class="btn" type="submit">Ask for it</button></form>' +
       '<p class="fine">Sends the city name you type and this page\'s version ("' + app() + '"), nothing else.</p>';
   }
-  function citiesList() { // zoomed out: where Latecup is
+  function citiesList() { // zoomed out, or asked for: where Latecup is
     var list = citiesNamed(S.q);
     $('count').textContent = S.areas.length + ' cities on the map. Pick one, or zoom in on one.';
+    if (!S.overview) $('count').insertAdjacentHTML('beforeend', ' <button type="button" id="hidecities">Back to ' + esc(S.focus.name) + '</button>');
     setRows(list.length ? list.map(cityRow).join('') : '<li class="empty out"><p>No city by that name on the map yet.</p>' + askHtml() + '</li>');
-    $('more').hidden = true;
+    more(false);
   }
   function outsideList() { // the map shows a part of the world no area covers, or the visitor is in one
     var c = S.ready ? S.map.getCenter() : null, near = S.away || (c && A.nearest(S.areas, c.lat, c.lng)) || S.areas[0];
     $('count').textContent = S.away ? "Latecup isn't where you are yet." : "Latecup isn't here yet.";
     setRows('<li class="empty out"><p>The nearest city on the map is ' + esc(near.name) + '.</p>' +
       '<p><button type="button" class="btn" data-area="' + esc(near.id) + '">Show ' + esc(near.name) + '</button> <button type="button" class="linkbtn" id="allcities">All cities</button></p>' + askHtml() + '</li>');
-    $('more').hidden = true;
+    more(false);
   }
   function goTo(a) { // a tap on a city: the map moves to its center and zoom, and the rest follows the map
-    S.away = null; S.hood = null; S.shown = PAGE;
+    S.away = null; S.hood = null; S.cities = false; S.shown = PAGE;
     if (S.ready) { var v = startView(a); S.map.jumpTo({ center: v.center, zoom: v.zoom }); return; }
     S.focus = a; S.overview = S.outside = false; S.lastChips = ''; // no map in this browser: the list alone moves
     renderArea(); want(a); refresh(); setHash();
@@ -297,7 +306,7 @@
   function onMove(e) {
     S.shown = PAGE; S.helpShown = PAGE;
     if (S.add && !S.add.ll) { if (e && e.originalEvent) S.add.moved = true; pinState(); }
-    if (S.away && e && e.originalEvent) S.away = null;
+    if (e && e.originalEvent) { S.away = null; S.cities = false; } // the visitor moved the map: the list is about the map again
     if (S.multi && locate()) {
       if (S.hood && S.hoodArea !== S.focus) S.hood = null;
       S.lastChips = ''; renderArea(); refresh(); setHash();
@@ -371,7 +380,7 @@
   function renderPlace(p, quiet) {
     if (!p) return;
     if (p._help) { if (!quiet) renderHelpPlace(p); return; } // nothing in it follows the clock
-    var di = dayOf(nowOf(p._a)), view = placeView(p), st = { cls: view.cls, text: view.line }, src = H.sourceLine(p), hol = holidayFor(di.date);
+    var di = dayOf(nowOf(p._a)), view = placeView(p), st = { cls: view.cls, text: view.line }, src = H.sourceLine(p, A.visitors(p._a)), hol = holidayFor(di.date);
     var big = view.big, bigsub = view.caption, flagged = sum(p).flagged; // the large line follows the status; a reported-wrong place loses its mark
     var rows = H.DOW.map(function (d, i) { return '<tr' + (i === di.dow ? ' class="today"' : '') + '><td>' + d + '</td><td>' + esc(H.dayText(p.hours, i)) + '</td></tr>'; }).join('');
     var acts = linksHtml(p, true) + '<button type="button" id="share">Copy link</button>';
@@ -446,7 +455,7 @@
       '<p class="fine">' + fineReport() + '</p></form></details>';
     /* Fix the hours: the week filled in with what we show, changed in place and sent as a table. The other reasons stay as they are. */
     var good = !T.check(p.hours);
-    S.ed = { model: good ? T.rows(p.hours) : T.blank(), base: good ? T.encode(T.fold(p.hours)) : null };
+    S.ed = { model: good ? T.rows(p.hours) : T.blank(), feed: good ? p.hours : null }; // the feed's own days: one the visitor leaves alone is sent exactly as the feed has it
     return '<details class="wrong"><summary>Hours wrong?</summary><form id="report">' + kinds +
       '<div class="fixbox"><p class="fine">Change this week to the right hours, then send.</p>' + editorHtml(S.ed.model) + '</div>' +
       '<textarea name="note" maxlength="500" placeholder="Optional: what you saw, and where" aria-label="Note" hidden></textarea>' +
@@ -540,9 +549,9 @@
       function () { S.mine = JSON.parse(before); V.save(store, S.mine); btn.disabled = false; edError(f, { error: 'net', day: -1 }); });
   }
   function sendHours(p, f, done) { // a `fix`: the week as a table, for a place of the feed or of the help file
-    var r = T.table(readEditor(f));
+    var r = T.table(readEditor(f), S.ed.feed);
     if (r.error) return edError(f, r);
-    if (S.ed.base && T.encode(r.table) === S.ed.base) return edError(f, { error: 'same', day: -1 });
+    if (S.ed.feed && r.touched.indexOf(true) < 0) return edError(f, { error: 'same', day: -1 });
     sendWithId(f, function (iid) { return { type: 'fix', place_id: p.id, place_name: p.name, note: T.fixNote(iid, p.hh || '0', r.table), app: app() }; }, done);
   }
   /* What the visitor is told after sending, truthfully. From this page hours are a report: they put the place on our list and change nothing by themselves. */
@@ -554,7 +563,7 @@
   /* A café of the help file: what we lack, and the same editor, empty or filled with its early hours. */
   function renderHelpPlace(p) {
     var early = p.why === 'early' && !T.check(p.hours), acts = linksHtml(p, false);
-    S.ed = { model: early ? T.rows(p.hours) : T.blank(), base: early ? T.encode(T.fold(p.hours)) : null };
+    S.ed = { model: early ? T.rows(p.hours) : T.blank(), feed: early ? p.hours : null };
     $('place').innerHTML = '<button type="button" class="x" id="closeplace">Close</button>' +
       '<p class="meta">' + [A.locality(p), p.boro, CAT[p.cat] || p.cat].filter(Boolean).map(esc).join(' · ') + '</p><h2>' + esc(p.name) + '</h2>' +
       '<p class="st off">' + (early ? 'Not on the late map' : 'No hours yet') + '</p>' +
@@ -599,7 +608,7 @@
   }
   function addForm() {
     var a = S.add, area = A.at(S.areas, a.ll.lat, a.ll.lon) || S.focus;
-    S.ed = { model: a.model, base: null };
+    S.ed = { model: a.model, feed: null };
     $('place').innerHTML = '<button type="button" class="x" id="closeplace">Close</button><p class="meta">' + esc(area.name) + '</p><h2>Add a café</h2>' +
       '<p class="src">For a coffee shop, tea house or dessert café that is open until 8 PM or later on some night and is not on the map.</p>' +
       '<form id="newcafe"><label class="fld">Name<input type="text" name="name" maxlength="80" required value="' + esc(a.name) + '"></label>' +
@@ -775,6 +784,7 @@
     opt('helpmore').addEventListener('click', function () { S.helpShown += PAGE; refresh({ listOnly: true, keepPanel: true }); });
     opt('helprows').addEventListener('click', function (e) { var b = e.target.closest('[data-id]'); if (b) openPlace(b.dataset.id, true); });
     $('count').addEventListener('click', function (e) {
+      if (e.target.id === 'showcities' || e.target.id === 'hidecities') { S.cities = e.target.id === 'showcities'; refresh({ listOnly: true, keepPanel: true }); return; }
       if (e.target.id !== 'clearhood') return;
       S.hood = null; S.shown = PAGE; setHash(); refresh();
     });
@@ -896,7 +906,7 @@
      area and "many" for more; "v10" and "v11" likewise for the 1.1 fields. As written, the page is
      the one-area page. */
   function adapt() {
-    var on = { one: !S.multi, many: S.multi, v10: !S.v11, v11: S.v11 };
+    var on = { one: !S.multi, many: S.multi, v10: !S.v11, v11: S.v11, vis: S.areas.some(A.visitors) }; // vis: somewhere, hours that visitors sent are published
     Array.prototype.forEach.call(document.querySelectorAll('[data-if]'), function (el) { el.hidden = !on[el.getAttribute('data-if')]; });
     if (S.v11 && $('cityfine')) $('cityfine').textContent = 'Sends the city name you type and this page\'s version ("' + app() + '"), nothing else.';
     if (!S.multi) return;

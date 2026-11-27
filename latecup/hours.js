@@ -203,9 +203,10 @@
     for (var d = 0; d < 7; d++) { var t = tonight(hours, d); if (t) best = Math.max(best, t.allDay ? Infinity : t.close); }
     return best;
   }
-  function sourceLine(p) {
+  function sourceLine(p, visitorsOn) { // visitorsOn: the place's area publishes hours that visitors sent (its manifest entry says "visitors": true)
     if (p.src === 'shop') return { confirmed: true, text: 'Hours confirmed ' + p.checked + " from the shop's own site or page" }; // website, ordering page or official social account
     if (p.src === 'brand') return { confirmed: true, text: 'Hours confirmed ' + p.checked + " from the chain's store locator" };
+    if (p.src === 'visitors' && visitorsOn !== true) return { confirmed: false, text: 'Unconfirmed hours: check before you go' }; // not published as visitors' hours here, so not shown as that
     if (p.src === 'visitors') { // sent by visitors who agree with each other (the feed's `visitors` is how many; `checked` is the day of the newest)
       var n = p.visitors >= 1 ? Math.floor(p.visitors) : 0, m = /^\d{4}-(\d\d)-(\d\d)$/.exec(p.checked || '');
       return { confirmed: true, text: 'Hours from ' + (n === 1 ? '1 visitor' : n ? n + ' visitors' : 'visitors') +

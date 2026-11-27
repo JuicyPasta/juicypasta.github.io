@@ -8,7 +8,9 @@
    - The coverage line, one per area, from the manifest's optional `indie` and
      `indie_confirmed`: "Dallas-Fort Worth · 112 late independents · 9 confirmed".
    - A manifest is "1.1" when it lists more than one area or carries one of the 1.1 fields
-     (`indie`, `help`). With a 1.0 manifest the web map is the page it was before areas. */
+     (`indie`, `help`, `visitors`). With a 1.0 manifest the web map is the page it was before areas.
+   - Publishing visitors' hours is off unless an area says `"visitors": true`. Without it no
+     place of that area shows "Hours from N visitors", whatever its `src` says. */
 (function (root) {
   'use strict';
   var FILE = /^[A-Za-z0-9][A-Za-z0-9._-]*\.json$/; // a file beside the manifest: no folder in its name
@@ -73,7 +75,9 @@
     var h = a && a.help;
     return h && typeof h === 'object' && typeof h.file === 'string' && FILE.test(h.file) ? { file: h.file, count: count(h.count) ? h.count : null } : null;
   }
-  function v11(areas) { return areas.length > 1 || areas.some(function (a) { return count(a.indie) || !!help(a); }); }
+  /* True only where two visitors who agree really do change the map: the area carries "visitors": true. */
+  function visitors(a) { return !!a && a.visitors === true; }
+  function v11(areas) { return areas.length > 1 || areas.some(function (a) { return count(a.indie) || !!help(a) || visitors(a); }); }
   /* "New York time", "Los Angeles time": the first name of the area, for the clock line. */
   function clockName(a) { var n = a.name.split(' + ')[0]; return n === 'New York City' ? 'New York' : n; }
   /* The name inside a sentence: "Los Angeles and Orange County", "Detroit, Dearborn and Ann Arbor", "the SF Bay Area". */
@@ -87,6 +91,6 @@
   /* The street address, with the city outside New York (New York's places say it with `boro`). */
   function address(p) { return p.addr ? p.addr + (p.city && !p.boro ? ', ' + p.city : '') : (p.city || ''); }
   var api = { usable: usable, list: list, contains: contains, miles: miles, nearest: nearest, at: at, touching: touching, focus: focus,
-    coverage: coverage, announced: announced, help: help, v11: v11, clockName: clockName, prose: prose, locality: locality, address: address };
+    coverage: coverage, announced: announced, help: help, visitors: visitors, v11: v11, clockName: clockName, prose: prose, locality: locality, address: address };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.LatecupAreas = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
