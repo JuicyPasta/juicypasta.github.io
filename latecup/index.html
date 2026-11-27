@@ -45,7 +45,7 @@
 <label><input type="checkbox" id="indie"> Independent shops only</label>
 <label><input type="checkbox" id="confirmed"> Confirmed hours only</label>
 </div>
-<p id="helprow" hidden><label><input type="checkbox" id="helpsw"> <span id="helptext">Help: cafés with no hours yet</span></label></p>
+<p id="helprow" hidden><label><input type="checkbox" id="helpsw" aria-label="Help: cafés with no hours yet"> <span id="helptext">Help: cafés with no hours yet</span></label></p>
 </div>
 <div id="mapwrap"><div id="map"></div><p id="msg" hidden role="status"></p>
 <div id="pinmark" hidden aria-hidden="true"></div>
@@ -63,9 +63,8 @@
 
 <main class="text">
 <h2 id="about">It's 9:40 pm. Where can you still get a coffee, and until when?</h2>
-<p>Latecup is a map of coffee shops, tea houses and dessert cafés in New York City that stay open late. Other maps tell you what is open now. Latecup answers the next question: what is still open at 10, at 11, at midnight, and what time each place closes. The closing time is written on the pin, and the pin's color shows how much time is left.</p>
-<p>It is free, with no ads and no account. It covers the five boroughs: Manhattan, Brooklyn, Queens, the Bronx and Staten Island. Browse by area on the <a href="nyc/">neighborhood pages</a>, for example late coffee in the East Village, Koreatown or Astoria.</p>
-<p data-if="many" hidden>The map goes beyond New York now, into <span data-fill="others">several</span> more US metro areas. Zoom out to see them, or type a city in the search box. Outside New York most independent shops still show unconfirmed hours, and each city has a line that says how many we have confirmed.<span data-fill="announced"></span></p>
+<p><span data-if="one">Latecup is a map of coffee shops, tea houses and dessert cafés in New York City that stay open late.</span><span data-if="many" hidden>Latecup is a map of coffee shops, tea houses and dessert cafés that stay open late, in New York City and <span data-fill="others">several</span> more US metro areas.</span> Other maps tell you what is open now. Latecup answers the next question: what is still open at 10, at 11, at midnight, and what time each place closes. The closing time is written on the pin, and the pin's color shows how much time is left.</p>
+<p><span data-if="one">It is free, with no ads and no account. It covers the five boroughs: Manhattan, Brooklyn, Queens, the Bronx and Staten Island. Browse by area on the</span><span data-if="many" hidden>It is free, with no ads and no account. It started in New York, and that is where most of the hours are confirmed. In the other cities most independent shops still show unconfirmed hours, and each city says how many of its shops we have confirmed.<span data-fill="announced"></span> Zoom out on the map to see the cities, or type one in the search box. New York also has</span> <a href="nyc/">neighborhood pages</a>, for example late coffee in the East Village, Koreatown or Astoria.</p>
 <p><strong>The apps for iPhone, iPad and Android are on their way.</strong> Until they are in the stores, this page is the whole product.</p>
 
 <h3>How the map decides what "late" means</h3>

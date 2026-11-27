@@ -176,7 +176,10 @@
   function renderArea() {
     var a = S.focus, st = S.loaded[a.id], cov = A.coverage(a), h = A.help(a);
     S.now = nowOf(a);
-    if (S.multi) document.querySelector('#controls h1').textContent = 'Coffee shops open late in ' + A.prose(a.name);
+    if (S.multi) { // the heading and the title follow the area; with one area both stay as the page has them
+      document.querySelector('#controls h1').textContent = 'Coffee shops open late in ' + A.prose(a.name);
+      document.title = 'Coffee shops open late in ' + A.prose(a.name) + ' | Latecup';
+    }
     opt('cover').hidden = !cov; if (cov) opt('cover').textContent = cov.text;
     opt('helprow').hidden = !h || !reportTarget(); // with nowhere to send hours to, the switch is not offered
     if (st && st.state === 'ok') {
@@ -217,7 +220,9 @@
     var q = S.q.trim(), near = !!S.user && (!S.multi || S.userArea === S.focus);
     var rows = inView().slice(), total = S.multi ? S.matched.filter(inFocus).length : S.matched.length;
     if (near) rows.forEach(function (m) { m.d = miles(S.user, m.p); });
+    if (S.v11 && !near) rows.forEach(function (m) { m.k = { close: m.ev.allDay ? Infinity : m.ev.close, marked: sum(m.p).marked, chain: !!m.p.chain, name: m.p.name }; });
     rows.sort(near ? function (a, b) { return a.d - b.d; }
+      : S.v11 ? function (a, b) { return A.latestFirst(a.k, b.k); } // places that close together: accepted hours first, then independents, then by name
       : function (a, b) { return (b.ev.allDay ? 1e6 : b.ev.close) - (a.ev.allDay ? 1e6 : a.ev.close) || (a.p.chain ? 1 : 0) - (b.p.chain ? 1 : 0) || a.p.name.localeCompare(b.p.name); });
     var what = ctx.chip.id === 'now' ? 'open now' : ctx.chip.id === 'all' ? 'open all night' : 'open at ' + ctx.chip.label.replace('+', '').replace('Midnight', 'midnight');
     var when = ctx.chip.id === 'now' ? '' : ' ' + nightName(ctx.di);
@@ -283,6 +288,7 @@
     more(false);
   }
   function goTo(a) { // a tap on a city: the map moves to its center and zoom, and the rest follows the map
+    if (S.selected || S.add) closePlace(); // an open place belongs to the area being left
     S.away = null; S.hood = null; S.cities = false; S.shown = PAGE;
     if (S.ready) { var v = startView(a); S.map.jumpTo({ center: v.center, zoom: v.zoom }); return; }
     S.focus = a; S.overview = S.outside = false; S.lastChips = ''; // no map in this browser: the list alone moves
@@ -308,6 +314,8 @@
     if (S.add && !S.add.ll) { if (e && e.originalEvent) S.add.moved = true; pinState(); }
     if (e && e.originalEvent) { S.away = null; S.cities = false; } // the visitor moved the map: the list is about the map again
     if (S.multi && locate()) {
+      var open = S.selected && placeById(S.selected);
+      if (open && open._a !== S.focus && !S.overview) closePlace(); // the map is in another area now, however it got there: its place does not stay open over this one
       if (S.hood && S.hoodArea !== S.focus) S.hood = null;
       S.lastChips = ''; renderArea(); refresh(); setHash();
     } else refresh({ listOnly: true, keepPanel: true });
@@ -326,20 +334,21 @@
     return '<li><button type="button" class="row" data-id="' + esc(p.id) + '"><span class="top"><span class="nm">' + esc(p.name) + '</span></span>' +
       '<span class="hood">' + whereLine(p) + '</span><span class="st off">' + (p.why === 'early' ? 'Unconfirmed hours, none of them late · fix them' : 'No hours yet · add them') + '</span></button></li>';
   }
+  function helpName(text) { opt('helptext').textContent = text; opt('helpsw').setAttribute('aria-label', text); } // what the switch says is also its name, for a reader that takes names from aria-label alone
   function helpList() { // the switch's own line and list: a number here is the length of the list under it
     var h = A.help(S.focus), box = opt('helplist');
     if (!h || !reportTarget()) { box.hidden = true; return; }
     var st = S.help[S.focus.id], n = h.count;
     if (!S.helpOn || S.overview || S.outside) {
       box.hidden = true;
-      opt('helptext').textContent = n === null ? 'Help: show the cafés with no hours yet' : 'Help: ' + n.toLocaleString('en-US') + (n === 1 ? ' café here has' : ' cafés here have') + ' no hours yet';
+      helpName(n === null ? 'Help: show the cafés with no hours yet' : 'Help: ' + n.toLocaleString('en-US') + (n === 1 ? ' café here has' : ' cafés here have') + ' no hours yet');
       return;
     }
     var b = S.ready ? S.map.getBounds() : null, seen = helpAll().filter(function (p) { return !b || b.contains([p.lon, p.lat]); });
     seen.sort(function (x, y) { return x.name.localeCompare(y.name); });
     var line = !st || st.state === 'loading' ? 'Looking for cafés with no hours yet…' : st.state === 'failed' ? 'The cafés with no hours could not be loaded. Check your connection.'
       : seen.length + (seen.length === 1 ? ' café in view has' : ' cafés in view have') + ' no hours yet';
-    opt('helptext').textContent = 'Help: ' + (st && st.state === 'ok' ? line : 'cafés with no hours yet');
+    helpName('Help: ' + (st && st.state === 'ok' ? line : 'cafés with no hours yet'));
     opt('helpcount').textContent = line + (seen.length ? '. They are the gray dots. Tap one to add its hours.' : st && st.state === 'ok' ? '. Move the map to look elsewhere.' : '');
     opt('helprows').innerHTML = seen.slice(0, S.helpShown).map(helpRow).join('');
     opt('helpmore').hidden = seen.length <= S.helpShown;
@@ -506,7 +515,7 @@
     return h > 23 || mm > 59 ? null : h * 60 + mm;
   }
   function editorHtml(m) {
-    var h = '<div class="ed' + (m.same ? ' same' : '') + '"><label class="edsame"><input type="checkbox" data-ed="same"' + (m.same ? ' checked' : '') + '> Same hours each day</label>';
+    var h = '<div class="ed' + (m.same ? ' same' : '') + '"><label class="edsame"><input type="checkbox" data-ed="same" aria-label="Same hours each day"' + (m.same ? ' checked' : '') + '> Same hours each day</label>';
     (m.same ? [0] : [0, 1, 2, 3, 4, 5, 6]).forEach(function (d) {
       var day = m.days[d], name = m.same ? 'Each day' : H.DAYS[d], open = day.state === 'open';
       var span = function (s, i) {
@@ -763,7 +772,10 @@
       });
       return;
     }
-    if (named && named !== S.focus) goTo(named);
+    if (named) { // an area link: that area, and no place of another one left open over it
+      if (S.selected || S.add) closePlace();
+      if (named !== S.focus || S.overview || S.outside) goTo(named);
+    }
   }
   function isLoaded(a) { return !!S.loaded[a.id] && S.loaded[a.id].state === 'ok'; }
   function message(text, ms) {
@@ -914,8 +926,16 @@
     var on = { one: !S.multi, many: S.multi, v10: !S.v11, v11: S.v11, vis: S.areas.some(A.visitors) }; // vis: somewhere, hours that visitors sent are published
     Array.prototype.forEach.call(document.querySelectorAll('[data-if]'), function (el) { el.hidden = !on[el.getAttribute('data-if')]; });
     if (S.v11 && $('cityfine')) $('cityfine').textContent = 'Sends the city name you type and this page\'s version ("' + app() + '"), nothing else.';
+    if (S.v11) { $('indie').setAttribute('aria-label', 'Independent shops only'); $('confirmed').setAttribute('aria-label', 'Confirmed hours only'); } // a name that does not depend on how a reader works out a label
     if (!S.multi) return;
     var others = S.areas.slice(1), named = others.filter(function (a) { return A.announced(a, false); }).map(function (a) { return a.name; });
+    /* What the page says of itself to a search engine or a link preview stops saying New York alone. The title follows the area (renderArea). */
+    var where = 'New York City and ' + others.length + ' more US metro ' + (others.length === 1 ? 'area' : 'areas'), set = function (sel, text) { var el = document.querySelector(sel); if (el) el.setAttribute('content', text); };
+    set('meta[name="description"]', 'A free map of coffee shops, tea houses and dessert cafés that are open late, in ' + where + '. Pick 8 PM, 10 PM, midnight or all night and see the closing time on each pin, with where the hours come from.');
+    set('meta[property="og:title"]', 'Coffee shops open late, with closing times on the map');
+    set('meta[property="og:description"]', 'Pick how late you need (8 PM, 10 PM, midnight, all night) and see which coffee shops are still open and until when, in ' + where + '. Free, no ads, no account.');
+    var ld = document.querySelector('script[type="application/ld+json"]');
+    try { var about = JSON.parse(ld.textContent); about.description = 'A map of coffee shops that are open late in ' + where + ', with the closing time on each pin.'; ld.textContent = JSON.stringify(about); } catch (e) { /* left as it is */ }
     Array.prototype.forEach.call(document.querySelectorAll('[data-fill=others]'), function (el) { el.textContent = String(others.length); });
     Array.prototype.forEach.call(document.querySelectorAll('[data-fill=announced]'), function (el) { // a city is named in the page's own text once half its independents are confirmed
       el.textContent = named.length ? ' At least half are confirmed so far in ' + (named.length < 2 ? named[0] : named.slice(0, -1).join(', ') + ' and ' + named[named.length - 1]) + '.' : '';

@@ -313,7 +313,8 @@ for (const m of metros) pageOf[m.area.id] = { name: m.area.name, n: m.places.len
 const cityList = [...cityPages].sort((x, y) => x.name.localeCompare(y.name));
 for (const m of metros) {
   const a = m.area, ps = m.places, of = m.sum, name = A.prose(a.name), path = `${a.id}/`, c = pageOf[a.id].cover, f = facts(ps, of, m.vis);
-  const indie = ps.filter((p) => !p.chain).sort(byLatest), chains = ps.filter((p) => p.chain);
+  const key = (p) => ({ close: H.latestClose(p.hours), marked: of(p).marked, chain: !!p.chain, name: p.name }); // the map's own order: on a tie, accepted hours first
+  const indie = ps.filter((p) => !p.chain).sort((x, y) => A.latestFirst(key(x), key(y))), chains = ps.filter((p) => p.chain);
   const srcOf = (p) => (p.src === 'visitors' && !m.vis ? 'osm' : p.src); // visitors' hours count as that only where the area publishes them
   const by = (list, k) => list.filter((p) => srcOf(p) === k).length, conf = by(indie, 'shop') + by(indie, 'brand') + by(indie, 'visitors');
   const from = list([by(indie, 'shop') ? `${by(indie, 'shop')} from the shop's own site or page` : '', by(indie, 'brand') ? `${by(indie, 'brand')} from a chain's store locator` : '',

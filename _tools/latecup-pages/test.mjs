@@ -408,6 +408,16 @@ t('names: the clock line, the name in a sentence, where a place is', () => {
   assert.equal(A.locality(oak), 'Oakland', 'the city shows where a place has no neighborhood'); assert.equal(A.address(oak), '4000 Telegraph Ave, Oakland');
   assert.equal(A.locality({ ...oak, hood: 'Temescal' }), 'Temescal'); assert.equal(A.locality(bare), ''); assert.equal(A.address(bare), '1 Main St');
 });
+t('the list on a tie: accepted hours first, then independents before chains, then by name', () => {
+  const p = (name, close, marked, chain) => ({ name, close, marked: !!marked, chain: !!chain });
+  const order = (list) => [...list].sort(A.latestFirst).map((x) => x.name).join(' ');
+  // Chicago's first screen: round-the-clock Dunkin' with unconfirmed hours no longer sit above everything else
+  assert.equal(order([p("Dunkin' b", Infinity, 0, 1), p("Dunkin' a", Infinity, 0, 1), p('Qamaria', Infinity, 0, 0), p('Starbucks', Infinity, 1, 1), p('Corner', Infinity, 1, 0), p('Late', 1560, 0, 0)]),
+    "Corner Starbucks Qamaria Dunkin' a Dunkin' b Late");
+  assert.equal(order([p('B', 1380, 0, 0), p('A', 1380, 0, 0), p('C', 1500, 0, 1), p('D', 1380, 1, 1), p('E', 1380, 1, 0)]), 'C E D A B', 'the closing time comes first; the rest only breaks a tie');
+  assert.equal(order([p('b', 1380), p('a', 1380), p('c', 1320, 1)]), 'a b c'); assert.equal(order([]), '');
+  assert.equal(A.latestFirst(p('x', Infinity), p('x', Infinity)), 0); assert.ok(A.latestFirst(p('x', Infinity), p('x', 1620)) < 0); assert.ok(A.latestFirst(p('x', 1200), p('x', 1260)) > 0);
+});
 t('each area on its own clock: the same instant is a different night in each zone', () => {
   const when = new Date('2026-11-28T10:30:00Z'), on = (tz) => H.cityNow(tz, when);
   const ny = on('America/New_York'), chi = on('America/Chicago'), den = on('America/Denver'), phx = on('America/Phoenix'), la = on('America/Los_Angeles'), hnl = on('Pacific/Honolulu');
@@ -684,6 +694,8 @@ t('more areas: a page for each, the coverage line at the top, the same source la
   assert.ok(line > 0 && line < chi.indexOf('<table'), 'the coverage line comes before the list'); assert.ok(line < chi.indexOf('<p>Latecup lists'));
   assert.match(chi, /The hours of 3 of the 10 independent shops here are confirmed \(marked ✓\): 2 from the shop's own site or page and 1 sent by visitors who agree with each other\. The other 7 come from OpenStreetMap and are marked unconfirmed/);
   assert.match(chi, /<h2>Independent shops \(10\)<\/h2>/); assert.equal(chi.split('<a class="name"').length - 1, 10, 'the number in the heading is the length of the list under it');
+  assert.deepEqual([...chi.matchAll(/<a class="name"[^>]*>([^<]+)</g)].map((m) => m[1]), ['Indie 0', 'Indie 1', 'Indie 2', 'Indie 4', 'Indie 3', 'Indie 5', 'Indie 6', 'Indie 7', 'Indie 8', 'Indie 9'],
+    'latest closing first; among those that close together, the ones with a ✓ come first (4: two visitors confirmed it; 5 lost its mark to a newer report)');
   assert.match(chi, /<h2>Chain stores \(20\)<\/h2>/); assert.match(chi, /<tr><td>Starbucks<\/td><td>20<\/td><td>20<\/td><td>1 AM<\/td><\/tr>/);
   assert.match(chi, /<span class="tag ok">✓ Shop's own site or page, 2026-12-01<\/span>/); assert.match(chi, /<span class="tag ok">✓ Hours from 2 visitors · latest Dec 3<\/span>/);
   assert.equal(chi.split('<span class="tag">Unconfirmed</span>').length - 1, 7, 'unconfirmed hours are labeled as that, one for one');

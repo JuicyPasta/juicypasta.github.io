@@ -86,11 +86,18 @@
     var parts = String(name).split(' + ').map(function (p) { return THE.test(p) ? 'the ' + p : p; });
     return parts.length < 2 ? parts[0] : parts.slice(0, -1).join(', ') + ' and ' + parts[parts.length - 1];
   }
+  /* The list, latest closing first. Places that close at the same time (above all the ones open
+     24 hours) go: hours the list accepts first (its ✓), then independents before chains, then
+     by name. a, b: { close, marked, chain, name }; close is Infinity for a place open 24 hours.
+     The app has the same rule. */
+  function latestFirst(a, b) {
+    return (a.close === b.close ? 0 : b.close - a.close) || (b.marked ? 1 : 0) - (a.marked ? 1 : 0) || (a.chain ? 1 : 0) - (b.chain ? 1 : 0) || String(a.name).localeCompare(String(b.name));
+  }
   /* Where a place is, in a word: its neighborhood, or its city where it has none. */
   function locality(p) { return p.hood || p.city || ''; }
   /* The street address, with the city outside New York (New York's places say it with `boro`). */
   function address(p) { return p.addr ? p.addr + (p.city && !p.boro ? ', ' + p.city : '') : (p.city || ''); }
   var api = { usable: usable, list: list, contains: contains, miles: miles, nearest: nearest, at: at, touching: touching, focus: focus,
-    coverage: coverage, announced: announced, help: help, visitors: visitors, v11: v11, clockName: clockName, prose: prose, locality: locality, address: address };
+    coverage: coverage, announced: announced, help: help, visitors: visitors, v11: v11, latestFirst: latestFirst, clockName: clockName, prose: prose, locality: locality, address: address };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.LatecupAreas = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
