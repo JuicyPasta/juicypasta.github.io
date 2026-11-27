@@ -25,10 +25,12 @@ const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; ch
 const FIELDS = { 'entry.416204548': 'type', 'entry.1281919753': 'place_id', 'entry.2034522100': 'place_name', 'entry.1615506675': 'note', 'entry.68838780': 'app' };
 const reports = [];
 
-const file = (base, rel) => { // a file under base, or null; never above it
-  const path = normalize(join(base, decodeURIComponent(rel)));
-  if (path !== base && !path.startsWith(base + '/')) return null;
-  try { return statSync(path).isDirectory() ? (statSync(join(path, 'index.html')), join(path, 'index.html')) : path; } catch { return null; }
+const file = (base, rel) => { // a file under base, or null; never above it, and nothing whose name starts with a dot
+  try {
+    const path = normalize(join(base, decodeURIComponent(rel)));
+    if ((path !== base && !path.startsWith(base + '/')) || /(^|\/)\./.test(path.slice(base.length))) return null;
+    return statSync(path).isDirectory() ? (statSync(join(path, 'index.html')), join(path, 'index.html')) : path;
+  } catch { return null; }
 };
 createServer((req, res) => {
   const url = new URL(req.url, 'http://localhost'), send = (code, type, body) => { res.writeHead(code, { 'content-type': type, 'cache-control': 'no-store' }); res.end(req.method === 'HEAD' ? undefined : body); };
