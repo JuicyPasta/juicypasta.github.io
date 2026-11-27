@@ -628,8 +628,13 @@ import { readFileSync, readdirSync as ls, mkdirSync as mk } from 'node:fs';
 const SITE_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'latecup');
 const BANNED = /\b(accurate|accuracy|guarantee\w*|verified|every|always open)\b/i;
 const words = (html) => html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, ' ').replace(/<[^>]+>/g, ' ');
+const plain = (text) => text.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+const added = (html) => (html.match(/<[a-z0-9]+[^>]* data-more="[^"]*"[^>]*>/g) || []).map((tag) => { // the sentences the script puts into a paragraph on some manifests
+  const attr = (name) => plain(new RegExp(` ${name}="([^"]*)"`).exec(tag)[1]), name = /^<([a-z0-9]+)/.exec(tag)[1], rest = html.slice(html.indexOf(tag) + tag.length);
+  return { when: attr('data-more'), after: attr('data-after'), say: attr('data-say'), runs: rest.slice(0, rest.indexOf(`</${name}>`)).split(/<[^>]+>/).map(plain) };
+});
 t('wording never says accurate, guaranteed, verified, every or always open', () => {
-  const page = words(readFileSync(join(SITE_DIR, 'index.html'), 'utf8'));
+  const html = readFileSync(join(SITE_DIR, 'index.html'), 'utf8'), page = words(html) + added(html).map((m) => m.say).join(' ');
   assert.doesNotMatch(page, BANNED); assert.doesNotMatch(page, /[—]/, 'no em dashes');
   // the privacy policy is the released app's: one sentence of it predates this rule and stays as it was written
   const privacy = words(readFileSync(join(SITE_DIR, 'privacy.html'), 'utf8')).replace('The files are identical for every user.', '');
@@ -639,6 +644,23 @@ t('wording never says accurate, guaranteed, verified, every or always open', () 
     const code = readFileSync(join(SITE_DIR, f), 'utf8').replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:'"\\])\/\/.*$/gm, '$1').replace(/\.every\(/g, '.all(');
     const hit = BANNED.exec(code); assert.equal(hit, null, `${f}: "${hit && code.slice(Math.max(0, hit.index - 40), hit.index + 40)}"`);
     assert.doesNotMatch(code, /—/, f);
+  }
+});
+
+t('a sentence that only some manifests add to a paragraph has one place to go, and the paragraph as written does not change', () => {
+  const html = readFileSync(join(SITE_DIR, 'index.html'), 'utf8'), more = added(html);
+  assert.equal(more.length, 5);
+  for (const m of more) {
+    assert.ok(['v11', 'vis'].includes(m.when), m.when);
+    const runs = m.runs.filter((run) => run.includes(m.after));
+    assert.equal(runs.length, 1, `"${m.after}" is in one run of the paragraph's text`); assert.equal(runs[0].split(m.after).length, 2, `"${m.after}" is there once`);
+    assert.match(m.after, /\.$/, 'it goes after a whole sentence'); assert.match(m.say, /^ \S.*\.$/, 'and is a sentence of its own, with the space before it');
+  }
+  // nothing inside a paragraph that is always shown is switched on or off: only whole paragraphs, list items and headings are (an element inside one changes how its letters are drawn)
+  for (const tag of html.match(/<[a-z0-9]+[^>]* data-if="[^"]*"[^>]*>/g)) assert.match(tag, /^<(p|li|h3) /, tag);
+  for (const tag of html.match(/<[a-z0-9]+[^>]* data-fill="[^"]*"[^>]*>/g)) {
+    const before = html.slice(0, html.indexOf(tag)), open = before.slice(Math.max(before.lastIndexOf('<p'), before.lastIndexOf('<li'), before.lastIndexOf('<h3')));
+    assert.match(open, /^<(p|li|h3) data-if="many" hidden>/, `${tag} is filled in only inside text that one area never shows`);
   }
 });
 

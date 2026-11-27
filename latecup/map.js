@@ -925,6 +925,17 @@
   function adapt() {
     var on = { one: !S.multi, many: S.multi, v10: !S.v11, v11: S.v11, vis: S.areas.some(A.visitors) }; // vis: somewhere, hours that visitors sent are published
     Array.prototype.forEach.call(document.querySelectorAll('[data-if]'), function (el) { el.hidden = !on[el.getAttribute('data-if')]; });
+    /* A sentence more inside a paragraph that stays (data-more): it goes in here, after the words named in data-after. The paragraph as written
+       is the one the page always had, down to its runs of text, so with one area it is drawn exactly as before. */
+    Array.prototype.forEach.call(document.querySelectorAll('[data-more]'), function (el) {
+      if (!on[el.getAttribute('data-more')]) return;
+      var after = el.getAttribute('data-after') || '', say = el.getAttribute('data-say') || '', walk = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), node, at;
+      el.removeAttribute('data-more'); // once
+      while (after && (node = walk.nextNode())) {
+        at = node.nodeValue.indexOf(after);
+        if (at >= 0) { at += after.length; node.nodeValue = node.nodeValue.slice(0, at) + say + node.nodeValue.slice(at); break; }
+      }
+    });
     if (S.v11 && $('cityfine')) $('cityfine').textContent = 'Sends the city name you type and this page\'s version ("' + app() + '"), nothing else.';
     if (S.v11) { $('indie').setAttribute('aria-label', 'Independent shops only'); $('confirmed').setAttribute('aria-label', 'Confirmed hours only'); } // a name that does not depend on how a reader works out a label
     if (!S.multi) return;
@@ -937,6 +948,7 @@
     var ld = document.querySelector('script[type="application/ld+json"]');
     try { var about = JSON.parse(ld.textContent); about.description = 'A map of coffee shops that are open late in ' + where + ', with the closing time on each pin.'; ld.textContent = JSON.stringify(about); } catch (e) { /* left as it is */ }
     Array.prototype.forEach.call(document.querySelectorAll('[data-fill=others]'), function (el) { el.textContent = String(others.length); });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-fill=hoods]'), function (el) { el.innerHTML = '<a href="nyc/">' + esc(el.textContent) + '</a>'; }); // New York's neighborhood pages
     Array.prototype.forEach.call(document.querySelectorAll('[data-fill=announced]'), function (el) { // a city is named in the page's own text once half its independents are confirmed
       el.textContent = named.length ? ' At least half are confirmed so far in ' + (named.length < 2 ? named[0] : named.slice(0, -1).join(', ') + ' and ' + named[named.length - 1]) + '.' : '';
     });
