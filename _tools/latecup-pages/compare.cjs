@@ -5,7 +5,10 @@
 // workflow: it needs Playwright, which this repo does not install.
 //
 //   NODE_PATH=$(npm root -g) node _tools/latecup-pages/compare.cjs [--ref origin/main] [--quick] [--shots <folder>]
-//   CHROME=/path/to/chrome ...      when Playwright's own browser is not installed
+//   CHROME=/path/to/chrome ...      when the Playwright that is installed and the browser it has cached do not match
+//                                   (on the Mac: Playwright 1.58.2 wants build 1208 and the cache holds 1255, so
+//                                   CHROME=~/Library/Caches/ms-playwright/chromium_headless_shell-1255/chrome-headless-shell-mac-arm64/chrome-headless-shell).
+//                                   Point it at what is there; do not download a browser for this.
 //   --quick                         one clock, and the places; about two minutes, not eight
 //
 // Both pages run on localhost, each on its own port, from serve.mjs. Nothing reaches the real
@@ -64,6 +67,9 @@ const snap = (page) => page.evaluate(async () => {
   const b = m.getMaxBounds();
   return {
     title: document.title, h1: document.querySelector('#controls h1').textContent, clock: document.getElementById('clock').textContent,
+    head: [...document.querySelectorAll('head meta[name], head meta[property], head link[rel=canonical]')].map((m) => (m.getAttribute('name') || m.getAttribute('property') || 'canonical') + '=' + (m.content || m.getAttribute('href'))),
+    ld: [...document.querySelectorAll('script[type="application/ld+json"]')].map((e) => e.textContent),
+    boxes: [...document.querySelectorAll('input[type=checkbox]')].filter((e) => e.getClientRects().length).map((e) => [e.id, e.getAttribute('aria-label'), e.getAttribute('aria-labelledby'), e.checked].join('/')),
     holiday: vis(document.getElementById('holiday')) ? document.getElementById('holiday').textContent : null,
     chips: document.getElementById('chips').innerHTML, day: document.getElementById('day').innerHTML, dayValue: document.getElementById('day').value,
     controlsText: document.getElementById('controls').innerText, count: document.getElementById('count').innerHTML, rows: document.getElementById('rows').innerHTML,
@@ -141,7 +147,8 @@ const each = async (o, n, fn) => { await fn(o.page); await fn(n.page); await set
       await each(o, n, (p) => p.evaluate(() => window.__map.jumpTo({ zoom: 9 }))); await cmp(`${name} zoomed all the way out`);
     });
     same(`${name}: feed and page requests`, o.gets.filter((u) => !u.startsWith('SITE/')).sort(), n.gets.filter((u) => !u.startsWith('SITE/')).sort());
-    same(`${name}: the page's own files, apart from the two new scripts`, [...new Set(o.gets.filter((u) => u.startsWith('SITE/')))].sort(), [...new Set(n.gets.filter((u) => u.startsWith('SITE/') && !/SITE\/(areas|table)\.js$/.test(u)))].sort());
+    const own = (x) => [...new Set(x.gets.filter((u) => u.startsWith('SITE/') && !/SITE\/(areas|table)\.js$/.test(u)))].sort(); // areas.js and table.js came with areas: an older ref does not load them
+    same(`${name}: the page's own files, apart from the two scripts that came with areas`, own(o), own(n));
     same(`${name}: nothing posted`, [o.posts, n.posts], [[], []]);
     await o.context.close(); await n.context.close();
   }
@@ -209,6 +216,7 @@ const each = async (o, n, fn) => { await fn(o.page); await fn(n.page); await set
   for (const viewport of QUICK ? [{ width: 390, height: 844 }] : [{ width: 390, height: 844 }, { width: 360, height: 640 }, { width: 820, height: 1180 }, { width: 1920, height: 1080 }]) {
     const [o, n] = await both(browser, { now: NOWS.fri2240, viewport }, async (o, n, cmp) => {
       await cmp(`${viewport.width} wide`);
+      same(`${viewport.width} wide: the whole page from top to bottom, pixels that differ`, await differing(browser, await o.page.screenshot({ fullPage: true }), await n.page.screenshot({ fullPage: true })), 0);
       const [po, pn] = [await o.page.screenshot({ fullPage: false }), await n.page.screenshot({ fullPage: false })];
       if (OUT) { fs.writeFileSync(path.join(OUT, `${viewport.width}-old.png`), po); fs.writeFileSync(path.join(OUT, `${viewport.width}-new.png`), pn); }
       await each(o, n, (p) => p.evaluate(() => document.getElementById('list').scrollIntoView())); await o.page.waitForTimeout(300);
