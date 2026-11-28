@@ -42,6 +42,7 @@ for (const d of DRUGS) {
     '<li><a href="../glp-1-injection-sites/">GLP-1 injection sites: all four pens side by side</a></li>',
     '<li><a href="../pt/onde-aplicar-mounjaro/" hreflang="pt-BR" lang="pt-BR">Onde aplicar Mounjaro</a> (português) · <a href="../es/donde-aplicar-mounjaro/" hreflang="es" lang="es">Dónde aplicar Mounjaro</a> (español)</li>',
     '<li><a href="../pt/onde-aplicar-ozempic/" hreflang="pt-BR" lang="pt-BR">Onde aplicar Ozempic</a> (português) · <a href="../es/donde-aplicar-ozempic/" hreflang="es" lang="es">Dónde aplicar Ozempic</a> (español)</li>',
+    '<li><a href="../de/wo-spritzt-man-mounjaro-wegovy-ozempic/" hreflang="de" lang="de">Wo spritzt man Mounjaro, Wegovy, Ozempic?</a> (Deutsch) · <a href="../fr/comment-injecter-mounjaro-wegovy-ozempic/" hreflang="fr" lang="fr">Comment injecter Mounjaro, Wegovy ou Ozempic</a> (français)</li>',
   ].join('\n');
   // A page with translations lists them, itself and x-default; the others have no alternates.
   const alternates = d.alternates

@@ -19,6 +19,8 @@ function readStrings() {
 const T = readStrings();
 const nameOf = (id) => (fromId(id) ? T.sites[id] : '');
 const lower = (s) => s.charAt(0).toLowerCase() + s.slice(1);
+// Site names mid-sentence: German keeps its capitals (Bauch, Oberschenkel are nouns).
+const lowerSite = (s) => (/^de\b/i.test(document.documentElement.lang) ? s : lower(s));
 
 const store = {
   get(k) { try { return window.localStorage.getItem(k); } catch { return null; } },
@@ -111,11 +113,11 @@ function render() {
     if (!history.length) {
       why.textContent = T.whyStart;
     } else if (n === undefined) {
-      why.textContent = fill(T.whyUnused, { last: lower(nameOf(last)) });
+      why.textContent = fill(T.whyUnused, { last: lowerSite(nameOf(last)) });
     } else if (enabled.size === 1) {
       why.textContent = T.whyOnly;
     } else {
-      why.textContent = fill(T.whyLeast, { last: lower(nameOf(last)), n });
+      why.textContent = fill(T.whyLeast, { last: lowerSite(nameOf(last)), n });
     }
   }
 

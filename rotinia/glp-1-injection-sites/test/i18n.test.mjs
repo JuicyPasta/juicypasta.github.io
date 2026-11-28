@@ -16,6 +16,12 @@ const PAGES = [
   ['pt-BR', 'pt/onde-aplicar-ozempic/index.html', 'Ozempic', 'semaglutida', 'ozempic-injection-sites/'],
   ['es', 'es/donde-aplicar-ozempic/index.html', 'Ozempic', 'semaglutida', 'ozempic-injection-sites/'],
 ];
+// German and French: one page for all three pens, in the same hreflang set as the generic English page.
+// [lang, file, active ingredients as the page writes them, the other page of the pair].
+const MULTI = [
+  ['de', 'de/wo-spritzt-man-mounjaro-wegovy-ozempic/index.html', ['Tirzepatid', 'Semaglutid'], 'fr/comment-injecter-mounjaro-wegovy-ozempic/'],
+  ['fr', 'fr/comment-injecter-mounjaro-wegovy-ozempic/index.html', ['tirzépatide', 'sémaglutide'], 'de/wo-spritzt-man-mounjaro-wegovy-ozempic/'],
+];
 // English pages per medicine: same planner, strings in their own block.
 const DRUG_PAGES = ['zepbound', 'mounjaro', 'wegovy', 'ozempic'].map((d) => `${d}-injection-sites/index.html`);
 
@@ -50,7 +56,7 @@ test('mergeStrings overrides by key and falls back to English', () => {
   assert.equal(EN.sites.thigh_l, 'Left thigh');
 });
 
-for (const [lang, rel] of PAGES) {
+for (const [lang, rel] of [...PAGES, ...MULTI]) {
   test(`${rel}: every string translated, placeholders kept`, () => {
     const { html, strings } = pageStrings(rel);
     assert.match(html, new RegExp(`<html lang="${lang}">`));
@@ -100,6 +106,55 @@ for (const [lang, rel, brand, generic, english] of PAGES) {
     assert.doesNotMatch(html, /googletagmanager|google-analytics|gtag\(/);
   });
 }
+
+const SITE = 'https://juicypasta.github.io/rotinia/';
+for (const [lang, rel, generics, other] of MULTI) {
+  test(`${rel}: all three pens, FAQ markup says what the page shows, no doses, hreflang both ways, coming soon`, () => {
+    const { html } = pageStrings(rel);
+    const title = html.match(/<title>(.*?)<\/title>/)[1];
+    const h1 = html.match(/<h1>(.*?)<\/h1>/)[1];
+    assert.ok(title.length <= 75, `${rel} title is ${title.length} characters`);
+    for (const brand of ['Mounjaro', 'Wegovy', 'Ozempic']) {
+      assert.ok(title.includes(brand), `${rel} title names ${brand}`);
+      assert.ok(h1.includes(brand), `${rel} h1 names ${brand}`);
+    }
+    const visible = html.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<[^>]+>/g, ' ');
+    for (const g of generics) assert.ok(visible.includes(g), `${rel} names ${g}`);
+    // One hreflang set: the generic English page, pt/es Mounjaro, de, fr; each lists the others.
+    const self = SITE + rel.replace('index.html', '');
+    assert.ok(html.includes(`<link rel="canonical" href="${self}">`), `${rel} canonical`);
+    const set = [['en', 'glp-1-injection-sites/'], ['pt-BR', 'pt/onde-aplicar-mounjaro/'], ['es', 'es/donde-aplicar-mounjaro/'],
+      ['de', 'de/wo-spritzt-man-mounjaro-wegovy-ozempic/'], ['fr', 'fr/comment-injecter-mounjaro-wegovy-ozempic/']];
+    for (const [l, path] of set) {
+      assert.ok(html.includes(`<link rel="alternate" hreflang="${l}" href="${SITE}${path}">`), `${rel} lists ${l}`);
+      assert.ok(readFileSync(rotinia + path + 'index.html', 'utf8').includes(`<link rel="alternate" hreflang="${lang}" href="${self}">`), `${path} lists ${rel}`);
+    }
+    assert.ok(html.includes(`<link rel="alternate" hreflang="x-default" href="${SITE}glp-1-injection-sites/">`));
+    assert.ok(html.includes(`href="../../${other}"`), `${rel} links ${other}`);
+    for (const f of ['../sitemap.xml', '../sitemap.txt']) {
+      assert.ok(readFileSync(rotinia + f, 'utf8').includes(self), `${rel} in ${f}`);
+    }
+    assert.ok(readFileSync(rotinia + 'index.html', 'utf8').includes(`href="${rel.replace('index.html', '')}"`), `/rotinia/ links ${rel}`);
+    const blocks = [...html.matchAll(/<script type="application\/ld\+json">\n([\s\S]*?)\n<\/script>/g)].map((m) => JSON.parse(m[1]));
+    const faq = blocks.find((b) => b['@type'] === 'FAQPage');
+    assert.ok(faq, `${rel}: no FAQPage block`);
+    assert.deepEqual(faq, faqLd(html));
+    assert.equal(faq.mainEntity.length, 6);
+    assert.ok(faq.mainEntity.every((q) => /Mounjaro|Wegovy|Ozempic/.test(q.name)), `${rel}: every question names a pen`);
+    assert.doesNotMatch(visible, /\d\s?mg\b/i, `${rel}: no doses`);
+    assert.doesNotMatch(html, /\u2014/, `${rel}: no em dashes`);
+    assert.doesNotMatch(html, /googletagmanager|google-analytics|gtag\(|apps\.apple\.com|play\.google\.com/);
+    assert.match(visible, lang === 'de' ? /Bald im App Store für iPhone\./ : /Bientôt sur l'App Store pour iPhone\./);
+    assert.match(visible, lang === 'de' ? /nicht mit Eli Lilly noch mit Novo Nordisk verbunden|weder mit Eli Lilly noch mit Novo Nordisk verbunden/ : /n'est affiliée ni à Eli Lilly ni à Novo Nordisk/);
+    assert.match(visible, lang === 'de' ? /Keine Packungsbeilage nennt eine einzelne beste Stelle/ : /Aucune notice ne désigne un seul meilleur site/);
+  });
+}
+
+test('sitemap.txt lists the same URLs as sitemap.xml', () => {
+  const xml = [...readFileSync(rotinia + '../sitemap.xml', 'utf8').matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+  const txt = readFileSync(rotinia + '../sitemap.txt', 'utf8').split('\n').filter(Boolean);
+  assert.deepEqual(txt, xml);
+});
 
 for (const rel of DRUG_PAGES) {
   test(`${rel}: every planner string, shared planner, canonical`, () => {

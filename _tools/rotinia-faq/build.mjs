@@ -1,4 +1,4 @@
-// FAQPage markup for the Portuguese and Spanish Rotinia pages, written from the
+// FAQPage markup for the Portuguese, Spanish, German and French Rotinia pages, written from the
 // page's own <section class="faq"> so the markup says exactly what the page shows.
 // Run after editing a FAQ section: node _tools/rotinia-faq/build.mjs
 import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
@@ -28,7 +28,7 @@ const BLOCK = /<script type="application\/ld\+json">\n\{"@context":"https:\/\/sc
 const ANCHOR = '<script type="application/json" id="planner-strings">';
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  for (const lang of ['pt', 'es']) {
+  for (const lang of ['pt', 'es', 'de', 'fr']) {
     for (const dir of readdirSync(rotinia + lang)) {
       const file = `${rotinia}${lang}/${dir}/index.html`;
       let html = readFileSync(file, 'utf8');
