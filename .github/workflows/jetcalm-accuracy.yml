@@ -1,0 +1,44 @@
+# Refreshes the accuracy numbers in the Jetcalm forecast page's FAQ from jetcalm-data's
+# verification summary (verification/latest.json, rescored every 6 hours), once a day.
+# Pages is deployed from this branch, so the commit this makes publishes by itself.
+# If the summary can't be read or the sentence isn't found, fill.mjs exits 1 before it writes,
+# and the job fails without a commit.
+name: Jetcalm accuracy numbers
+
+on:
+  schedule:
+    - cron: '40 12 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: jetcalm-accuracy
+  cancel-in-progress: false
+
+jobs:
+  fill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Tests
+        run: node --test _tools/jetcalm-accuracy/test.mjs
+      - name: Fill the numbers
+        run: node _tools/jetcalm-accuracy/fill.mjs
+      - name: Commit if they changed
+        run: |
+          git add jetcalm/turbulence-forecast/index.html
+          if git diff --cached --quiet; then
+            echo "The numbers already match. No commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -q -m "Jetcalm forecast page: accuracy numbers from today's verification summary"
+          git pull -q --rebase origin "${GITHUB_REF_NAME}"
+          git push -q origin "HEAD:${GITHUB_REF_NAME}"
