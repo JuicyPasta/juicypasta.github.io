@@ -117,19 +117,4 @@ test('more protection or darker skin never shortens the time', () => {
   }
 });
 
-test('the static burn-time table and the numbers in the page text match the maths', () => {
-  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
-  const body = html.split('<tbody id="burn-body">')[1].split('</tbody>')[0];
-  const rows = body.trim().split('\n');
-  assert.equal(rows.length, 11);
-  rows.forEach((row, i) => {
-    const uvi = i + 1;
-    assert.ok(row.startsWith(`<tr><th scope="row">${uvi} `), `row ${uvi}`);
-    const cells = [...row.matchAll(/<td>(\d+)<\/td>/g)].map((m) => Number(m[1]));
-    assert.deepEqual(cells, [1, 2, 3, 4, 5, 6].map((skin) => Math.floor(S.safeTime(uvi, skin, 0).minutes + 1e-9)), `row ${uvi}`);
-  });
-  const whole = (uvi, skin) => Math.floor(S.safeTime(uvi, skin, 0).minutes + 1e-9);
-  assert.ok(html.includes(`unprotected type II skin reaches its safe limit in about ${whole(3, 2)} minutes; at UV 8 (very high), in about ${whole(8, 2)}.`));
-  assert.ok(html.includes(`at UV 3, about ${whole(3, 1)} minutes for type I and ${whole(3, 3)} for type III; at UV 5, ${whole(5, 1)} and ${whole(5, 3)}; at UV 8, ${whole(8, 1)} and ${whole(8, 3)}; at UV 10, ${whole(10, 1)} and ${whole(10, 3)}.`));
-  assert.ok(html.includes(`type V at UV 8 has about ${whole(8, 5)} minutes`));
-});
+// The page's table, sentences and FAQ markup: page.test.mjs.

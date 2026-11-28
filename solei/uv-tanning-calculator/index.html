@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>UV Tanning Calculator: How Long in the Sun by UV Index (Free) | Solei</title>
-<meta name="description" content="Free UV tanning calculator: enter the UV index, your skin type and your sunscreen to estimate the minutes until your safe sun limit, when to reapply, and burn times at UV 1 to 11. Tan without burning. Estimates only, not medical advice.">
+<title>UV Index for Tanning: Calculator and Burn Times | Solei</title>
+<meta name="description" content="Free UV tanning calculator: the best UV index for tanning, how long at UV 8 or 10, and minutes to burn for skin types I to VI, with or without sunscreen.">
 <link rel="canonical" href="https://juicypasta.github.io/solei/uv-tanning-calculator/">
 <link rel="alternate" hreflang="en" href="https://juicypasta.github.io/solei/uv-tanning-calculator/">
 <link rel="alternate" hreflang="es" href="https://juicypasta.github.io/solei/es/indice-uv-hoy/">
 <link rel="alternate" hreflang="pt-BR" href="https://juicypasta.github.io/solei/pt/indice-uv-hoje/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Solei">
-<meta property="og:title" content="UV tanning calculator: how long in the sun by UV index (free)">
+<meta property="og:title" content="UV index for tanning: calculator and burn times">
 <meta property="og:description" content="UV index, skin type and sunscreen in; minutes until your safe sun limit and when to reapply out. Tan without burning.">
 <meta property="og:url" content="https://juicypasta.github.io/solei/uv-tanning-calculator/">
 <meta property="og:image" content="https://juicypasta.github.io/solei/icon.png">
@@ -22,6 +22,9 @@
 <link rel="stylesheet" href="page.css">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebApplication","name":"Solei UV tanning calculator","url":"https://juicypasta.github.io/solei/uv-tanning-calculator/","applicationCategory":"HealthApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"description":"Free calculator: estimated minutes in the sun before your safe limit, from the UV index, your skin type and your sunscreen."}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What UV index is best for tanning?","acceptedAnswer":{"@type":"Answer","text":"There isn't one. No UV level makes a tan safe: skin tans and burns from the same UV, and a tan is a sign of skin damage. The WHO advises protection from UV 3 up. A higher index only means fewer minutes before you burn; at UV 8, unprotected type II skin reaches its safe limit in about 13 min."}},{"@type":"Question","name":"How long can I stay in the sun at UV 8?","acceptedAnswer":{"@type":"Answer","text":"Without sunscreen, at a steady UV 8, skin reaches its estimated safe limit after about 11 minutes for type I, 13 for type II, 16 for type III, 25 for type IV, 33 for type V and 55 for type VI. That's the time before a burn, not a tanning time. SPF 30 applied generously gives type III skin about 1 h 31 min, inside one 2-hour reapply window."}},{"@type":"Question","name":"How long at UV 10?","acceptedAnswer":{"@type":"Answer","text":"Without sunscreen, at a steady UV 10, skin reaches its estimated safe limit after about 8 minutes for type I, 11 for type II, 13 for type III, 20 for type IV, 26 for type V and 44 for type VI. SPF 30 gives type III skin about 1 h 13 min. UV 10 is very high: the WHO advises avoiding the midday sun."}},{"@type":"Question","name":"How long can I tan at UV 3 or UV 5?","acceptedAnswer":{"@type":"Answer","text":"Without sunscreen, at UV 3 the estimated safe limit comes after about 29 minutes for type I, 37 for type II, 44 for type III, 66 for type IV, 88 for type V and 148 for type VI. At UV 5 it's about 17 minutes for type I, 22 for type II, 26 for type III, 40 for type IV, 53 for type V and 88 for type VI."}}]}
 </script>
 <script type="module" src="app.js"></script>
 </head>
@@ -93,16 +96,14 @@
 </section>
 
 <h2>What UV index is best for tanning?</h2>
-<p>None is free of risk: a tan is your skin reacting to UV, and no tan is risk-free. What the UV index does tell you is how fast you reach your limit. A higher UV index doesn't give you a better tan, it gives you fewer minutes before you burn. At UV 3 (moderate), unprotected type II skin reaches its safe limit in about 37 minutes; at UV 8 (very high), in about 13.</p>
-<p>If you want a tan without burning, lower UV gives you more time: the morning and late afternoon instead of the midday peak. A gradual tan over several days is gentler on skin than one long session. Wear sunscreen, and stop at your limit.</p>
+<p>None. No UV level makes a tan safe. Skin tans and burns from the same UV, and a tan is the skin reacting to damage that's already done. The WHO advises sun protection from UV 3 up: shade around midday, clothes, a hat and sunscreen.</p>
+<p>What the UV index changes is the minutes. Each step adds the same amount of sunburn-causing UV per minute, so UV 8 gets you to your limit in half the time UV 4 does. A higher index doesn't tan you better, it just gives you less time before you burn. Without sunscreen, going from UV 3 to UV 8 cuts the time to the safe limit from about <span data-range="3,8">29 to 11 minutes for type I, 37 to 13 for type II, 44 to 16 for type III, 66 to 25 for type IV, 88 to 33 for type V and 148 to 55 for type VI</span>.</p>
+<p>The calculator above gives the minutes for your skin type and sunscreen. If you're out anyway: lower UV in the morning and late afternoon gives you more time than the midday peak, sunscreen adds more, turning over doesn't add any, and the limit counts for the whole day.</p>
 
-<h2>How long can I tan at UV 3, 5, 8 or 10?</h2>
-<p>It depends on your skin type and on sunscreen. Without sunscreen, at a steady UV index, the estimated time to the safe limit is: at UV 3, about 29 minutes for type I and 44 for type III; at UV 5, 17 and 26; at UV 8, 11 and 16; at UV 10, 8 and 13. Darker skin has more time: type V at UV 8 has about 33 minutes. The table below has every combination, and the calculator above adds sunscreen.</p>
-
-<h2>Burn time by UV index and skin type</h2>
+<h2>Minutes to burn by UV index and skin type</h2>
 <div class="table-wrap">
 <table class="burn">
-<caption>Minutes to the safe limit with no sunscreen, at a steady UV index</caption>
+<caption>Minutes of sun with no sunscreen until the safe limit, at a steady UV index</caption>
 <thead><tr><th scope="col">UV index</th><th scope="col">I</th><th scope="col">II</th><th scope="col">III</th><th scope="col">IV</th><th scope="col">V</th><th scope="col">VI</th></tr></thead>
 <tbody id="burn-body">
 <tr><th scope="row">1 <small>Low</small></th><td>88</td><td>111</td><td>133</td><td>200</td><td>266</td><td>444</td></tr>
@@ -115,15 +116,28 @@
 <tr><th scope="row">8 <small>Very high</small></th><td>11</td><td>13</td><td>16</td><td>25</td><td>33</td><td>55</td></tr>
 <tr><th scope="row">9 <small>Very high</small></th><td>9</td><td>12</td><td>14</td><td>22</td><td>29</td><td>49</td></tr>
 <tr><th scope="row">10 <small>Very high</small></th><td>8</td><td>11</td><td>13</td><td>20</td><td>26</td><td>44</td></tr>
-<tr><th scope="row">11 <small>Extreme</small></th><td>8</td><td>10</td><td>12</td><td>18</td><td>24</td><td>40</td></tr>
+<tr><th scope="row">11+ <small>Extreme</small></th><td>8</td><td>10</td><td>12</td><td>18</td><td>24</td><td>40</td></tr>
 </tbody>
 </table>
 </div>
-<p class="small muted">Skin types I to VI are the Fitzpatrick types in the calculator above. The safe limit is set at two thirds of the dose that typically causes the first redness, as a margin. Estimates only, not medical advice.</p>
+<p class="small muted">Skin types I to VI are the Fitzpatrick types in the calculator above. The safe limit stops at two thirds of the dose that typically causes the first redness, as a margin: skin can start to burn soon after it. The 11+ row is UV 11; above that the times are shorter still. Worked out by the same code as the calculator. Estimates only, not medical advice.</p>
 
 <h2>How sunscreen changes the time</h2>
 <p>Sunscreen counts as the square root of its SPF (SPF 30 counts as about 5.5×), because most people apply far less than the amount used in lab tests. It only counts until it's time to reapply: every 2 hours, or every 80 minutes when you swim or sweat, and right after a swim. SPF 50+ counts as SPF 60.</p>
 <p>So the calculator never shows more than one reapply interval with sunscreen: if your limit lies further out, it says "2 h, then reapply" and how long the limit would take if you reapply on time. Reapplying keeps the protection going; it doesn't reset the limit, which counts for the whole day.</p>
+
+<h2>Questions</h2>
+<section id="faq" class="faq">
+<h3>What UV index is best for tanning?</h3>
+<p>There isn't one. No UV level makes a tan safe: skin tans and burns from the same UV, and a tan is a sign of skin damage. The WHO advises protection from UV 3 up. A higher index only means fewer minutes before you burn; at UV 8, unprotected type II skin reaches its safe limit in about <span data-t="8,2,0">13 min</span>.</p>
+<h3>How long can I stay in the sun at UV 8?</h3>
+<p>Without sunscreen, at a steady UV 8, skin reaches its estimated safe limit after about <span data-list="8">11 minutes for type I, 13 for type II, 16 for type III, 25 for type IV, 33 for type V and 55 for type VI</span>. That's the time before a burn, not a tanning time. SPF 30 applied generously gives type III skin about <span data-t="8,3,30">1 h 31 min</span>, inside one 2-hour reapply window.</p>
+<h3>How long at UV 10?</h3>
+<p>Without sunscreen, at a steady UV 10, skin reaches its estimated safe limit after about <span data-list="10">8 minutes for type I, 11 for type II, 13 for type III, 20 for type IV, 26 for type V and 44 for type VI</span>. SPF 30 gives type III skin about <span data-t="10,3,30">1 h 13 min</span>. UV 10 is very high: the WHO advises avoiding the midday sun.</p>
+<h3>How long can I tan at UV 3 or UV 5?</h3>
+<p>Without sunscreen, at UV 3 the estimated safe limit comes after about <span data-list="3">29 minutes for type I, 37 for type II, 44 for type III, 66 for type IV, 88 for type V and 148 for type VI</span>. At UV 5 it's about <span data-list="5">17 minutes for type I, 22 for type II, 26 for type III, 40 for type IV, 53 for type V and 88 for type VI</span>.</p>
+</section>
+<p class="small muted">Sources: <a href="https://www.who.int/news-room/questions-and-answers/item/radiation-the-ultraviolet-(uv)-index">WHO, the UV index</a> and the <a href="https://www.who.int/publications/i/item/9241590076">Global Solar UV Index guide</a>.</p>
 
 <h2>About the estimates</h2>
 <p>Safe sun time is how long it takes to reach two thirds of the dose that typically causes the first redness for your skin type. Each step of the UV index adds 1.5 J/m² of sunburn-weighted UV per minute, and the doses used for skin types I to VI are 200, 250, 300, 450, 600 and 1,000 J/m², the cautious low ends of the published ranges. This page assumes the UV index stays the same for the whole time; real UV rises toward midday and falls after it, which the Solei app follows along the forecast.</p>
