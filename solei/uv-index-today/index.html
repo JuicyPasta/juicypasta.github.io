@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UV index today: hourly UV for Melbourne, Sydney, Perth… | Solei</title>
+<meta name="description" content="Today's UV index by the hour for Melbourne, Sydney, Brisbane, Perth, Auckland, Cape Town or your location: the peak, sun protection times and burn times.">
+<link rel="canonical" href="https://juicypasta.github.io/solei/uv-index-today/">
+<link rel="alternate" hreflang="en" href="https://juicypasta.github.io/solei/uv-index-today/">
+<link rel="alternate" hreflang="es" href="https://juicypasta.github.io/solei/es/indice-uv-hoy/">
+<link rel="alternate" hreflang="pt-BR" href="https://juicypasta.github.io/solei/pt/indice-uv-hoje/">
+<link rel="alternate" hreflang="x-default" href="https://juicypasta.github.io/solei/uv-index-today/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="en_AU">
+<meta property="og:site_name" content="Solei">
+<meta property="og:title" content="UV index today, hour by hour">
+<meta property="og:description" content="Today's UV index by the hour for your city: the peak, the UV now, the hours above 3, 6 and 8, and how long each skin type has before its limit.">
+<meta property="og:url" content="https://juicypasta.github.io/solei/uv-index-today/">
+<meta property="og:image" content="https://juicypasta.github.io/solei/icon.png">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#0b5d6e">
+<link rel="icon" href="../icon.png">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../uv-tanning-calculator/page.css">
+<link rel="stylesheet" href="../live-uv/page.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"UV index today (Solei)","url":"https://juicypasta.github.io/solei/uv-index-today/","inLanguage":"en","applicationCategory":"WeatherApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"AUD"},"description":"Today's and tomorrow's UV index by the hour for your city or your location, with the WHO categories and the protection they call for. Clear-sky UV from MET Norway (CC BY 4.0)."}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is the UV index?","acceptedAnswer":{"@type":"Answer","text":"It's the World Health Organization's scale for how strongly the sun burns at a place and time. It's 0 at night and rises with the sun: 0 to 2 is low, 3 to 5 moderate, 6 to 7 high, 8 to 10 very high and 11 or more extreme. The higher it is, the faster skin burns."}},{"@type":"Question","name":"What time is the UV highest today?","acceptedAnswer":{"@type":"Answer","text":"Around solar noon, when the sun is highest. With daylight saving that's after 13:00 on the clock in Melbourne, Adelaide and Auckland, and closer to 12:00 in Brisbane and Perth, which don't use it. The page above gives the peak hour for your city. Early morning and late afternoon are much lower."}},{"@type":"Question","name":"When do I need sun protection?","acceptedAnswer":{"@type":"Answer","text":"When the UV index is 3 or more. That's the WHO's advice and what Australia's sun protection times are based on: shade, a shirt, a hat, sunscreen and sunglasses. In an Australian or New Zealand summer it's usually 3 or more from mid morning to late afternoon, even on cool days, and thin cloud doesn't stop it."}},{"@type":"Question","name":"Do clouds lower the UV index?","acceptedAnswer":{"@type":"Answer","text":"Thick cloud does, but thin or broken cloud lets most UV through and sometimes adds a little. That's why this page shows the clear-sky index, the most each hour can get, with the forecast cloud cover next to it. Water, sand and snow reflect UV and add more."}},{"@type":"Question","name":"How long can I stay in the sun today?","acceptedAnswer":{"@type":"Answer","text":"It depends on your skin type and your sunscreen. For each day, this page gives the time to the safe limit without sunscreen at the peak hour, for all six skin types. With sunscreen, the UV tanning calculator works it out for your SPF and tells you when to reapply."}},{"@type":"Question","name":"Is this the official UV forecast?","acceptedAnswer":{"@type":"Answer","text":"No. The official forecasts come from the Bureau of Meteorology and ARPANSA in Australia, MetService and NIWA in New Zealand and the South African Weather Service. Theirs include cloud. This page shows MET Norway's clear-sky model for anywhere in the world, worked out in your browser."}},{"@type":"Question","name":"Where does the data come from?","acceptedAnswer":{"@type":"Answer","text":"From the forecast of MET Norway, Norway's weather service, which covers the whole world and publishes its data under CC BY 4.0. This page doesn't keep your location: it only sends MET Norway the coordinates rounded to about 1 km to ask for the forecast."}}]}
+</script>
+<script type="application/json" id="uv-strings">
+{
+  "locale": "en-AU",
+  "param": "city",
+  "calcHref": "../uv-tanning-calculator/",
+  "titleCity": "UV index today in {place}, hour by hour | Solei",
+  "countries": {"AU": "Australia", "NZ": "New Zealand", "ZA": "South Africa", "BR": "Brazil", "PT": "Portugal", "ES": "Spain", "MX": "Mexico", "AR": "Argentina", "CL": "Chile", "CO": "Colombia", "PE": "Peru"},
+  "cat": {"low": "Low", "moderate": "Moderate", "high": "High", "veryHigh": "Very high", "extreme": "Extreme"},
+  "advice": {
+    "low": "Most people need no protection.",
+    "moderate": "Wear sunscreen and seek shade around midday.",
+    "high": "Protection needed: shade, clothing and sunscreen.",
+    "veryHigh": "Extra protection needed. Avoid the midday sun.",
+    "extreme": "Stay out of the midday sun. Full protection is essential."
+  },
+  "step": {"none": "No special protection", "needed": "Protection needed", "extra": "Extra protection"},
+  "stepText": {
+    "none": "The WHO says you can be outside safely.",
+    "needed": "The WHO advises shade around midday, and a shirt, sunscreen and a hat.",
+    "extra": "The WHO advises staying out of the sun around midday and seeking shade. A shirt, sunscreen and a hat are a must."
+  },
+  "today": "Today",
+  "tomorrow": "Tomorrow",
+  "maxToday": "Today's peak",
+  "maxFromNow": "Peak from now",
+  "maxDay": "Peak",
+  "at": "at {t}",
+  "now": "Now ({t})",
+  "clearSky": "clear sky",
+  "spanLine": "UV {n} or more",
+  "spanFromTo": "{from} to {to}",
+  "spanOne": "around {from}",
+  "spanNone": "no hours",
+  "noUvLeft": "There's no UV left today in {place}. Tomorrow's is below.",
+  "noUvHours": "No hours with UV in the rest of the day.",
+  "hourCol": "Time",
+  "uvCol": "UV index",
+  "cloudCol": "Cloud",
+  "hourCaption": "Clear-sky UV index by the hour ({when})",
+  "localTime": "local time",
+  "placeTime": "{place} time",
+  "skinCaption": "Time to the safe limit with no sunscreen at UV {uv}, by skin type",
+  "skinTypes": ["I: very fair", "II: fair", "III: medium", "IV: olive", "V: brown", "VI: dark brown or black"],
+  "skinNote": "Skin types I (very fair, always burns) to VI (dark brown or black). The safe limit is two thirds of the dose that usually reddens skin. Estimates, not medical advice. With sunscreen:",
+  "calcLink": "the UV tanning calculator",
+  "noLimit": "over 1 day",
+  "sourceData": "Data:",
+  "sourceClear": "Clear-sky UV index and forecast cloud cover.",
+  "sourceUpdated": "Forecast updated at {t} ({when}).",
+  "sourceChanges": "Local times, the peak and the hours above each level are worked out on this page.",
+  "loading": "Loading the forecast for {place}…",
+  "error": "Couldn't load the forecast from MET Norway. Try again in a bit.",
+  "geoAsk": "Asking your browser for your location…",
+  "geoDenied": "Couldn't use your location. Type your city or pick the nearest one.",
+  "geoUnsupported": "This browser doesn't share its location. Type your city.",
+  "myPlace": "Your location",
+  "guessed": "Showing {place} from your device's time zone. Change the city or use your location.",
+  "noMatch": "Not on the list. Use your location or pick the nearest big city."
+}
+</script>
+<script type="module" src="../live-uv/app.js"></script>
+</head>
+<body>
+<main>
+<header>
+<a href="../"><img src="../icon.png" alt="Solei" width="64" height="64"></a>
+<div><p class="brand"><a href="../">Solei</a></p><p>Free, no ads, no sign-up</p></div>
+</header>
+<p class="langs">Also in: <a href="../es/indice-uv-hoy/" hreflang="es" lang="es">Español</a> · <a href="../pt/indice-uv-hoje/" hreflang="pt-BR" lang="pt-BR">Português</a></p>
+
+<h1>UV index today, hour by hour</h1>
+<p class="lead">Pick your city or use your location to see today's and tomorrow's UV index: the peak, the UV right now, the hours above 3, 6 and 8, how long each skin type has before its limit, and what the WHO advises at each level. The numbers are MET Norway's clear-sky UV forecast.</p>
+
+<form id="picker" class="card live" autocomplete="off" role="search">
+  <h2><label for="city">Where are you?</label></h2>
+  <div class="pick">
+    <div class="combo">
+      <input id="city" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="city-list" placeholder="Type your city" spellcheck="false">
+      <ul id="city-list" role="listbox" aria-label="Cities" hidden></ul>
+    </div>
+    <button id="locate" class="btn" type="button">Use my location</button>
+  </div>
+  <p class="quick">Or pick:
+    <a href="?city=melbourne" data-city="au-melbourne">Melbourne</a>
+    <a href="?city=sydney" data-city="au-sydney">Sydney</a>
+    <a href="?city=perth" data-city="au-perth">Perth</a>
+    <a href="?city=brisbane" data-city="au-brisbane">Brisbane</a>
+    <a href="?city=adelaide" data-city="au-adelaide">Adelaide</a>
+    <a href="?city=gold-coast" data-city="au-gold-coast">Gold Coast</a>
+    <a href="?city=auckland" data-city="nz-auckland">Auckland</a>
+    <a href="?city=cape-town" data-city="za-cape-town">Cape Town</a>
+  </p>
+  <p id="status" class="hint" role="status"></p>
+</form>
+<noscript><p class="card note">The live UV index needs JavaScript. The WHO table below works without it.</p></noscript>
+
+<section id="result" aria-live="polite" hidden></section>
+
+<section class="app-cta card">
+<h2>Solei follows the day's UV for you</h2>
+<p>The Solei app uses this same forecast where you are, adds up your UV dose minute by minute for your skin type and sunscreen, and tells you when to reapply and when you hit your limit. The core app is free, with no ads, no account and no tracking.</p>
+<p><strong>Coming soon to the App Store and Google Play.</strong> <a href="../">About the app</a></p>
+</section>
+
+<h2>What to do at each UV level</h2>
+<div class="table-wrap">
+<table class="who">
+<caption>UV index categories and the protection the WHO advises</caption>
+<thead><tr><th scope="col">UV index</th><th scope="col">Category</th><th scope="col">What to do</th></tr></thead>
+<tbody>
+<tr><td><span class="dot c-low"></span>0 to 2</td><td>Low</td><td>No special protection needed. You can be outside safely.</td></tr>
+<tr><td><span class="dot c-moderate"></span>3 to 5</td><td>Moderate</td><td>Protection needed: shade around midday, and a shirt, sunscreen and a hat.</td></tr>
+<tr><td><span class="dot c-high"></span>6 to 7</td><td>High</td><td>Protection needed, as for moderate. Without sunscreen, fair skin reaches its limit in under 20 minutes.</td></tr>
+<tr><td><span class="dot c-veryHigh"></span>8 to 10</td><td>Very high</td><td>Extra protection: stay out of the sun around midday and seek shade. A shirt, sunscreen and a hat are a must.</td></tr>
+<tr><td><span class="dot c-extreme"></span>11 or more</td><td>Extreme</td><td>Extra protection, as for very high. At midday very fair skin reaches its limit in under 10 minutes.</td></tr>
+</tbody>
+</table>
+</div>
+<p class="small muted">Source: World Health Organization, <a href="https://www.who.int/publications/i/item/9241590076">Global Solar UV Index: A Practical Guide</a> (2002) and its <a href="https://www.who.int/news-room/questions-and-answers/item/radiation-the-ultraviolet-(uv)-index">questions on the UV index</a>. The minutes are Solei's estimates for skin types II and I.</p>
+
+<h2>The official UV forecasts</h2>
+<p>This page is a quick look, not the official forecast. For that, go to your national service. Their numbers include the cloud forecast; the numbers here are the clear-sky model, the UV each hour would get if the sky stays clear.</p>
+<ul>
+<li><b>Australia:</b> the <a href="https://www.bom.gov.au/australia/uv/">Bureau of Meteorology</a> forecasts the UV index and the sun protection times for each town, and <a href="https://www.arpansa.gov.au/">ARPANSA</a> measures the UV live in the capital cities.</li>
+<li><b>New Zealand:</b> <a href="https://www.metservice.com/">MetService</a> and <a href="https://niwa.co.nz/atmosphere/uv-and-ozone">NIWA</a> (now Earth Sciences New Zealand) publish the UV forecasts.</li>
+<li><b>South Africa:</b> the <a href="https://www.weathersa.co.za/">South African Weather Service</a> (SAWS).</li>
+</ul>
+
+<section id="faq" class="faq">
+<h2>Questions</h2>
+<h3>What is the UV index?</h3>
+<p>It's the World Health Organization's scale for how strongly the sun burns at a place and time. It's 0 at night and rises with the sun: 0 to 2 is low, 3 to 5 moderate, 6 to 7 high, 8 to 10 very high and 11 or more extreme. The higher it is, the faster skin burns.</p>
+<h3>What time is the UV highest today?</h3>
+<p>Around solar noon, when the sun is highest. With daylight saving that's after 13:00 on the clock in Melbourne, Adelaide and Auckland, and closer to 12:00 in Brisbane and Perth, which don't use it. The page above gives the peak hour for your city. Early morning and late afternoon are much lower.</p>
+<h3>When do I need sun protection?</h3>
+<p>When the UV index is 3 or more. That's the WHO's advice and what Australia's sun protection times are based on: shade, a shirt, a hat, sunscreen and sunglasses. In an Australian or New Zealand summer it's usually 3 or more from mid morning to late afternoon, even on cool days, and thin cloud doesn't stop it.</p>
+<h3>Do clouds lower the UV index?</h3>
+<p>Thick cloud does, but thin or broken cloud lets most UV through and sometimes adds a little. That's why this page shows the clear-sky index, the most each hour can get, with the forecast cloud cover next to it. Water, sand and snow reflect UV and add more.</p>
+<h3>How long can I stay in the sun today?</h3>
+<p>It depends on your skin type and your sunscreen. For each day, this page gives the time to the safe limit without sunscreen at the peak hour, for all six skin types. With sunscreen, the <a href="../uv-tanning-calculator/">UV tanning calculator</a> works it out for your SPF and tells you when to reapply.</p>
+<h3>Is this the official UV forecast?</h3>
+<p>No. The official forecasts come from the Bureau of Meteorology and ARPANSA in Australia, MetService and NIWA in New Zealand and the South African Weather Service. Theirs include cloud. This page shows MET Norway's clear-sky model for anywhere in the world, worked out in your browser.</p>
+<h3>Where does the data come from?</h3>
+<p>From the forecast of <a href="https://www.met.no/en">MET Norway</a>, Norway's weather service, which covers the whole world and publishes its data under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. This page doesn't keep your location: it only sends MET Norway the coordinates rounded to about 1 km to ask for the forecast.</p>
+</section>
+
+<h2>UV index today by city</h2>
+<p class="cities"><b>Australia:</b> <a href="?city=sydney" data-city="au-sydney">Sydney</a> · <a href="?city=melbourne" data-city="au-melbourne">Melbourne</a> · <a href="?city=brisbane" data-city="au-brisbane">Brisbane</a> · <a href="?city=perth" data-city="au-perth">Perth</a> · <a href="?city=adelaide" data-city="au-adelaide">Adelaide</a> · <a href="?city=gold-coast" data-city="au-gold-coast">Gold Coast</a> · <a href="?city=newcastle" data-city="au-newcastle">Newcastle</a> · <a href="?city=canberra" data-city="au-canberra">Canberra</a> · <a href="?city=sunshine-coast" data-city="au-sunshine-coast">Sunshine Coast</a> · <a href="?city=wollongong" data-city="au-wollongong">Wollongong</a> · <a href="?city=geelong" data-city="au-geelong">Geelong</a> · <a href="?city=hobart" data-city="au-hobart">Hobart</a> · <a href="?city=townsville" data-city="au-townsville">Townsville</a> · <a href="?city=cairns" data-city="au-cairns">Cairns</a> · <a href="?city=darwin" data-city="au-darwin">Darwin</a></p>
+<p class="cities"><b>New Zealand:</b> <a href="?city=auckland" data-city="nz-auckland">Auckland</a> · <a href="?city=christchurch" data-city="nz-christchurch">Christchurch</a> · <a href="?city=wellington" data-city="nz-wellington">Wellington</a> · <a href="?city=hamilton" data-city="nz-hamilton">Hamilton</a> · <a href="?city=tauranga" data-city="nz-tauranga">Tauranga</a> · <a href="?city=dunedin" data-city="nz-dunedin">Dunedin</a> · <a href="?city=queenstown" data-city="nz-queenstown">Queenstown</a></p>
+<p class="cities"><b>South Africa:</b> <a href="?city=johannesburg" data-city="za-johannesburg">Johannesburg</a> · <a href="?city=cape-town" data-city="za-cape-town">Cape Town</a> · <a href="?city=durban" data-city="za-durban">Durban</a> · <a href="?city=pretoria" data-city="za-pretoria">Pretoria</a> · <a href="?city=gqeberha-port-elizabeth" data-city="za-gqeberha-port-elizabeth">Gqeberha (Port Elizabeth)</a></p>
+<p class="small muted">The search box also has the big cities of Brazil, Portugal, Spain and Latin America. Anywhere else: use your location.</p>
+
+<footer>
+<p>No ads, no cookies, no tracking. Your location is only used to ask for the forecast and isn't kept. <a href="../">Solei</a> · <a href="../privacy.html">Privacy</a></p>
+<p>Weather data: <a href="https://www.met.no/en">MET Norway</a> (CC BY 4.0). Solei is made by Jackson Darrow in New York City.</p>
+</footer>
+</main>
+</body>
+</html>

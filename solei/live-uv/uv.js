@@ -1,5 +1,5 @@
 // Today's UV index by the hour from MET Norway's locationforecast, for the
-// Spanish and Portuguese "UV index today" pages. Pure functions, no DOM:
+// "UV index today" pages (English, Spanish, Portuguese). Pure functions, no DOM:
 // test/uv.test.mjs covers the parsing, the WHO bands and the time zones.
 import { roundUvi, uvCategory } from '../uv-tanning-calculator/sun.js';
 
@@ -156,4 +156,25 @@ export function searchCities(cities, query, countryName = (c) => c, limit = 8) {
   }
   scored.sort((a, b) => a[0] - b[0]);
   return scored.slice(0, limit).map((s) => s[1]);
+}
+
+// A city's name as it appears in links: "gold-coast" for Gold Coast.
+export const citySlug = (name) => fold(name).replace(/ /g, '-');
+
+// The short name a link uses (?city=melbourne): the name's slug when no other
+// city has it, else the full id ("au-newcastle" style).
+export function linkId(cities, city) {
+  const s = citySlug(city.n);
+  return cities.filter((c) => citySlug(c.n) === s).length === 1 ? s : city.id;
+}
+
+// The city a link names, by id (?c=au-melbourne) or by its short name
+// (?city=melbourne). Null when it's not in the list or the name is ambiguous.
+export function findCity(cities, value) {
+  if (!value) return null;
+  const v = String(value).toLowerCase();
+  const byId = cities.find((c) => c.id === v);
+  if (byId) return byId;
+  const named = cities.filter((c) => citySlug(c.n) === v);
+  return named.length === 1 ? named[0] : null;
 }

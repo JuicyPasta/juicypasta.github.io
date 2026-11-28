@@ -12,6 +12,7 @@
 import { readFileSync, writeFileSync, realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import * as S from '../../solei/uv-tanning-calculator/sun.js';
+import { faqOf, faqLd, withFaqLd } from './faq.mjs';
 
 export const PAGE = fileURLToPath(new URL('../../solei/uv-tanning-calculator/index.html', import.meta.url));
 const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI'];
@@ -37,24 +38,8 @@ export function timeOf(uv, skin, spf) {
   return S.formatDuration(s.minutes);
 }
 
-const text = (h) => h.replace(/<[^>]+>/g, '').replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
+export { faqOf, faqLd };
 
-// [{ q, a }] from <h3>question</h3> followed by its paragraphs.
-export function faqOf(html) {
-  const m = html.match(/<section id="faq" class="faq">([\s\S]*?)<\/section>/);
-  if (!m) return [];
-  return m[1].split(/<h3[^>]*>/).slice(1).map((part) => {
-    const [q, rest] = part.split('</h3>');
-    return { q: text(q), a: text(rest.replace(/<\/p>/g, ' ')) };
-  });
-}
-
-export const faqLd = (html) => ({
-  '@context': 'https://schema.org', '@type': 'FAQPage',
-  mainEntity: faqOf(html).map(({ q, a }) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })),
-});
-
-const FAQ_BLOCK = /<script type="application\/ld\+json">\n\{"@context":"https:\/\/schema\.org","@type":"FAQPage"[\s\S]*?<\/script>\n/;
 const ANCHOR = '<script type="module" src="app.js"></script>';
 
 export function build(html) {
@@ -62,9 +47,7 @@ export function build(html) {
   out = out.replace(/(<span data-list="(\d+)">)[^<]*(<\/span>)/g, (_, a, uv, b) => a + listAt(Number(uv)) + b);
   out = out.replace(/(<span data-range="(\d+),(\d+)">)[^<]*(<\/span>)/g, (_, a, lo, hi, b) => a + rangeOf(Number(lo), Number(hi)) + b);
   out = out.replace(/(<span data-t="(\d+),(\d),(\d+)">)[^<]*(<\/span>)/g, (_, a, uv, skin, spf, b) => a + timeOf(Number(uv), Number(skin), Number(spf)) + b);
-  const block = `<script type="application/ld+json">\n${JSON.stringify(faqLd(out))}\n</script>\n`;
-  out = FAQ_BLOCK.test(out) ? out.replace(FAQ_BLOCK, () => block) : out.replace(ANCHOR, () => block + ANCHOR);
-  return out;
+  return withFaqLd(out, ANCHOR);
 }
 
 if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {

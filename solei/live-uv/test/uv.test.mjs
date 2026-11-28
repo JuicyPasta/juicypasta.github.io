@@ -9,6 +9,7 @@ import { readFileSync } from 'node:fs';
 import * as U from '../uv.js';
 import { CITIES } from '../cities.js';
 
+const PAGES = ['../../uv-index-today/index.html', '../../es/indice-uv-hoy/index.html', '../../pt/indice-uv-hoje/index.html'];
 const fixture = (name) => JSON.parse(readFileSync(new URL(`./met-${name}.json`, import.meta.url)));
 const H = 3600e3;
 
@@ -145,7 +146,7 @@ test('city list: valid zones, sane coordinates, unique ids, accent-free search',
   const ids = new Set();
   for (const c of CITIES) {
     assert.ok(U.validZone(c.tz), `${c.n}: ${c.tz}`);
-    assert.ok(Math.abs(c.lat) <= 60 && Math.abs(c.lon) <= 120, `${c.n} coordinates`);
+    assert.ok(Math.abs(c.lat) <= 60 && Math.abs(c.lon) <= 180, `${c.n} coordinates`);
     assert.ok(!ids.has(c.id), `duplicate ${c.id}`);
     ids.add(c.id);
   }
@@ -154,6 +155,9 @@ test('city list: valid zones, sane coordinates, unique ids, accent-free search',
     if (['AR', 'CL'].includes(c.c)) assert.ok(c.lat < 0, c.n);
     if (['ES', 'PT', 'MX'].includes(c.c)) assert.ok(c.lat > 0, c.n);
     if (['BR', 'AR', 'CL', 'CO', 'PE', 'MX'].includes(c.c)) assert.ok(c.lon < -30, c.n);
+    if (c.c === 'AU') assert.ok(c.lat < -10 && c.lon > 110 && c.lon < 155 && c.tz.startsWith('Australia/'), c.n);
+    if (c.c === 'NZ') assert.ok(c.lat < -34 && c.lon > 166 && c.tz === 'Pacific/Auckland', c.n);
+    if (c.c === 'ZA') assert.ok(c.lat < -22 && c.lon > 16 && c.lon < 33 && c.tz === 'Africa/Johannesburg', c.n);
   }
   const names = (q) => U.searchCities(CITIES, q, (c) => c).map((c) => `${c.n} ${c.c}`);
   assert.equal(names('sao paulo')[0], 'São Paulo BR');
@@ -167,8 +171,8 @@ test('city list: valid zones, sane coordinates, unique ids, accent-free search',
   assert.ok(CITIES.find((c) => c.id === 'mx-ciudad-de-mexico'));
 });
 
-test('the quick-pick buttons on both pages point at real cities', () => {
-  for (const page of ['../../es/indice-uv-hoy/index.html', '../../pt/indice-uv-hoje/index.html']) {
+test('the quick-pick buttons on every page point at real cities', () => {
+  for (const page of PAGES) {
     const html = readFileSync(new URL(page, import.meta.url), 'utf8');
     const ids = [...html.matchAll(/data-city="([^"]+)"/g)].map((m) => m[1]);
     assert.ok(ids.length >= 6, page);
@@ -178,5 +182,72 @@ test('the quick-pick buttons on both pages point at real cities', () => {
       assert.ok(strings.cat[k] && strings.advice[k], `${page}: ${k}`);
     }
     assert.equal(strings.skinTypes.length, 6);
+    // Every city in the shared list has a country name on every page.
+    for (const code of new Set(CITIES.map((c) => c.c))) assert.ok(strings.countries[code], `${page}: country ${code}`);
   }
+});
+
+test('English page: the cities the searches ask for, each one a ?city= link', () => {
+  const html = readFileSync(new URL('../../uv-index-today/index.html', import.meta.url), 'utf8');
+  const links = [...html.matchAll(/<a href="\?city=([^"]+)" data-city="([^"]+)">([^<]+)<\/a>/g)].map((m) => ({ q: m[1], id: m[2], text: m[3] }));
+  const wanted = ['Melbourne', 'Sydney', 'Perth', 'Brisbane', 'Auckland', 'Adelaide', 'Gold Coast', 'Cape Town',
+    'Hobart', 'Darwin', 'Canberra', 'Newcastle', 'Cairns', 'Wellington', 'Christchurch', 'Johannesburg', 'Durban'];
+  for (const name of wanted) {
+    const link = links.find((l) => l.text === name);
+    assert.ok(link, `no link for ${name}`);
+    const c = U.findCity(CITIES, link.q);
+    assert.ok(c, `?city=${link.q} finds nothing`);
+    assert.equal(c.id, link.id, name);
+    assert.equal(c.n, name);
+    assert.equal(U.linkId(CITIES, c), link.q, `${name}: the link is what the page writes back`);
+  }
+  for (const l of links) assert.equal(U.findCity(CITIES, l.q)?.id, l.id, l.q);
+  const strings = JSON.parse(html.match(/<script type="application\/json" id="uv-strings">([\s\S]*?)<\/script>/)[1]);
+  assert.equal(strings.param, 'city');
+  assert.equal(strings.calcHref, '../uv-tanning-calculator/');
+  assert.ok(html.includes('href="../live-uv/app.js"') || html.includes('src="../live-uv/app.js"'));
+});
+
+test('findCity and linkId: ids, short names, ambiguity', () => {
+  assert.equal(U.findCity(CITIES, 'au-melbourne').n, 'Melbourne');
+  assert.equal(U.findCity(CITIES, 'melbourne').id, 'au-melbourne');
+  assert.equal(U.findCity(CITIES, 'MELBOURNE').id, 'au-melbourne');
+  assert.equal(U.findCity(CITIES, 'gold-coast').id, 'au-gold-coast');
+  assert.equal(U.findCity(CITIES, 'br-sao-paulo').n, 'São Paulo');
+  assert.equal(U.findCity(CITIES, 'sao-paulo').id, 'br-sao-paulo');
+  assert.equal(U.findCity(CITIES, ''), null);
+  assert.equal(U.findCity(CITIES, null), null);
+  assert.equal(U.findCity(CITIES, 'atlantis'), null);
+  // Córdoba is in Argentina and in Spain: the short name is ambiguous, the id isn't.
+  assert.equal(U.findCity(CITIES, 'cordoba'), null);
+  const cba = CITIES.find((c) => c.n === 'Córdoba' && c.c === 'AR');
+  assert.equal(U.linkId(CITIES, cba), cba.id);
+  assert.equal(U.findCity(CITIES, U.linkId(CITIES, cba)), cba);
+  for (const c of CITIES) assert.equal(U.findCity(CITIES, U.linkId(CITIES, c)), c, c.id);
+});
+
+test('the three UV pages name each other in hreflang, both ways, and the FAQ markup matches', async () => {
+  const { faqLd } = await import('../../../_tools/solei-pages/faq.mjs');
+  const urls = { en: 'https://juicypasta.github.io/solei/uv-index-today/', es: 'https://juicypasta.github.io/solei/es/indice-uv-hoy/', 'pt-BR': 'https://juicypasta.github.io/solei/pt/indice-uv-hoje/' };
+  for (const page of PAGES) {
+    const html = readFileSync(new URL(page, import.meta.url), 'utf8');
+    const alts = Object.fromEntries([...html.matchAll(/<link rel="alternate" hreflang="([^"]+)" href="([^"]+)">/g)].map((m) => [m[1], m[2]]));
+    assert.deepEqual(alts, { ...urls, 'x-default': urls.en }, page);
+    const canonical = html.match(/<link rel="canonical" href="([^"]+)">/)[1];
+    assert.ok(Object.values(urls).includes(canonical), page);
+    for (const m of html.matchAll(/<script type="application\/ld\+json">\n([\s\S]*?)\n<\/script>/g)) JSON.parse(m[1]);
+  }
+  const en = readFileSync(new URL('../../uv-index-today/index.html', import.meta.url), 'utf8');
+  const ld = [...en.matchAll(/<script type="application\/ld\+json">\n([\s\S]*?)\n<\/script>/g)].map((m) => JSON.parse(m[1]));
+  assert.deepEqual(ld.map((b) => b['@type']), ['WebApplication', 'FAQPage']);
+  assert.deepEqual(ld[1], faqLd(en));
+  assert.ok(ld[1].mainEntity.length >= 6);
+  // Honest labels: the model is named as clear-sky, the national services as the authority.
+  for (const s of ['clear-sky', 'Bureau of Meteorology', 'ARPANSA', 'MetService', 'NIWA', 'South African Weather Service', 'MET Norway']) assert.ok(en.includes(s), s);
+  assert.ok(!/googletagmanager|google-analytics|gtag\(/.test(en), 'no analytics');
+  assert.ok(!/apps\.apple\.com|play\.google\.com/.test(en), 'no store link before approval');
+  const title = en.match(/<title>([^<]+)<\/title>/)[1];
+  const desc = en.match(/<meta name="description" content="([^"]+)">/)[1];
+  assert.match(title, /^UV index today/);
+  assert.ok(title.length <= 65 && desc.length <= 155, `${title.length} / ${desc.length}`);
 });

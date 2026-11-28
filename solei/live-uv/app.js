@@ -1,5 +1,6 @@
-// The live "UV index today" pages (es, pt). Words come from the page's
-// #uv-strings block; the maths lives in uv.js and ../uv-tanning-calculator/sun.js.
+// The live "UV index today" pages (en, es, pt). Words come from the page's
+// #uv-strings block (plus optional "locale" for dates, "param" for the link's
+// query key, "calcHref" and "titleCity"); the maths lives in uv.js and ../uv-tanning-calculator/sun.js.
 // Nothing is stored: no cookies, no localStorage. The only request is the
 // forecast for the chosen place, with coordinates rounded to ~1 km.
 import * as U from './uv.js';
@@ -7,7 +8,9 @@ import * as S from '../uv-tanning-calculator/sun.js';
 import { CITIES } from './cities.js';
 
 const T = JSON.parse(document.getElementById('uv-strings').textContent);
-const LANG = document.documentElement.lang;
+const LANG = T.locale || document.documentElement.lang;
+// ?c=au-melbourne (es, pt) or ?city=melbourne (en); both are read everywhere.
+const PARAM = T.param || 'c';
 const fill = (s, vars = {}) => s.replace(/\{(\w+)\}/g, (_, k) => (k in vars ? vars[k] : `{${k}}`));
 const $ = (id) => document.getElementById(id);
 const el = (tag, attrs = {}, ...children) => {
@@ -103,15 +106,22 @@ function pick(c) {
   input.value = cityLabel(c);
   closeList();
   const q = new URLSearchParams(location.search);
-  q.set('c', c.id);
+  q.delete('c');
+  q.delete('city');
+  q.set(PARAM, PARAM === 'city' ? U.linkId(CITIES, c) : c.id);
   history.replaceState(null, '', `?${q}${location.hash}`);
+  if (T.titleCity) document.title = fill(T.titleCity, { place: c.n });
   load({ name: c.n, full: cityLabel(c), lat: c.lat, lon: c.lon, tz: c.tz });
 }
 
 for (const b of document.querySelectorAll('[data-city]')) {
-  b.addEventListener('click', () => {
+  // Buttons, or links (<a href="?city=…">) that stay on the page.
+  b.addEventListener('click', (e) => {
     const c = CITIES.find((x) => x.id === b.dataset.city);
-    if (c) pick(c);
+    if (!c) return;
+    e.preventDefault();
+    pick(c);
+    if (!b.closest('#picker')) $('picker').scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 }
 
@@ -125,6 +135,7 @@ $('locate').addEventListener('click', () => {
     input.value = '';
     const q = new URLSearchParams(location.search);
     q.delete('c');
+    q.delete('city');
     const qs = q.toString();
     history.replaceState(null, '', `${location.pathname}${qs ? `?${qs}` : ''}${location.hash}`);
     load({ name: T.myPlace, full: T.myPlace, lat, lon, tz: deviceZone(), here: true });
@@ -225,7 +236,7 @@ function dayPanel(place, day, isToday, now) {
       spans,
       hourly,
       skin,
-      skin ? el('p', { class: 'small muted' }, T.skinNote, ' ', el('a', { href: '../../uv-tanning-calculator/', hreflang: 'en' }, T.calcLink)) : null));
+      skin ? el('p', { class: 'small muted' }, T.skinNote, ' ', el('a', { href: T.calcHref || '../../uv-tanning-calculator/', hreflang: 'en' }, T.calcLink)) : null));
 }
 
 function render(place, json) {
@@ -270,8 +281,9 @@ function render(place, json) {
   result.hidden = false;
 }
 
-// ---- start: a shared link (?c=…), else the device's time zone picks a city ----
-const fromLink = CITIES.find((c) => c.id === new URLSearchParams(location.search).get('c'));
+// ---- start: a shared link (?c=… or ?city=…), else the device's time zone picks a city ----
+const linked = new URLSearchParams(location.search);
+const fromLink = U.findCity(CITIES, linked.get('city') || linked.get('c'));
 if (fromLink) {
   pick(fromLink);
 } else {

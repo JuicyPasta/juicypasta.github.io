@@ -1,5 +1,6 @@
 // The city list for the UV pages: the biggest cities (and some beach towns) of
-// Brazil, Portugal, Spain, Mexico, Argentina, Chile, Colombia and Peru, with
+// Brazil, Portugal, Spain, Mexico, Argentina, Chile, Colombia and Peru, and
+// (for the English page, 2026-11-28) Australia, New Zealand and South Africa, with
 // coordinates to two decimals and the IANA time zone, so the hours show in the
 // city's own time. Kept static on purpose: no geocoding service sees what
 // visitors type. Biggest first within each country (search ties keep this order).
@@ -201,6 +202,36 @@ const raw = [
   ['Tacna', 'PE', -18.01, -70.25, Z.PE],
   ['Puno', 'PE', -15.84, -70.02, Z.PE],
   ['Máncora', 'PE', -4.10, -81.05, Z.PE],
+  // Australia (Queensland and the Northern Territory have no daylight saving)
+  ['Sydney', 'AU', -33.87, 151.21, 'Australia/Sydney'],
+  ['Melbourne', 'AU', -37.81, 144.96, 'Australia/Melbourne'],
+  ['Brisbane', 'AU', -27.47, 153.03, 'Australia/Brisbane'],
+  ['Perth', 'AU', -31.95, 115.86, 'Australia/Perth'],
+  ['Adelaide', 'AU', -34.93, 138.60, 'Australia/Adelaide'],
+  ['Gold Coast', 'AU', -28.02, 153.40, 'Australia/Brisbane'],
+  ['Newcastle', 'AU', -32.93, 151.78, 'Australia/Sydney'],
+  ['Canberra', 'AU', -35.28, 149.13, 'Australia/Sydney'],
+  ['Sunshine Coast', 'AU', -26.65, 153.09, 'Australia/Brisbane'],
+  ['Wollongong', 'AU', -34.42, 150.89, 'Australia/Sydney'],
+  ['Geelong', 'AU', -38.15, 144.36, 'Australia/Melbourne'],
+  ['Hobart', 'AU', -42.88, 147.33, 'Australia/Hobart'],
+  ['Townsville', 'AU', -19.26, 146.82, 'Australia/Brisbane'],
+  ['Cairns', 'AU', -16.92, 145.77, 'Australia/Brisbane'],
+  ['Darwin', 'AU', -12.46, 130.84, 'Australia/Darwin'],
+  // New Zealand
+  ['Auckland', 'NZ', -36.85, 174.76, 'Pacific/Auckland'],
+  ['Christchurch', 'NZ', -43.53, 172.64, 'Pacific/Auckland'],
+  ['Wellington', 'NZ', -41.29, 174.78, 'Pacific/Auckland'],
+  ['Hamilton', 'NZ', -37.79, 175.28, 'Pacific/Auckland'],
+  ['Tauranga', 'NZ', -37.69, 176.17, 'Pacific/Auckland'],
+  ['Dunedin', 'NZ', -45.87, 170.50, 'Pacific/Auckland'],
+  ['Queenstown', 'NZ', -45.03, 168.66, 'Pacific/Auckland'],
+  // South Africa
+  ['Johannesburg', 'ZA', -26.20, 28.05, 'Africa/Johannesburg'],
+  ['Cape Town', 'ZA', -33.92, 18.42, 'Africa/Johannesburg'],
+  ['Durban', 'ZA', -29.86, 31.03, 'Africa/Johannesburg'],
+  ['Pretoria', 'ZA', -25.75, 28.19, 'Africa/Johannesburg'],
+  ['Gqeberha (Port Elizabeth)', 'ZA', -33.96, 25.60, 'Africa/Johannesburg'],
 ];
 
 const slug = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
