@@ -26,11 +26,21 @@ export const DRUGS = [
 <li><strong>Under the skin only:</strong> "Do not inject ZEPBOUND into a muscle (intramuscularly) or vein (intravenously)." (Medication Guide)</li>
 </ul>`,
     printSub: 'Zepbound: stomach (abdomen) or thigh; back of the upper arm only by another person. Change the site every week. Follow the Instructions for Use for your pen or vial.',
+    // The injection-sites diagram (diagram.mjs): only the sites this label names.
+    diagram: {
+      subtitle: 'From the US label (tirzepatide)',
+      abdomen: ['Stomach (abdomen)', 'at least 2 in from', 'the belly button'],
+      thigh: ['Thigh'],
+      arm: ['Back of upper arm', 'another person', 'should inject here'],
+      alt: 'Zepbound injection sites diagram: front and back body outlines with the stomach (abdomen) shaded, at least 2 inches from the belly button, the thighs, and the back of the upper arms, where another person should inject',
+      caption: 'Zepbound injection sites diagram, from the US label: "Inject ZEPBOUND subcutaneously in the abdomen, thigh, or another person should inject in the back of the upper arm." The KwikPen instructions keep stomach injections "at least 2 inches from the belly button".',
+    },
     answer: `
 <p><strong>Short answer:</strong> inject Zepbound under the skin of your <strong>stomach (abdomen) or thigh</strong>. The <strong>back of the upper arm</strong> works too, but the label says <strong>another person</strong> should give that injection. Change (rotate) the spot <strong>every week</strong>: the same area is fine, but not the same spot as last time, and the KwikPen instructions add <strong>at least 2 inches from the belly button</strong>.</p>`,
     body: `
-<h2 id="label">What the Zepbound label says about injection sites</h2>
+<h2 id="label">Zepbound injection sites diagram: what the label says</h2>
 <p>The Zepbound prescribing information (section 2) says: "Inject ZEPBOUND subcutaneously in the abdomen, thigh, or another person should inject in the back of the upper arm." and "Rotate injection sites with each dose." It is given "once weekly at any time of day, with or without meals."</p>
+<!--diagram-->
 <p>Zepbound comes in four forms, and each has its own Instructions for Use. They describe the sites a little differently:</p>
 <table class="sum">
 <caption>Where each Zepbound form's instructions say to inject</caption>
@@ -85,11 +95,20 @@ ${notDose('Zepbound')}
 <li><strong>With insulin:</strong> the same body area is fine, "but not right next to each other."</li>
 </ul>`,
     printSub: 'Mounjaro: stomach (abdomen) or thigh; back of the upper arm only by another person. Change the site every week. With insulin: separate shots, not next to each other.',
+    diagram: {
+      subtitle: 'From the US label (tirzepatide)',
+      abdomen: ['Stomach (abdomen)', 'at least 2 in from', 'the belly button'],
+      thigh: ['Thigh'],
+      arm: ['Back of upper arm', 'another person', 'should inject here'],
+      alt: 'Mounjaro injection sites diagram: front and back body outlines with the stomach (abdomen) shaded, at least 2 inches from the belly button, the thighs, and the back of the upper arms, where another person should inject',
+      caption: 'Mounjaro injection sites diagram, from the US label: "Inject MOUNJARO subcutaneously in the abdomen, thigh, or have another person inject MOUNJARO in the back of the upper arm." The KwikPen instructions keep stomach injections "at least 2 inches from the belly button".',
+    },
     answer: `
 <p><strong>Short answer:</strong> inject Mounjaro under the skin of your <strong>stomach (abdomen) or thigh</strong>, or have <strong>another person</strong> inject it in the <strong>back of your upper arm</strong>. Change (rotate) the site <strong>with each weekly injection</strong>; the same area is fine if the spot is different, and the KwikPen instructions say <strong>at least 2 inches from the belly button</strong>. If you also take insulin, inject them <strong>separately, never mixed</strong>: the same body area is fine, but not right next to each other.</p>`,
     body: `
-<h2 id="label">Where the Mounjaro label says to inject</h2>
+<h2 id="label">Mounjaro injection sites diagram: where the label says to inject</h2>
 <p>Section 2.2 of the Mounjaro prescribing information: "Inject MOUNJARO subcutaneously in the abdomen, thigh, or have another person inject MOUNJARO in the back of the upper arm." It also says "Rotate injection sites with each dose" and to give it "once weekly, any time of day, with or without meals." The Medication Guide puts it in plain words: "Inject MOUNJARO under the skin (subcutaneously) of your stomach (abdomen), thigh, or another person should inject in the back of the upper arm."</p>
+<!--diagram-->
 
 <h2 id="insulin">Mounjaro and insulin: can you inject in the same area?</h2>
 <p>Yes, as two separate injections. The prescribing information says: "When using MOUNJARO with insulin, administer as separate injections and never mix. It is acceptable to inject MOUNJARO and insulin in the same body region, but the injections should not be adjacent to each other." The Medication Guide: "You may give an injection of MOUNJARO and insulin in the same body area (such as your stomach area), but not right next to each other." The vial instructions add: "Do not inject MOUNJARO in the same injection site used for other medicines."</p>
@@ -139,11 +158,20 @@ ${notDose('Mounjaro')}
 <li><strong>If injecting is hard:</strong> the pen instructions suggest changing "to a more firm injection site, such as upper leg, or upper arm".</li>
 </ul>`,
     printSub: 'Wegovy: lower stomach (2 inches from the belly button), front of the thigh, or upper arm. Not the same spot each week. Follow the Instructions for Use for your pen.',
+    diagram: {
+      subtitle: 'From the US label (semaglutide)',
+      abdomen: ['Stomach (abdomen)', '2 in (5 cm) from', 'the belly button'],
+      thigh: ['Front of thigh'],
+      arm: ['Upper arm'],
+      alt: 'Wegovy injection sites diagram: front and back body outlines with the stomach (abdomen) shaded, 2 inches (5 cm) from the belly button, the front of the thighs, and the upper arms',
+      caption: 'Wegovy injection sites diagram, from the US label: "Inject WEGOVY subcutaneously in the abdomen, thigh, or upper arm." The single-dose pen instructions say "upper leg (front of the thighs), lower stomach (keep 2 inches away from your belly button) or upper arm"; the syringe instructions say the back of the upper arm "only with help from someone else".',
+    },
     answer: `
 <p><strong>Short answer:</strong> inject Wegovy under the skin of your <strong>stomach (abdomen), thigh or upper arm</strong>. The pen instructions say the <strong>lower stomach, keeping 2 inches from your belly button</strong>, the <strong>front of the thighs</strong>, or the upper arm. Inject <strong>once a week</strong>, and change (rotate) the spot each time: the same body area is fine, but not the same spot.</p>`,
     body: `
-<h2 id="label">Where the Wegovy label says to inject</h2>
+<h2 id="label">Wegovy injection sites diagram: where the label says to inject</h2>
 <p>The Wegovy prescribing information (section 2): "Inject WEGOVY subcutaneously in the abdomen, thigh, or upper arm. The time of day and the injection site can be changed without the need for a dosage modification." and "Rotate injection sites with each dose." Wegovy injection is given "once weekly, on the same day each week, at any time of day, with or without meals." The label also says: "Similar exposure was achieved with subcutaneous administration of semaglutide in the abdomen, thigh, or upper arm."</p>
+<!--diagram-->
 <p>The single-dose pen instructions are more specific:</p>
 <ul>
 <li>"You may inject into your upper leg (front of the thighs), lower stomach (keep 2 inches away from your belly button) or upper arm."</li>
@@ -191,11 +219,20 @@ ${notDose('Wegovy')}
 <li><strong>With insulin:</strong> the same body area is fine, "but not right next to each other."</li>
 </ul>`,
     printSub: 'Ozempic: stomach (abdomen), thigh or upper arm; a different spot each week. New needle every time. With insulin: separate shots, not next to each other.',
+    diagram: {
+      subtitle: 'From the US label (semaglutide)',
+      abdomen: ['Stomach (abdomen)', 'at least 2 in from', 'the belly button'],
+      thigh: ['Thigh'],
+      arm: ['Upper arm'],
+      alt: 'Ozempic injection sites diagram: front and back body outlines with the stomach (abdomen) shaded, at least 2 inches from the belly button, the thighs, and the upper arms',
+      caption: 'Ozempic injection sites diagram, from the US label: "Inject OZEMPIC subcutaneously in the abdomen, thigh, or upper arm." The prefilled syringe instructions say the "Stomach area (abdomen) at least 2 inches from the belly button" and the "Back of upper arm (only with help from someone else)".',
+    },
     answer: `
 <p><strong>Short answer:</strong> inject Ozempic under the skin of your <strong>stomach (abdomen), thigh or upper arm</strong>, once a week on the same day. Use a <strong>different spot each week</strong>, even within the same area. If you also take insulin, give them as <strong>separate injections, never mixed</strong>; the same body area is fine, but not right next to each other.</p>`,
     body: `
-<h2 id="label">Where the Ozempic label says to inject</h2>
+<h2 id="label">Ozempic injection sites diagram: where the label says to inject</h2>
 <p>Section 2 of the Ozempic prescribing information: "Inject OZEMPIC subcutaneously in the abdomen, thigh, or upper arm." It says to "use a different injection site each week when injecting in the same body region," and to give Ozempic "once weekly, on the same day each week, at any time of the day, with or without meals." The label adds that "similar exposure is achieved" with injections in the abdomen, thigh, or upper arm; it names no best area.</p>
+<!--diagram-->
 <p>The Medication Guide: "Change (rotate) your injection site with each injection. Do not use the same site for each injection." The Ozempic single-dose prefilled syringe instructions spell out the areas: "Stomach area (abdomen) at least 2 inches from the belly button", thighs, and the "Back of upper arm (only with help from someone else)", and "Avoid using the exact same spot as the last time between injections."</p>
 
 <h2 id="insulin">Ozempic and insulin in the same area</h2>
@@ -220,3 +257,12 @@ ${notDose('Ozempic')}
 </ul>`,
   },
 ];
+
+// The diagram on the generic page (glp-1-injection-sites/), from all four labels.
+export const GENERIC_DIAGRAM = {
+  subtitle: 'Ozempic, Wegovy, Mounjaro, Zepbound (US labels)',
+  abdomen: ['Stomach (abdomen)', 'at least 2 in from', 'the belly button'],
+  thigh: ['Thigh'],
+  arm: ['Upper arm', 'Mounjaro, Zepbound:', 'another person injects'],
+  alt: 'GLP-1 injection sites diagram: front and back body outlines with the stomach (abdomen) shaded, at least 2 inches from the belly button, the thighs, and the upper arms; for Mounjaro and Zepbound another person injects in the back of the upper arm',
+};

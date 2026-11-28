@@ -24,7 +24,7 @@
 <link rel="stylesheet" href="../style.css">
 <link rel="stylesheet" href="page.css">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebApplication","name":"Rotinia injection site rotation planner","url":"https://juicypasta.github.io/rotinia/glp-1-injection-sites/","applicationCategory":"HealthApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"description":"Free injection site rotation planner and printable log for weekly GLP-1 injections such as Ozempic, Wegovy, Mounjaro and Zepbound."}
+{"@context":"https://schema.org","@type":"WebApplication","name":"Rotinia injection site rotation planner","url":"https://juicypasta.github.io/rotinia/glp-1-injection-sites/","applicationCategory":"HealthApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"description":"Free injection site rotation planner and printable log for weekly GLP-1 injections such as Ozempic, Wegovy, Mounjaro and Zepbound.","image":{"@type":"ImageObject","url":"https://juicypasta.github.io/rotinia/glp-1-injection-sites/injection-sites-diagram.svg","contentUrl":"https://juicypasta.github.io/rotinia/glp-1-injection-sites/injection-sites-diagram.svg","caption":"GLP-1 injection sites diagram, from the US labels: all four name the abdomen, thigh and upper arm, and their instructions keep stomach injections at least 2 inches from the belly button. For Mounjaro and Zepbound, another person should give the injection in the back of the upper arm; the Ozempic and Wegovy syringe instructions say the back of the upper arm \"only with help from someone else\"."}}
 </script>
 <script type="module" src="app.js"></script>
 </head>
@@ -150,6 +150,11 @@ Your taps are kept only in this browser's local storage on this device, so the p
 <tr><th scope="row">Mounjaro (tirzepatide)</th><td>Yes</td><td>Yes</td><td>Back of the arm, given by another person</td></tr>
 <tr><th scope="row">Zepbound (tirzepatide)</th><td>Yes</td><td>Yes</td><td>Back of the arm, given by another person</td></tr>
 </table>
+
+<figure class="diagram" id="diagram">
+<img src="injection-sites-diagram.svg" width="400" height="386" alt="GLP-1 injection sites diagram: front and back body outlines with the stomach (abdomen) shaded, at least 2 inches from the belly button, the thighs, and the upper arms; for Mounjaro and Zepbound another person injects in the back of the upper arm">
+<figcaption><strong>GLP-1 injection sites diagram</strong>, from the US labels: all four name the abdomen, thigh and upper arm, and their instructions keep stomach injections at least 2 inches from the belly button. For Mounjaro and Zepbound, another person should give the injection in the back of the upper arm; the Ozempic and Wegovy syringe instructions say the back of the upper arm "only with help from someone else".</figcaption>
+</figure>
 
 <h2 id="best">What is the best place to inject Ozempic or Mounjaro?</h2>
 <p>None of the labels names one best site. They list the same three areas, and the prescribing information for each of the four medicines says that similar exposure (how much of the medicine reaches the bloodstream) was achieved with injections in the abdomen, thigh, or upper arm. The Instructions for Use say: "Your healthcare provider can help you choose the injection site that is best for you."</p>

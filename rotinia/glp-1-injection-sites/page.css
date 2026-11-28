@@ -96,6 +96,12 @@ select{font:inherit;font-size:15px;padding:6px 8px;border:1px solid var(--line);
   .print-foot{display:block;font-size:9pt;color:#333;margin-top:6px}
 }
 
+/* The labelled injection-sites diagram: an SVG file with its own light and dark colors. */
+.diagram{margin:16px 0 20px}
+.diagram img{display:block;width:100%;max-width:440px;height:auto;margin:0 auto}
+.diagram figcaption{font-size:15px;color:var(--muted);margin:8px auto 0;max-width:560px}
+.diagram figcaption strong{color:var(--ink)}
+
 /* Language links and the short answer on the translated pages. */
 .langs{font-size:15px;color:var(--muted);margin:-12px 0 12px}
 .answer{border-left:4px solid var(--next)}

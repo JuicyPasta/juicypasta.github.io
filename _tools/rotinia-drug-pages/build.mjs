@@ -1,12 +1,14 @@
 // Builds the four English drug pages from the generic page's planner and log
-// sections plus per-drug content in drugs.mjs. Usage (from the repo root): node _tools/rotinia-drug-pages/build.mjs rotinia _tools/rotinia-drug-pages/drugs.mjs
+// sections plus per-drug content in drugs.mjs, and every page's injection-sites diagram (diagram.mjs). Usage (from the repo root): node _tools/rotinia-drug-pages/build.mjs rotinia _tools/rotinia-drug-pages/drugs.mjs
 // Edit drugs.mjs (label text, sources) and rerun; the folder starts with _ so Jekyll does not publish it.
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 const root = process.argv[2].replace(/\/$/, '') + '/';
 const { EN } = await import(pathToFileURL(root + 'glp-1-injection-sites/i18n.js'));
-const { DRUGS } = await import(pathToFileURL(process.argv[3]));
+const { DRUGS, GENERIC_DIAGRAM } = await import(pathToFileURL(process.argv[3]));
+const { diagramSvg, DIAGRAM_SIZE } = await import(new URL('./diagram.mjs', import.meta.url));
+const DIAGRAM = 'injection-sites-diagram.svg';
 
 const generic = readFileSync(root + 'glp-1-injection-sites/index.html', 'utf8');
 const planner = generic.match(/<section id="planner"[\s\S]*?\n<\/section>/)[0];
@@ -17,6 +19,13 @@ const SITE = 'https://juicypasta.github.io/rotinia/';
 const esc = (s) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 // Plain text of a block of page HTML, so the FAQ markup says exactly what the page shows.
 const text = (h) => h.replace(/<\/(p|li)>/g, ' ').replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
+
+// The diagram figure: a real image file (image search indexes it) with the label's wording as its caption.
+const figure = (g) => `<figure class="diagram" id="diagram">
+<img src="${DIAGRAM}" width="${DIAGRAM_SIZE.width}" height="${DIAGRAM_SIZE.height}" alt="${esc(g.alt)}">
+<figcaption>${g.caption.replace(/^([^,]+ injection sites diagram)/, '<strong>$1</strong>')}</figcaption>
+</figure>`;
+const imageLd = (url, g) => ({ '@type': 'ImageObject', url: url + DIAGRAM, contentUrl: url + DIAGRAM, caption: g.caption });
 
 for (const d of DRUGS) {
   const url = SITE + d.slug + '/';
@@ -32,6 +41,7 @@ for (const d of DRUGS) {
     applicationCategory: 'HealthApplication', operatingSystem: 'Any',
     offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
     description: `Free injection site rotation planner and printable log for once-weekly ${d.name} (${d.generic}) injections.`,
+    image: imageLd(url, d.diagram),
   };
   const faq = {
     '@context': 'https://schema.org', '@type': 'FAQPage',
@@ -91,7 +101,7 @@ ${JSON.stringify(EN, null, 2)}
 
 <div class="card answer">
 ${d.answer.trim()}
-<p>The planner below keeps the rotation for you: tap the site you used last and it shows the next one.</p>
+<p>The planner below keeps the rotation for you: tap the site you used last and it shows the next one. For a picture of the sites, see the <a href="#diagram">${d.name} injection sites diagram</a>.</p>
 </div>
 
 <h2 id="best">${d.bestQ}</h2>
@@ -101,7 +111,7 @@ ${planner}
 
 ${cta}
 
-${d.body.trim()}
+${d.body.trim().replace('<!--diagram-->', figure(d.diagram))}
 
 ${log}
 
@@ -128,5 +138,10 @@ ${d.sources.trim()}
 `;
   mkdirSync(root + d.slug, { recursive: true });
   writeFileSync(root + d.slug + '/index.html', html);
+  writeFileSync(root + d.slug + '/' + DIAGRAM, diagramSvg({ title: `${d.name} injection sites`, desc: d.diagram.alt, ...d.diagram }));
   console.log('wrote', d.slug);
 }
+
+// The generic page is hand-written; only its diagram file is built here (the figure is in its index.html).
+writeFileSync(root + 'glp-1-injection-sites/' + DIAGRAM, diagramSvg({ title: 'GLP-1 injection sites', desc: GENERIC_DIAGRAM.alt, ...GENERIC_DIAGRAM }));
+console.log('wrote glp-1-injection-sites/' + DIAGRAM);
