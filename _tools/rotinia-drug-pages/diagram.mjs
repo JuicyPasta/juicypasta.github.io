@@ -1,6 +1,7 @@
 // The labelled injection-sites diagram (a standalone SVG, so image search can index it).
 // Body shapes are the planner's (glp-1-injection-sites/index.html), drawn at 0.95 scale;
-// only the sites the drug's US label names are shaded. Light and dark colors are the planner's.
+// only the sites the drug's label names are shaded. Light and dark colors are the planner's.
+// The localized pages (l10n.mjs) pass spec.lang for the view names and the <svg> language.
 const W = 400, H = 386, S = 0.95, DY = 48, FX = 68, BX = 334;
 const xmlEsc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
 
@@ -17,17 +18,39 @@ function block(x, y, anchor, lines) {
   return lines.map((t, i) => `<text x="${x}" y="${y + i * 14.5}" text-anchor="${anchor}" class="${i ? 'sub' : 'lbl'}">${xmlEsc(t)}</text>`).join('');
 }
 
-// spec: { title, subtitle, abdomen: [lines], thigh: [lines], arm: [lines], desc }
+// The words the diagram itself draws, per language (English output is unchanged).
+const VIEWS = {
+  en: ['Front', 'Back'], 'pt-BR': ['Frente', 'Costas'], es: ['De frente', 'De espaldas'],
+  de: ['Vorne', 'Hinten'], fr: ['Face', 'Dos'],
+};
+
+// spec: { title, subtitle, abdomen: [lines], thigh: [lines], arm: [lines], desc,
+//   lang (default 'en'), svgTitle (default "<title> diagram"),
+//   ring (default true: the navel ring for a label that states a distance from the navel),
+//   armFront (default false: also shade the front of the upper arms, for a label that names it;
+//     the arm label then sits between the views with a leader to each arm) }
 export function diagramSvg(spec) {
+  const lang = spec.lang || 'en';
+  const [frontName, backName] = VIEWS[lang];
+  const ring = spec.ring !== false;
   const TX = 130; // left edge of the front labels
   // Abdomen: dot on the zone right of the belly-button ring, leader across to the label.
-  const ab = { x: fx(104), y: yy(134) };
+  // (Lower down the zone when the arm label sits between the views, so the two labels don't meet.)
+  const ab = { x: fx(104), y: yy(spec.armFront ? 145 : 134) };
   const th = { x: fx(100.5), y: yy(205) };
   // Back of the left upper arm (the back view's arm nearest the middle), upper part of the zone.
   const ar = { x: +(BX + (214.05 - 255) * S).toFixed(1), y: yy(73.9) };
   const armTextX = 272;
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-labelledby="t d">
-<title id="t">${xmlEsc(spec.title)} diagram</title>
+  // Front of the right upper arm (the front view's arm nearest the middle), mirrored from the back one.
+  const af = { x: +(FX + (125.95 - 85) * S).toFixed(1), y: ar.y };
+  const armMid = +((af.x + ar.x) / 2).toFixed(1);
+  const arm = spec.armFront
+    ? `<path class="lead" d="M${af.x} ${af.y}H${armMid - 56}M${ar.x} ${ar.y}H${armMid + 56}"/><circle class="dot" cx="${af.x}" cy="${af.y}" r="2.6"/><circle class="dot" cx="${ar.x}" cy="${ar.y}" r="2.6"/>
+${block(armMid, ar.y + 5, 'middle', spec.arm)}`
+    : `<path class="lead" d="M${ar.x} ${ar.y}H${armTextX + 5}"/><circle class="dot" cx="${ar.x}" cy="${ar.y}" r="2.6"/>
+${block(armTextX, ar.y + 5, 'end', spec.arm)}`;
+  return `<svg xmlns="http://www.w3.org/2000/svg"${lang === 'en' ? '' : ` xml:lang="${lang}" lang="${lang}"`} viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-labelledby="t d">
+<title id="t">${xmlEsc(spec.svgTitle || `${spec.title} diagram`)}</title>
 <desc id="d">${xmlEsc(spec.desc)}</desc>
 <style>
 .bg{fill:#fff;stroke:#eadfd2}.fig *{fill:#efe3d6}.site{fill:#f0b9a5;stroke:#b8442a;stroke-width:1.6}
@@ -45,8 +68,10 @@ text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
 <g transform="translate(${FX} ${DY}) scale(${S}) translate(-85 0)">
 <g class="fig">${front}</g>
 <rect class="site" x="58" y="94" width="54" height="62" rx="9"/>
-<circle class="ring" cx="85" cy="125" r="9.5"/><circle class="navel" cx="85" cy="125" r="2.4"/>
-<rect class="site" x="57" y="174" width="25" height="50" rx="9"/><rect class="site" x="88" y="174" width="25" height="50" rx="9"/>
+${ring ? '<circle class="ring" cx="85" cy="125" r="9.5"/>' : ''}<circle class="navel" cx="85" cy="125" r="2.4"/>
+<rect class="site" x="57" y="174" width="25" height="50" rx="9"/><rect class="site" x="88" y="174" width="25" height="50" rx="9"/>${spec.armFront ? `
+<rect class="site" x="34" y="66" width="24" height="40" rx="9" transform="rotate(7 46 58)"/>
+<rect class="site" x="112" y="66" width="24" height="40" rx="9" transform="rotate(-7 124 58)"/>` : ''}
 </g>
 <g transform="translate(${BX} ${DY}) scale(${S}) translate(-255 0)">
 <g class="fig">${back}</g>
@@ -57,9 +82,8 @@ text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
 ${block(TX, ab.y + 5, 'start', spec.abdomen)}
 <path class="lead" d="M${th.x} ${th.y}H${TX - 5}"/><circle class="dot" cx="${th.x}" cy="${th.y}" r="2.6"/>
 ${block(TX, th.y + 5, 'start', spec.thigh)}
-<path class="lead" d="M${ar.x} ${ar.y}H${armTextX + 5}"/><circle class="dot" cx="${ar.x}" cy="${ar.y}" r="2.6"/>
-${block(armTextX, ar.y + 5, 'end', spec.arm)}
-<text x="${FX}" y="346" class="cap">Front</text><text x="${BX}" y="346" class="cap">Back</text>
+${arm}
+<text x="${FX}" y="346" class="cap">${xmlEsc(frontName)}</text><text x="${BX}" y="346" class="cap">${xmlEsc(backName)}</text>
 <text x="${W / 2}" y="372" class="src">juicypasta.github.io/rotinia</text>
 </svg>
 `;

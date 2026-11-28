@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" xml:lang="es" lang="es" viewBox="0 0 400 386" width="400" height="386" role="img" aria-labelledby="t d">
+<title id="t">Dónde aplicar Ozempic: diagrama de las zonas de inyección</title>
+<desc id="d">Dónde aplicar Ozempic: diagrama de las zonas de inyección. Silueta del cuerpo de frente y de espaldas con la parte frontal de la cintura (abdomen), la parte frontal de los muslos y la parte superior de los brazos marcadas.</desc>
+<style>
+.bg{fill:#fff;stroke:#eadfd2}.fig *{fill:#efe3d6}.site{fill:#f0b9a5;stroke:#b8442a;stroke-width:1.6}
+.ring{fill:#efe3d6;stroke:#655a6e;stroke-width:1.1;stroke-dasharray:2.5 2}.navel{fill:#655a6e}
+.lead{stroke:#b8442a;stroke-width:1.5;fill:none}.dot{fill:#b8442a}
+text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;fill:#2e2238}
+.h{font-size:20px;font-weight:700}.st{font-size:13px;fill:#655a6e}.lbl{font-size:14.5px;font-weight:700}
+.sub{font-size:12.5px;fill:#655a6e}.cap{font-size:13px;font-weight:600;fill:#655a6e;text-anchor:middle}.src{font-size:11.5px;fill:#655a6e;text-anchor:middle}
+@media (prefers-color-scheme:dark){.bg{fill:#2a2132;stroke:#3e3348}.fig *,.ring{fill:#3b3045}.site{fill:#7a4f55;stroke:#ff9c80}
+.ring{stroke:#b9adc0}.navel{fill:#b9adc0}.lead{stroke:#ff9c80}.dot{fill:#ff9c80}text{fill:#f6efe8}.st,.sub,.cap,.src{fill:#b9adc0}}
+</style>
+<rect class="bg" x="0.5" y="0.5" width="399" height="385" rx="12"/>
+<text x="200" y="30" text-anchor="middle" class="h">Dónde aplicar Ozempic</text>
+<text x="200" y="49" text-anchor="middle" class="st">Según el prospecto (semaglutida)</text>
+<g transform="translate(68 48) scale(0.95) translate(-85 0)">
+<g class="fig"><circle cx="85" cy="27" r="17"/><rect x="78" y="40" width="14" height="14" rx="4"/><path d="M57 56 Q85 49 113 56 L117 98 Q120 130 115 164 L55 164 Q50 130 53 98 Z"/><rect x="38" y="58" width="16" height="96" rx="8" transform="rotate(7 46 58)"/><rect x="116" y="58" width="16" height="96" rx="8" transform="rotate(-7 124 58)"/><rect x="56" y="156" width="27" height="138" rx="12"/><rect x="87" y="156" width="27" height="138" rx="12"/></g>
+<rect class="site" x="58" y="94" width="54" height="62" rx="9"/>
+<circle class="navel" cx="85" cy="125" r="2.4"/>
+<rect class="site" x="57" y="174" width="25" height="50" rx="9"/><rect class="site" x="88" y="174" width="25" height="50" rx="9"/>
+</g>
+<g transform="translate(334 48) scale(0.95) translate(-255 0)">
+<g class="fig"><circle cx="255" cy="27" r="17"/><rect x="248" y="40" width="14" height="14" rx="4"/><path d="M227 56 Q255 49 283 56 L287 98 Q290 130 285 164 L225 164 Q220 130 223 98 Z"/><rect x="208" y="58" width="16" height="96" rx="8" transform="rotate(7 216 58)"/><rect x="286" y="58" width="16" height="96" rx="8" transform="rotate(-7 294 58)"/><rect x="226" y="156" width="27" height="138" rx="12"/><rect x="257" y="156" width="27" height="138" rx="12"/></g>
+<rect class="site" x="204" y="66" width="24" height="40" rx="9" transform="rotate(7 216 58)"/>
+<rect class="site" x="282" y="66" width="24" height="40" rx="9" transform="rotate(-7 294 58)"/>
+</g>
+<path class="lead" d="M86 175.3H125"/><circle class="dot" cx="86" cy="175.3" r="2.6"/>
+<text x="130" y="180.3" text-anchor="start" class="lbl">Abdomen</text><text x="130" y="194.8" text-anchor="start" class="sub">parte frontal</text><text x="130" y="209.3" text-anchor="start" class="sub">de la cintura</text>
+<path class="lead" d="M82.7 242.8H125"/><circle class="dot" cx="82.7" cy="242.8" r="2.6"/>
+<text x="130" y="247.8" text-anchor="start" class="lbl">Muslo</text><text x="130" y="262.3" text-anchor="start" class="sub">parte frontal</text>
+<path class="lead" d="M295.1 118.2H277"/><circle class="dot" cx="295.1" cy="118.2" r="2.6"/>
+<text x="272" y="123.2" text-anchor="end" class="lbl">Parte superior</text><text x="272" y="137.7" text-anchor="end" class="sub">del brazo</text>
+<text x="68" y="346" class="cap">De frente</text><text x="334" y="346" class="cap">De espaldas</text>
+<text x="200" y="372" class="src">juicypasta.github.io/rotinia</text>
+</svg>

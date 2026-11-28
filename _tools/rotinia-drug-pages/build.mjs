@@ -1,5 +1,5 @@
 // Builds the four English drug pages from the generic page's planner and log
-// sections plus per-drug content in drugs.mjs, and every page's injection-sites diagram (diagram.mjs). Usage (from the repo root): node _tools/rotinia-drug-pages/build.mjs rotinia _tools/rotinia-drug-pages/drugs.mjs
+// sections plus per-drug content in drugs.mjs, and every page's injection-sites diagram (diagram.mjs), the localized pages' too (l10n.mjs). Usage (from the repo root): node _tools/rotinia-drug-pages/build.mjs rotinia _tools/rotinia-drug-pages/drugs.mjs
 // Edit drugs.mjs (label text, sources) and rerun; the folder starts with _ so Jekyll does not publish it.
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
@@ -145,3 +145,7 @@ ${d.sources.trim()}
 // The generic page is hand-written; only its diagram file is built here (the figure is in its index.html).
 writeFileSync(root + 'glp-1-injection-sites/' + DIAGRAM, diagramSvg({ title: 'GLP-1 injection sites', desc: GENERIC_DIAGRAM.alt, ...GENERIC_DIAGRAM }));
 console.log('wrote glp-1-injection-sites/' + DIAGRAM);
+
+// The pt, es, de and fr pages are hand-written; l10n.mjs adds their diagram and figure.
+const { buildLocalized } = await import(new URL('./l10n.mjs', import.meta.url));
+buildLocalized(root);
