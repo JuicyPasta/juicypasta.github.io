@@ -437,6 +437,8 @@ ${foot('../')}`;
     .map((u) => `  <url><loc>${SITE}${u}</loc><lastmod>${u.startsWith('nyc/') || u === 'cities/' ? updated : built[u] || was(u) || today}</lastmod></url>`);
   rest.splice(end, 0, ...urls);
   writeFileSync(file, rest.join('\n'));
+  // The same URLs as a plain-text sitemap (Search Console showed "Couldn't fetch" for sitemap.xml from 2026-11-23 while the file was valid).
+  writeFileSync(join(ROOT, 'sitemap.txt'), rest.map((l) => (/<loc>([^<]+)<\/loc>/.exec(l) || [])[1]).filter(Boolean).join('\n') + '\n');
   console.log(`${hoods.length} neighborhood pages + index from ${places.length} places (feed updated ${updated}); sitemap has ${urls.length} Latecup URLs`
     + (many ? `; ${metros.length} city ${metros.length === 1 ? 'page' : 'pages'} built${kept.length ? `, ${kept.length} left as they were` : ''}, and the list of cities` : ''));
 }
